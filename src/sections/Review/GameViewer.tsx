@@ -216,7 +216,7 @@ export function GameViewer({
           Couldn’t read the moves. Fix the notation in{" "}
           <span className="font-medium text-ink">Edit the moves</span> below and apply.
         </div>
-        <MovesEditor draft={draft} setDraft={setDraft} onApply={applyEdits} />
+        <MovesEditor draft={draft} setDraft={setDraft} onApply={applyEdits} moveIndex={curIdx} />
       </div>
     );
   }
@@ -370,7 +370,7 @@ export function GameViewer({
           </p>
         </div>
       </div>
-      <MovesEditor draft={draft} setDraft={setDraft} onApply={applyEdits} />
+      <MovesEditor draft={draft} setDraft={setDraft} onApply={applyEdits} moveIndex={curIdx} />
     </div>
   );
 }
@@ -425,27 +425,122 @@ function ScoresheetPanel({
   );
 }
 
+// Character range of the move at index `idx` within raw PGN text (skips the
+// move numbers / results, and any preamble before "1.") — so we can highlight
+// it inside the edit box, in sync with the board + move list.
+function findMoveTokenRange(text: string, idx: number): [number, number] | null {
+  if (idx < 0) return null;
+  const anchor = text.search(/\b1\s*\.\s*[a-hKQRBNO0]/);
+  const re = /\S+/g;
+  re.lastIndex = anchor >= 0 ? anchor : 0;
+  let count = 0;
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(text))) {
+    const raw = m[0];
+    if (/^\d+\.+$/.test(raw)) continue; // "12."
+    if (/^(1-0|0-1|1\/2-1\/2|\*)$/.test(raw)) continue; // result
+    let s = m.index;
+    let tok = raw;
+    const num = tok.match(/^\d+\.+/); // "12.e4" glued together
+    if (num) {
+      s += num[0].length;
+      tok = tok.slice(num[0].length);
+    }
+    if (!tok) continue;
+    if (count === idx) return [s, s + tok.length];
+    count++;
+  }
+  return null;
+}
+
+// A textarea with a highlight band behind the active move. The backdrop mirrors
+// the textarea's text/layout exactly; the textarea sits on top (transparent bg)
+// so the caret + typing stay native while the highlight shows through.
+function HighlightTextarea({
+  value,
+  onChange,
+  range,
+}: {
+  value: string;
+  onChange: (s: string) => void;
+  range: [number, number] | null;
+}) {
+  const taRef = useRef<HTMLTextAreaElement>(null);
+  const bgRef = useRef<HTMLDivElement>(null);
+  const markRef = useRef<HTMLSpanElement>(null);
+
+  function sync() {
+    if (taRef.current && bgRef.current) {
+      bgRef.current.scrollTop = taRef.current.scrollTop;
+      bgRef.current.scrollLeft = taRef.current.scrollLeft;
+    }
+  }
+
+  // Bring the active move into view as you step.
+  useEffect(() => {
+    if (markRef.current && taRef.current) {
+      const top = markRef.current.offsetTop - taRef.current.clientHeight / 2;
+      taRef.current.scrollTop = Math.max(0, top);
+      sync();
+    }
+  }, [range, value]);
+
+  const shared =
+    "whitespace-pre-wrap break-words px-3 py-2 font-mono text-sm leading-6";
+  const before = range ? value.slice(0, range[0]) : value;
+  const mid = range ? value.slice(range[0], range[1]) : "";
+  const after = range ? value.slice(range[1]) : "";
+
+  return (
+    <div className="relative mt-3 h-40 overflow-hidden rounded-lg border border-line bg-paper ring-accent/30 focus-within:ring-2">
+      <div
+        ref={bgRef}
+        aria-hidden
+        className={`pointer-events-none absolute inset-0 overflow-auto text-transparent ${shared}`}
+      >
+        {before}
+        {range && (
+          <mark ref={markRef} className="rounded bg-accent/35 text-transparent">
+            {mid}
+          </mark>
+        )}
+        {after}
+        {"\n"}
+      </div>
+      <textarea
+        ref={taRef}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        onScroll={sync}
+        spellCheck={false}
+        className={`absolute inset-0 h-full w-full resize-none bg-transparent text-ink caret-ink outline-none ${shared}`}
+      />
+    </div>
+  );
+}
+
 function MovesEditor({
   draft,
   setDraft,
   onApply,
+  moveIndex,
 }: {
   draft: string;
   setDraft: (s: string) => void;
   onApply: () => void;
+  /** Index of the move currently on the board, to highlight in the text. */
+  moveIndex: number;
 }) {
+  const range = useMemo(
+    () => findMoveTokenRange(draft, moveIndex),
+    [draft, moveIndex],
+  );
   return (
-    <details className="rounded-xl border border-line bg-card px-4 py-3">
+    <details open className="rounded-xl border border-line bg-card px-4 py-3">
       <summary className="cursor-pointer text-sm font-medium text-muted">
         Edit the moves (if anything was misread)
       </summary>
-      <textarea
-        value={draft}
-        onChange={(e) => setDraft(e.target.value)}
-        rows={4}
-        spellCheck={false}
-        className="mt-3 w-full rounded-lg border border-line bg-paper px-3 py-2 font-mono text-sm outline-none ring-accent/30 focus:ring-2"
-      />
+      <HighlightTextarea value={draft} onChange={setDraft} range={range} />
       <button
         onClick={onApply}
         className="mt-2 rounded-lg bg-ink px-3 py-1.5 text-sm font-medium text-paper transition-opacity hover:opacity-90"
