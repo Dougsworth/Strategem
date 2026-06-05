@@ -10,6 +10,7 @@ import {
   Image as ImageIcon,
   SkipBack,
   SkipForward,
+  X,
 } from "lucide-react";
 import { Chess } from "chess.js";
 import type { Color } from "chess.js";
@@ -203,7 +204,7 @@ export function GameViewer({
   if (parsing) {
     return (
       <div className="flex flex-col gap-3">
-        {imageUrl && <ScoresheetPanel src={imageUrl} current={null} />}
+        {imageUrl && <ScoresheetPanel src={imageUrl} current={null} onOpen={() => setSheetOpen(true)} />}
         <Loader label="Reading the game" />
       </div>
     );
@@ -212,12 +213,15 @@ export function GameViewer({
   if (!parsed.ok) {
     return (
       <div className="flex flex-col gap-3">
-        {imageUrl && <ScoresheetPanel src={imageUrl} current={current} />}
+        {imageUrl && <ScoresheetPanel src={imageUrl} current={current} onOpen={() => setSheetOpen(true)} />}
         <div className="grid place-items-center rounded-xl bg-ink-soft p-8 text-center text-sm text-muted">
           Couldn’t read the moves. Fix the notation in{" "}
           <span className="font-medium text-ink">Edit the moves</span> below and apply.
         </div>
         <MovesEditor draft={draft} setDraft={setDraft} onApply={applyEdits} moveIndex={curIdx} onSeek={(i) => setPly(Math.max(0, Math.min(total, i + 1)))} />
+        {imageUrl && (
+          <SheetDrawer open={sheetOpen} src={imageUrl} onClose={() => setSheetOpen(false)} />
+        )}
       </div>
     );
   }
@@ -234,7 +238,7 @@ export function GameViewer({
 
   return (
     <div className="flex flex-col gap-3">
-      {imageUrl && <ScoresheetPanel src={imageUrl} current={current} />}
+      {imageUrl && <ScoresheetPanel src={imageUrl} current={current} onOpen={() => setSheetOpen(true)} />}
       {parsed.ignored.length > 0 && (
         <div className="rounded-xl border border-line bg-ink-soft/60 px-4 py-3 text-sm">
           <p className="font-semibold text-ink">
@@ -455,25 +459,65 @@ export function GameViewer({
         />
       )}
       <MovesEditor draft={draft} setDraft={setDraft} onApply={applyEdits} moveIndex={curIdx} onSeek={(i) => setPly(Math.max(0, Math.min(total, i + 1)))} />
-      {sheetOpen && imageUrl && (
-        <div
-          onClick={() => setSheetOpen(false)}
-          className="fixed inset-0 z-[140] overflow-auto bg-ink/90 p-4"
-        >
-          <button
-            onClick={() => setSheetOpen(false)}
-            className="fixed right-4 top-4 z-10 rounded-lg bg-ink px-4 py-2 text-sm font-medium text-paper ring-1 ring-paper/20"
-          >
-            Close
-          </button>
-          <img
-            src={imageUrl}
-            alt="Scanned scoresheet"
-            onClick={(e) => e.stopPropagation()}
-            className="mx-auto max-w-[min(100%,1500px)] rounded-lg"
-          />
-        </div>
+      {imageUrl && (
+        <SheetDrawer open={sheetOpen} src={imageUrl} onClose={() => setSheetOpen(false)} />
       )}
+    </div>
+  );
+}
+
+// Slide-in drawer for the scoresheet photo. Docked to the right so the board
+// stays visible and interactive on the left — compare the sheet to the position
+// as you step. Always mounted so the open/close slide animates both ways.
+function SheetDrawer({
+  open,
+  src,
+  onClose,
+}: {
+  open: boolean;
+  src: string;
+  onClose: () => void;
+}) {
+  const [zoom, setZoom] = useState(false);
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [open, onClose]);
+
+  return (
+    <div
+      aria-hidden={!open}
+      className={`fixed inset-y-0 right-0 z-[140] flex w-full flex-col border-l border-line bg-paper shadow-2xl transition-transform duration-300 ease-out sm:w-[46vw] sm:max-w-2xl ${
+        open ? "translate-x-0" : "pointer-events-none translate-x-full"
+      }`}
+    >
+      <header className="flex items-center justify-between gap-3 border-b border-line px-4 py-3">
+        <p className="text-sm font-medium text-ink">Original scoresheet</p>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setZoom((z) => !z)}
+            className="rounded-lg border border-line px-2.5 py-1 text-xs font-medium transition-colors hover:bg-ink-soft"
+          >
+            {zoom ? "Fit width" : "Zoom in"}
+          </button>
+          <button
+            onClick={onClose}
+            aria-label="Close scoresheet"
+            className="grid h-7 w-7 place-items-center rounded-lg text-muted transition-colors hover:bg-ink-soft hover:text-ink"
+          >
+            <X size={16} />
+          </button>
+        </div>
+      </header>
+      <div className="flex-1 overflow-auto p-3">
+        <img
+          src={src}
+          alt="Scanned scoresheet"
+          className={`mx-auto rounded-lg ring-1 ring-line ${zoom ? "w-[1400px] max-w-none" : "w-full"}`}
+        />
+      </div>
     </div>
   );
 }
@@ -481,54 +525,35 @@ export function GameViewer({
 function ScoresheetPanel({
   src,
   current,
+  onOpen,
 }: {
   src: string;
   current: { no: number; side: string; san: string } | null;
+  /** Open the full sheet side-by-side with the board (the slide-in drawer). */
+  onOpen?: () => void;
 }) {
-  const [zoom, setZoom] = useState(false);
   return (
-    <>
-      <details className="rounded-xl border border-line bg-card px-4 py-3">
-        <summary className="flex cursor-pointer items-center justify-between gap-3 text-sm font-medium text-muted">
-          <span>Original scoresheet — click to view</span>
-          {current && (
-            <span className="rounded-md bg-accent/10 px-2 py-0.5 font-mono text-[11px] font-semibold text-accent">
-              find move {current.no} · {current.side} · {current.san}
-            </span>
-          )}
-        </summary>
-        <img
-          src={src}
-          alt="Scanned scoresheet"
-          onClick={() => setZoom(true)}
-          className="mx-auto mt-3 max-h-[44vh] w-auto cursor-zoom-in rounded-lg object-contain ring-1 ring-line"
-        />
-        <p className="mt-1.5 text-center font-mono text-[10px] uppercase tracking-wide text-muted/50">
-          {current
-            ? `Compare move ${current.no} on the sheet with “${current.san}” on the board`
-            : "Click to enlarge · compare with the moves"}
-        </p>
-      </details>
-      {zoom && (
-        <div
-          onClick={() => setZoom(false)}
-          className="fixed inset-0 z-[140] overflow-auto bg-ink/90 p-4"
-        >
-          <button
-            onClick={() => setZoom(false)}
-            className="fixed right-4 top-4 z-10 rounded-lg bg-ink px-4 py-2 text-sm font-medium text-paper ring-1 ring-paper/20"
-          >
-            Close
-          </button>
-          <img
-            src={src}
-            alt="Scanned scoresheet"
-            onClick={(e) => e.stopPropagation()}
-            className="mx-auto max-w-[min(100%,1500px)] rounded-lg"
-          />
-        </div>
-      )}
-    </>
+    <details className="rounded-xl border border-line bg-card px-4 py-3">
+      <summary className="flex cursor-pointer items-center justify-between gap-3 text-sm font-medium text-muted">
+        <span>Original scoresheet — click to view</span>
+        {current && (
+          <span className="rounded-md bg-accent/10 px-2 py-0.5 font-mono text-[11px] font-semibold text-accent">
+            find move {current.no} · {current.side} · {current.san}
+          </span>
+        )}
+      </summary>
+      <img
+        src={src}
+        alt="Scanned scoresheet"
+        onClick={onOpen}
+        className="mx-auto mt-3 max-h-[44vh] w-auto cursor-zoom-in rounded-lg object-contain ring-1 ring-line"
+      />
+      <p className="mt-1.5 text-center font-mono text-[10px] uppercase tracking-wide text-muted/50">
+        {current
+          ? `Compare move ${current.no} on the sheet with “${current.san}” on the board`
+          : "Click to open it beside the board"}
+      </p>
+    </details>
   );
 }
 
