@@ -9,6 +9,7 @@ import { CurationEngine } from "@/sections/DashboardMain/components/CurationEngi
 import { TrainingPlan } from "@/sections/DashboardMain/components/TrainingPlan";
 import { AnalyticsView } from "@/sections/DashboardMain/components/AnalyticsView";
 import { Upsell } from "@/sections/DashboardMain/components/Upsell";
+import { LabView } from "@/sections/Lab/LabView";
 import { useStudent } from "@/lib/StudentContext";
 import { useView } from "@/lib/ViewContext";
 import { useAuth } from "@/lib/AuthContext";
@@ -24,7 +25,9 @@ export const DashboardMain = () => {
     <main className="mx-auto grid max-w-[1600px] grid-cols-12 gap-8 px-6 py-8">
       <ActiveRoster />
       <div className="col-span-12 md:col-span-9">
-        {selected ? (
+        {view === "lab" ? (
+          <LabView />
+        ) : selected ? (
           <div className="space-y-8">
             {view === "roster" && (
               <>

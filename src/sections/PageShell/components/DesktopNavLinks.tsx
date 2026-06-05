@@ -4,6 +4,7 @@ const LINKS: { label: string; view: View }[] = [
   { label: "Roster", view: "roster" },
   { label: "Curriculum", view: "curriculum" },
   { label: "Analytics", view: "analytics" },
+  { label: "The Lab", view: "lab" },
 ];
 
 export const DesktopNavLinks = () => {

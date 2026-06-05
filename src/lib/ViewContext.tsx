@@ -8,7 +8,7 @@ import {
 
 // Which top-level tab is showing. The app is a single page, so this is a tiny
 // in-memory router shared by the navbar links and the main content.
-export type View = "roster" | "curriculum" | "analytics";
+export type View = "roster" | "curriculum" | "analytics" | "lab";
 
 interface ViewValue {
   view: View;
