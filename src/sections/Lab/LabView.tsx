@@ -1,10 +1,12 @@
 import { useState } from "react";
-import { ArrowLeft, Lightbulb, Grid3x3, Route } from "lucide-react";
+import { ArrowLeft, Lightbulb, Grid3x3, Route, Hash, Brain } from "lucide-react";
 import { LightsOut } from "@/sections/Lab/LightsOut";
 import { KnightsTour } from "@/sections/Lab/KnightsTour";
 import { MazeRunner } from "@/sections/Lab/MazeRunner";
+import { Game2048 } from "@/sections/Lab/Game2048";
+import { MemoryMatch } from "@/sections/Lab/MemoryMatch";
 
-type PuzzleId = "knight" | "lights" | "maze";
+type PuzzleId = "knight" | "lights" | "maze" | "2048" | "memory";
 
 const PUZZLES: {
   id: PuzzleId;
@@ -37,6 +39,22 @@ const PUZZLES: {
     tagline: "Find the exit — then beat the optimal path.",
     trains: "Efficiency · shortest-plan",
     render: () => <MazeRunner />,
+  },
+  {
+    id: "2048",
+    name: "2048",
+    icon: Hash,
+    tagline: "Slide and merge tiles to reach 2048 without locking yourself in.",
+    trains: "Look-ahead · board management",
+    render: () => <Game2048 />,
+  },
+  {
+    id: "memory",
+    name: "Memory Match",
+    icon: Brain,
+    tagline: "Flip the chess-piece cards two at a time and find every pair.",
+    trains: "Visual memory · recall",
+    render: () => <MemoryMatch />,
   },
 ];
 
