@@ -343,10 +343,20 @@ exports.generateNarrative = onCall(
 const SCORESHEET_PROMPT =
   "This image is a chess scoresheet (the paper players fill in during a game). " +
   "Transcribe ALL the moves into standard algebraic notation as PGN movetext only, " +
-  "e.g. '1. e4 e5 2. Nf3 Nc6 3. Bb5 a6'. Output ONLY the movetext — no headers, no " +
-  "result, no commentary, no code fences. If a move looks illegible or illegal, infer " +
-  "the most likely LEGAL move that keeps the game consistent. Read both columns (White " +
-  "and Black) in order.";
+  "e.g. '1. e4 e5 2. Nf3 Nc6 3. Bb5 a6'. Read both columns (White then Black) row by row.\n\n" +
+  "CRITICAL — replay the game in your head as you read, and only ever output a move that " +
+  "is LEGAL in the current position. Use these rules to resolve messy handwriting:\n" +
+  "• No leading piece letter = a PAWN move (e4, exd5, e8=Q). A leading capital K/Q/R/B/N " +
+  "is that piece. Files are a–h, ranks 1–8.\n" +
+  "• Castling is O-O (kingside) or O-O-O (queenside) — letter O, not zero.\n" +
+  "• Captures use x (exd5, Nxe4), checks +, checkmate #, promotion =Q/=R/=B/=N, en passant " +
+  "is written like a normal pawn capture.\n" +
+  "• Handwritten look-alikes are common — c/e, b/d/h, a/o, g/q, n/h, 1/7, 3/8, 5/6, 6/8, 0/O. " +
+  "When a letter or digit is ambiguous, pick the reading that yields a LEGAL move in that " +
+  "position; if two readings are both legal, prefer the one closest to the handwriting.\n" +
+  "• If a move is truly illegible, infer the most likely LEGAL move that keeps the game " +
+  "consistent rather than emitting an illegal one.\n\n" +
+  "Output ONLY the movetext — no headers, no result, no commentary, no code fences.";
 
 function cleanPgn(text) {
   return text
