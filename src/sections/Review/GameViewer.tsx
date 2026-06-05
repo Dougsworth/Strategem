@@ -196,10 +196,22 @@ export function GameViewer({
     return { fen: c.fen(), lastMove: last };
   }, [ply, parsed.moves]);
 
+  // Which move is currently on the board — so the scoresheet panel can point the
+  // coach at the matching row on the paper.
+  const curIdx = ply - 1;
+  const current =
+    ply > 0 && parsed.moves[curIdx]
+      ? {
+          no: Math.floor(curIdx / 2) + 1,
+          side: curIdx % 2 === 0 ? "White" : "Black",
+          san: parsed.moves[curIdx],
+        }
+      : null;
+
   if (!parsed.ok) {
     return (
       <div className="flex flex-col gap-3">
-        {imageUrl && <ScoresheetPanel src={imageUrl} />}
+        {imageUrl && <ScoresheetPanel src={imageUrl} current={current} />}
         <div className="grid place-items-center rounded-xl bg-ink-soft p-8 text-center text-sm text-muted">
           Couldn’t read the moves. Fix the notation in{" "}
           <span className="font-medium text-ink">Edit the moves</span> below and apply.
@@ -221,7 +233,7 @@ export function GameViewer({
 
   return (
     <div className="flex flex-col gap-3">
-      {imageUrl && <ScoresheetPanel src={imageUrl} />}
+      {imageUrl && <ScoresheetPanel src={imageUrl} current={current} />}
       {parsed.corrections.length > 0 && (
         <div className="rounded-xl border border-positive/30 bg-positive/10 px-4 py-3 text-sm">
           <p className="font-semibold text-ink">
@@ -363,7 +375,13 @@ export function GameViewer({
   );
 }
 
-function ScoresheetPanel({ src }: { src: string }) {
+function ScoresheetPanel({
+  src,
+  current,
+}: {
+  src: string;
+  current: { no: number; side: string; san: string } | null;
+}) {
   const [zoom, setZoom] = useState(false);
   return (
     <>
@@ -371,8 +389,13 @@ function ScoresheetPanel({ src }: { src: string }) {
         open
         className="rounded-xl border border-line bg-card px-4 py-3"
       >
-        <summary className="cursor-pointer text-sm font-medium text-muted">
-          Original scoresheet
+        <summary className="flex cursor-pointer items-center justify-between gap-3 text-sm font-medium text-muted">
+          <span>Original scoresheet</span>
+          {current && (
+            <span className="rounded-md bg-accent/10 px-2 py-0.5 font-mono text-[11px] font-semibold text-accent">
+              find move {current.no} · {current.side} · {current.san}
+            </span>
+          )}
         </summary>
         <img
           src={src}
@@ -381,7 +404,9 @@ function ScoresheetPanel({ src }: { src: string }) {
           className="mx-auto mt-3 max-h-[44vh] w-auto cursor-zoom-in rounded-lg object-contain ring-1 ring-line"
         />
         <p className="mt-1.5 text-center font-mono text-[10px] uppercase tracking-wide text-muted/50">
-          Click to enlarge · compare with the moves
+          {current
+            ? `Compare move ${current.no} on the sheet with “${current.san}” on the board`
+            : "Click to enlarge · compare with the moves"}
         </p>
       </details>
       {zoom && (
