@@ -88,10 +88,13 @@ function parseGame(pgn: string): ParsedGame {
 export function GameViewer({
   pgn,
   onPgnChange,
+  imageUrl,
 }: {
   pgn: string;
   /** Called when the user edits + applies the moves (so the parent can persist). */
   onPgnChange?: (pgn: string) => void;
+  /** Original scoresheet photo, shown for side-by-side comparison. */
+  imageUrl?: string | null;
 }) {
   // Internal copy so the moves can be edited in place; re-syncs if the prop changes.
   const [pgnText, setPgnText] = useState(pgn);
@@ -196,6 +199,7 @@ export function GameViewer({
   if (!parsed.ok) {
     return (
       <div className="flex flex-col gap-3">
+        {imageUrl && <ScoresheetPanel src={imageUrl} />}
         <div className="grid place-items-center rounded-xl bg-ink-soft p-8 text-center text-sm text-muted">
           Couldn’t read the moves. Fix the notation in{" "}
           <span className="font-medium text-ink">Edit the moves</span> below and apply.
@@ -217,6 +221,7 @@ export function GameViewer({
 
   return (
     <div className="flex flex-col gap-3">
+      {imageUrl && <ScoresheetPanel src={imageUrl} />}
       {parsed.corrections.length > 0 && (
         <div className="rounded-xl border border-positive/30 bg-positive/10 px-4 py-3 text-sm">
           <p className="font-semibold text-ink">
@@ -355,6 +360,43 @@ export function GameViewer({
       </div>
       <MovesEditor draft={draft} setDraft={setDraft} onApply={applyEdits} />
     </div>
+  );
+}
+
+function ScoresheetPanel({ src }: { src: string }) {
+  const [zoom, setZoom] = useState(false);
+  return (
+    <>
+      <details
+        open
+        className="rounded-xl border border-line bg-card px-4 py-3"
+      >
+        <summary className="cursor-pointer text-sm font-medium text-muted">
+          Original scoresheet
+        </summary>
+        <img
+          src={src}
+          alt="Scanned scoresheet"
+          onClick={() => setZoom(true)}
+          className="mx-auto mt-3 max-h-[44vh] w-auto cursor-zoom-in rounded-lg object-contain ring-1 ring-line"
+        />
+        <p className="mt-1.5 text-center font-mono text-[10px] uppercase tracking-wide text-muted/50">
+          Click to enlarge · compare with the moves
+        </p>
+      </details>
+      {zoom && (
+        <div
+          onClick={() => setZoom(false)}
+          className="fixed inset-0 z-[140] grid cursor-zoom-out place-items-center bg-ink/85 p-4"
+        >
+          <img
+            src={src}
+            alt="Scanned scoresheet"
+            className="max-h-full max-w-full rounded-lg object-contain"
+          />
+        </div>
+      )}
+    </>
   );
 }
 

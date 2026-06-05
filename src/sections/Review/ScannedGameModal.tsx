@@ -1,5 +1,6 @@
 import { GameViewer } from "@/sections/Review/GameViewer";
 import { useScannedGames } from "@/lib/ScannedGamesContext";
+import { getScanImage } from "@/lib/scanImages";
 
 // Re-opens a saved scanned game full-screen, reusing the same scoresheet viewer.
 export const ScannedGameModal = () => {
@@ -26,6 +27,7 @@ export const ScannedGameModal = () => {
       <div className="mx-auto w-full max-w-6xl flex-1 overflow-y-auto p-6">
         <GameViewer
           pgn={openGame.pgn}
+          imageUrl={getScanImage(openGame.id)}
           onPgnChange={(p) => updateGame(openGame.id, p)}
         />
       </div>

@@ -6,6 +6,7 @@ import { useScannedGames } from "@/lib/ScannedGamesContext";
 import { useAuth } from "@/lib/AuthContext";
 import { entitlements } from "@/lib/entitlements";
 import { dailyQuota } from "@/lib/guardrails";
+import { compressImage, saveScanImage } from "@/lib/scanImages";
 
 type Stage = "input" | "reading" | "view";
 
@@ -17,6 +18,7 @@ export const ScoresheetModal = ({ onClose }: { onClose: () => void }) => {
   const [dragging, setDragging] = useState(false);
   const [saved, setSaved] = useState(false);
   const [savedId, setSavedId] = useState<string | null>(null);
+  const [sessionImage, setSessionImage] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const { saveScan, updateGame } = useScannedGames();
   const { user } = useAuth();
@@ -26,9 +28,11 @@ export const ScoresheetModal = ({ onClose }: { onClose: () => void }) => {
     setPgn(text);
     setDraft(text);
     setStage("view");
+    setSessionImage(null); // paste path has no image; the scan path sets it after
     const g = saveScan(text);
     setSaved(Boolean(g));
     setSavedId(g?.id ?? null);
+    return g;
   }
 
   async function onFile(file: File) {
@@ -50,7 +54,11 @@ export const ScoresheetModal = ({ onClose }: { onClose: () => void }) => {
     try {
       const { base64, mimeType } = await fileToBase64(file);
       const result = await transcribeScoresheet(base64, mimeType);
-      showGame(result);
+      const g = showGame(result);
+      // Keep the original photo (compressed) so it can be compared later.
+      const img = await compressImage(file);
+      setSessionImage(img);
+      if (g) saveScanImage(g.id, img);
     } catch (e) {
       setError(
         e instanceof Error ? e.message : "Couldn’t read that scoresheet.",
@@ -174,6 +182,7 @@ export const ScoresheetModal = ({ onClose }: { onClose: () => void }) => {
                 saved library copy. */}
             <GameViewer
               pgn={pgn}
+              imageUrl={sessionImage}
               onPgnChange={(p) => {
                 setPgn(p);
                 if (savedId) updateGame(savedId, p);
