@@ -226,11 +226,15 @@ export function reconstructMoves(tokens: string[], beam = 16): Reconstruction {
           m = null;
         }
         if (!m) continue;
+        // Small penalty per correction → among equally-legal readings, prefer
+        // the one that changed the handwriting the least (most likely what was
+        // actually written).
+        const editPenalty = cand.corrected ? 1.5 : 0;
         next.push({
           fen: c2.fen(),
           sans: [...st.sans, m.san],
           corr: cand.corrected ? [...st.corr, { from: raw, to: m.san }] : st.corr,
-          score: st.score + cand.score,
+          score: st.score + cand.score - editPenalty,
         });
       }
     }

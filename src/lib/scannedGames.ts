@@ -1,5 +1,6 @@
 import { firebaseEnabled, getFirebase } from "./firebase";
 import { Chess } from "chess.js";
+import { reconstructMoves } from "./chess/snapMove";
 
 // Scanned games a coach has captured (photo → PGN). Saved the same way as the
 // roster: Firestore `coaches/{uid}.scannedGames` when signed in (syncs across
@@ -17,39 +18,47 @@ export interface ScannedGame {
 const KEY = "strategem.scannedgames.v1";
 const CAP = 40;
 
-// Pull names + move count from the PGN (lenient — OCR'd games may be partial).
+// Names + move count from the PGN. Uses the SAME beam reconstruction the viewer
+// does, so the sidebar count matches what actually loads (the old strict parser
+// truncated at the first OCR misread, badly under-counting messy scans).
 export function summarize(pgn: string): {
   white: string;
   black: string;
   moveCount: number;
 } {
+  const headers: Record<string, string> = {};
+  for (const m of pgn.matchAll(/\[(\w+)\s+"([^"]*)"\]/g)) headers[m[1]] = m[2];
+
+  // Fast path: a clean PGN loads strictly.
   try {
     const c = new Chess();
     c.loadPgn(pgn);
-    const h = c.header() as Record<string, string>;
-    return {
-      white: h.White || "White",
-      black: h.Black || "Black",
-      moveCount: c.history().length,
-    };
-  } catch {
-    const c = new Chess();
-    const toks = pgn
-      .replace(/\[[^\]]*\]/g, " ")
-      .replace(/\d+\.(\.\.)?/g, " ")
-      .split(/\s+/)
-      .filter(Boolean);
-    let n = 0;
-    for (const t of toks) {
-      try {
-        if (c.move(t.replace(/[+#!?]+$/, ""))) n++;
-        else break;
-      } catch {
-        break;
-      }
+    const moves = c.history();
+    if (moves.length > 0) {
+      const h = c.header() as Record<string, string>;
+      return {
+        white: h.White || headers.White || "White",
+        black: h.Black || headers.Black || "Black",
+        moveCount: moves.length,
+      };
     }
-    return { white: "White", black: "Black", moveCount: n };
+  } catch {
+    /* fall through to beam reconstruction */
   }
+
+  const body = pgn
+    .replace(/\[[^\]]*\]/g, " ")
+    .replace(/\{[^}]*\}/g, " ")
+    .replace(/\$\d+/g, " ")
+    .replace(/\b(1-0|0-1|1\/2-1\/2|\*)\b/g, " ")
+    .replace(/\d+\.(\.\.)?/g, " ");
+  const tokens = body.split(/\s+/).filter(Boolean);
+  const { sans } = reconstructMoves(tokens);
+  return {
+    white: headers.White || "White",
+    black: headers.Black || "Black",
+    moveCount: sans.length,
+  };
 }
 
 export function makeGame(pgn: string, savedAt: number): ScannedGame {

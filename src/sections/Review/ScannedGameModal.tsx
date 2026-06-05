@@ -1,3 +1,4 @@
+import { useEffect, useRef } from "react";
 import { GameViewer } from "@/sections/Review/GameViewer";
 import { useScannedGames } from "@/lib/ScannedGamesContext";
 import { getScanImage } from "@/lib/scanImages";
@@ -5,6 +6,19 @@ import { getScanImage } from "@/lib/scanImages";
 // Re-opens a saved scanned game full-screen, reusing the same scoresheet viewer.
 export const ScannedGameModal = () => {
   const { openGame, close, updateGame } = useScannedGames();
+  const refreshed = useRef<Set<string>>(new Set());
+  const id = openGame?.id;
+  const pgn = openGame?.pgn;
+
+  // Refresh the saved game's summary (move count / names) the first time it's
+  // opened, in case it was saved before the beam reconstruction existed.
+  useEffect(() => {
+    if (id && pgn && !refreshed.current.has(id)) {
+      refreshed.current.add(id);
+      updateGame(id, pgn);
+    }
+  }, [id, pgn, updateGame]);
+
   if (!openGame) return null;
 
   return (
