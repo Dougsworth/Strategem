@@ -81,8 +81,16 @@ export function GameInsights({
         <div className="flex flex-wrap items-center justify-end gap-1.5 text-[11px] text-muted">
           {engine ? (
             <>
-              <Stat label={`${white} acc`} value={`${engine.accuracyWhite}%`} />
-              <Stat label={`${black} acc`} value={`${engine.accuracyBlack}%`} />
+              <Stat
+                label={`${white} acc`}
+                value={`${engine.accuracyWhite}%`}
+                title={`${white}'s accuracy — how close their moves were to Stockfish's best (Lichess model). 100% = flawless.`}
+              />
+              <Stat
+                label={`${black} acc`}
+                value={`${engine.accuracyBlack}%`}
+                title={`${black}'s accuracy — how close their moves were to Stockfish's best (Lichess model). 100% = flawless.`}
+              />
             </>
           ) : (
             <>
@@ -127,7 +135,10 @@ export function GameInsights({
           <EngineButton onClick={runEngine} progress={progress} />
         )}
         {engine && (
-          <span className="rounded-md bg-ink-soft px-2 py-0.5 text-muted">
+          <span
+            className="cursor-help rounded-md bg-ink-soft px-2 py-0.5 text-muted"
+            title={`Every position evaluated by Stockfish for ${engine.movetime}ms. The curve is win% for White; accuracy + mistakes use Lichess's model.`}
+          >
             Stockfish · {engine.movetime}ms/move
           </span>
         )}
@@ -137,11 +148,19 @@ export function GameInsights({
       {/* Engine mistakes (precise) when analysed, else heuristic key moments. */}
       {engine ? (
         mistakes.length > 0 ? (
-          <MomentList title="Biggest mistakes — click to jump there" onSeek={onSeek}>
-            {mistakes.map((m, i) => (
-              <EngineMoment key={i} m={m} onSeek={onSeek} />
-            ))}
-          </MomentList>
+          <>
+            <MomentList title="Biggest mistakes — click to jump there" onSeek={onSeek}>
+              {mistakes.map((m, i) => (
+                <EngineMoment key={i} m={m} onSeek={onSeek} />
+              ))}
+            </MomentList>
+            <p className="mt-2 text-[11px] leading-relaxed text-muted">
+              <span className="text-accent">Blunder</span> /{" "}
+              <span className="text-accent/70">Mistake</span> / Inaccuracy = how much winning chance
+              you gave up vs the engine’s best. <span className="font-mono">−N</span> = pawns lost ·{" "}
+              <span className="font-mono">best</span> = what to play instead. Hover any row for detail.
+            </p>
+          </>
         ) : (
           <p className="mt-4 text-sm text-positive">Clean game — no clear mistakes found.</p>
         )
@@ -225,9 +244,15 @@ const CLASS_LABEL: Record<MoveClass, string> = {
 
 function EngineMoment({ m, onSeek }: { m: EngineMove; onSeek: (ply: number) => void }) {
   const no = `${Math.floor(m.ply / 2) + 1}${m.side === "w" ? "." : "…"}`;
+  const lost = (m.cpLoss / 100).toFixed(1);
+  const title =
+    `${CLASS_LABEL[m.classification]} — gave up ${lost} pawns of advantage vs the engine's best move` +
+    (m.best ? ` (${m.best} was better)` : "") +
+    `. Click to jump to this position.`;
   return (
     <button
       onClick={() => onSeek(m.ply + 1)}
+      title={title}
       className="flex w-full items-center gap-2.5 rounded-lg px-2 py-1.5 text-left text-sm transition-colors hover:bg-ink-soft"
     >
       <AlertTriangle size={15} className={`shrink-0 ${CLASS_TINT[m.classification]}`} />
@@ -236,7 +261,12 @@ function EngineMoment({ m, onSeek }: { m: EngineMove; onSeek: (ply: number) => v
       <span className={`text-xs font-medium ${CLASS_TINT[m.classification]}`}>
         {CLASS_LABEL[m.classification]}
       </span>
-      <span className="ml-auto font-mono text-[11px] text-muted">−{(m.cpLoss / 100).toFixed(1)}</span>
+      {m.best && (
+        <span className="hidden truncate text-xs text-muted sm:inline">
+          best <span className="font-mono text-ink">{m.best}</span>
+        </span>
+      )}
+      <span className="ml-auto font-mono text-[11px] text-muted">−{lost}</span>
     </button>
   );
 }
@@ -264,9 +294,9 @@ function HeuristicMoment({ m, onSeek }: { m: KeyMoment; onSeek: (ply: number) =>
   );
 }
 
-function Stat({ label, value }: { label: string; value: number | string }) {
+function Stat({ label, value, title }: { label: string; value: number | string; title?: string }) {
   return (
-    <span className="rounded-md bg-ink-soft px-2 py-0.5">
+    <span className={`rounded-md bg-ink-soft px-2 py-0.5${title ? " cursor-help" : ""}`} title={title}>
       <span className="font-mono font-semibold text-ink">{value}</span> {label}
     </span>
   );
@@ -312,7 +342,10 @@ function Curve({
   const cursorX = (total <= 0 ? 0 : Math.min(1, ply / total)) * W;
 
   return (
-    <div className="relative">
+    <div
+      className="relative cursor-help"
+      title="Advantage through the game — above the centre line favours White, below favours Black. The orange line marks the move you're on. Click to jump there."
+    >
       <div className="mb-1 flex justify-between text-[10px] uppercase tracking-wide text-muted">
         <span>{leftLabel}</span>
         <span>{rightLabel}</span>

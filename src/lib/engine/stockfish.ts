@@ -61,6 +61,8 @@ export interface PosEval {
   cp: number | null;
   /** Mate-in-N from WHITE's perspective (+ = white mates), null otherwise. */
   mate: number | null;
+  /** The engine's best move (UCI) in this position, null if none. */
+  best: string | null;
 }
 
 function evalOnce(fen: string, movetime: number): Promise<PosEval> {
@@ -68,6 +70,7 @@ function evalOnce(fen: string, movetime: number): Promise<PosEval> {
     const sideSign = fen.split(" ")[1] === "b" ? -1 : 1; // engine reports for side-to-move
     let cp: number | null = null;
     let mate: number | null = null;
+    let best: string | null = null;
     let done = false;
     const finish = (timedOut: boolean) => {
       if (done) return;
@@ -78,6 +81,7 @@ function evalOnce(fen: string, movetime: number): Promise<PosEval> {
       resolve({
         cp: cp === null ? null : cp * sideSign,
         mate: mate === null ? null : mate * sideSign,
+        best,
       });
     };
     const onLine: Listener = (line) => {
@@ -92,6 +96,8 @@ function evalOnce(fen: string, movetime: number): Promise<PosEval> {
           mate = null;
         }
       } else if (line.startsWith("bestmove")) {
+        const bm = line.split(/\s+/)[1];
+        best = bm && bm !== "(none)" ? bm : null;
         finish(false);
       }
     };

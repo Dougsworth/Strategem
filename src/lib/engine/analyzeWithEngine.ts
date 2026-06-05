@@ -23,6 +23,8 @@ export interface EngineMove {
   /** Centipawns lost vs best (from the mover's view), capped. */
   cpLoss: number;
   classification: MoveClass;
+  /** The engine's preferred move here, in SAN (what to play instead). */
+  best: string | null;
 }
 
 export interface EngineAnalysis {
@@ -80,6 +82,7 @@ export async function analyzeWithEngine(
   }
 
   const cpWhite: number[] = [];
+  const bestUci: (string | null)[] = [];
   for (let i = 0; i < fens.length; i++) {
     if (opts.signal?.aborted) throw new Error("aborted");
     // Terminal positions (mate / stalemate) have no legal moves — the engine
@@ -87,13 +90,33 @@ export async function analyzeWithEngine(
     const pos = new Chess(fens[i]);
     if (pos.isCheckmate()) {
       cpWhite.push(pos.turn() === "w" ? -MATE_CP : MATE_CP);
+      bestUci.push(null);
     } else if (pos.isGameOver()) {
       cpWhite.push(0); // stalemate / draw
+      bestUci.push(null);
     } else {
-      cpWhite.push(toCpWhite(await evaluate(fens[i], movetime)));
+      const e = await evaluate(fens[i], movetime);
+      cpWhite.push(toCpWhite(e));
+      bestUci.push(e.best);
     }
     opts.onProgress?.(i + 1, fens.length);
   }
+
+  // The engine's preferred move in each position, as SAN (what to play instead).
+  const bestSan = (i: number): string | null => {
+    const uci = bestUci[i];
+    if (!uci) return null;
+    try {
+      const m = new Chess(fens[i]).move({
+        from: uci.slice(0, 2),
+        to: uci.slice(2, 4),
+        promotion: uci.slice(4) || undefined,
+      });
+      return m?.san ?? null;
+    } catch {
+      return null;
+    }
+  };
 
   const winWhite = cpWhite.map((cp) => winPercentFromCp(cp));
   const moves: EngineMove[] = [];
@@ -108,7 +131,16 @@ export async function analyzeWithEngine(
     const acc = accuracyFromWinPercents(winBefore, winAfter);
     const cpLoss = Math.max(0, Math.min(CP_CAP, sign * (cpWhite[i] - cpWhite[i + 1])));
     const classification = classify(Math.max(0, winBefore - winAfter), cpLoss);
-    moves.push({ ply: i, san: sans[i], side, winWhite: winWhite[i + 1], cpLoss, classification });
+    const best = bestSan(i);
+    moves.push({
+      ply: i,
+      san: sans[i],
+      side,
+      winWhite: winWhite[i + 1],
+      cpLoss,
+      classification,
+      best: best && best !== sans[i] ? best : null,
+    });
     (side === "w" ? accW : accB).push(acc);
   }
 
