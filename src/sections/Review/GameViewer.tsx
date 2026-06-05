@@ -25,7 +25,7 @@ interface ParsedGame {
   /** Set when even the smart matcher couldn't place a move — we keep the legal prefix. */
   truncated: { atMoveNo: number; token: string } | null;
   /** Misreads we auto-corrected to a legal move, e.g. "c4" → "e4". */
-  corrections: { from: string; to: string }[];
+  corrections: { from: string; to: string; moveIndex: number }[];
   /** Crossed-out / struck-through tokens we skipped. */
   ignored: string[];
 }
@@ -261,19 +261,22 @@ export function GameViewer({
         <div className="rounded-xl border border-positive/30 bg-positive/10 px-4 py-3 text-sm">
           <p className="font-semibold text-ink">
             Auto-fixed {parsed.corrections.length}{" "}
-            {parsed.corrections.length === 1 ? "move" : "moves"} that looked misread.
+            {parsed.corrections.length === 1 ? "move" : "moves"} that looked misread —
+            click one to jump there and check it against the photo.
           </p>
-          <p className="mt-0.5 text-muted">
-            Snapped to the nearest legal move:{" "}
-            {parsed.corrections.slice(0, 6).map((c, i) => (
-              <span key={i} className="font-mono text-xs">
-                {i > 0 ? " · " : ""}
-                {c.from}→<span className="font-semibold text-ink">{c.to}</span>
-              </span>
+          <div className="mt-2 flex flex-wrap gap-1.5">
+            {parsed.corrections.map((c, i) => (
+              <button
+                key={i}
+                onClick={() => setPly(Math.min(total, c.moveIndex + 1))}
+                title={`Jump to move ${Math.floor(c.moveIndex / 2) + 1}`}
+                className="rounded-md bg-card px-2 py-0.5 font-mono text-xs ring-1 ring-line transition-colors hover:bg-ink-soft"
+              >
+                {Math.floor(c.moveIndex / 2) + 1}. {c.from}→
+                <span className="font-semibold text-ink">{c.to}</span>
+              </button>
             ))}
-            {parsed.corrections.length > 6 ? " …" : ""}. Double-check them in{" "}
-            <span className="font-medium text-ink">Edit the moves</span> if needed.
-          </p>
+          </div>
         </div>
       )}
       {parsed.truncated && (

@@ -184,10 +184,17 @@ export function snapMove(chess: Chess, rawToken: string): SnapResult | null {
   return { san: m.san, corrected: best.corrected };
 }
 
+interface Correction {
+  from: string;
+  to: string;
+  /** Index in `sans` of the corrected move (for jump-to). */
+  moveIndex: number;
+}
+
 interface BeamState {
   fen: string;
   sans: string[];
-  corr: { from: string; to: string }[];
+  corr: Correction[];
   ignored: string[]; // crossed-out / spurious tokens dropped mid-game
   tail: string[]; // tokens skipped since the last successful move
   score: number;
@@ -195,7 +202,7 @@ interface BeamState {
 
 export interface Reconstruction {
   sans: string[];
-  corrections: { from: string; to: string }[];
+  corrections: Correction[];
   /** Crossed-out / struck-through / spurious tokens skipped between real moves. */
   ignored: string[];
   /** The first token no legal interpretation could place (the game stops here). */
@@ -214,7 +221,7 @@ const SKIP_PENALTY = 4;
  * recovers from crossed-out / struck-through moves the OCR picked up, leading
  * prose, smudges, or doubled tokens.
  */
-export function reconstructMoves(tokens: string[], beam = 16): Reconstruction {
+export function reconstructMoves(tokens: string[], beam = 24): Reconstruction {
   let states: BeamState[] = [
     { fen: new Chess().fen(), sans: [], corr: [], ignored: [], tail: [], score: 0 },
   ];
@@ -245,7 +252,9 @@ export function reconstructMoves(tokens: string[], beam = 16): Reconstruction {
         next.push({
           fen: c2.fen(),
           sans: [...st.sans, m.san],
-          corr: cand.corrected ? [...st.corr, { from: raw, to: m.san }] : st.corr,
+          corr: cand.corrected
+            ? [...st.corr, { from: raw, to: m.san, moveIndex: st.sans.length }]
+            : st.corr,
           ignored,
           tail: [],
           score: st.score + cand.score - editPenalty,
