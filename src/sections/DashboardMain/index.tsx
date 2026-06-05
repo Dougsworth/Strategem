@@ -10,16 +10,18 @@ import { TrainingPlan } from "@/sections/DashboardMain/components/TrainingPlan";
 import { AnalyticsView } from "@/sections/DashboardMain/components/AnalyticsView";
 import { Upsell } from "@/sections/DashboardMain/components/Upsell";
 import { LabView } from "@/sections/Lab/LabView";
+import { Loader } from "@/components/Loader";
 import { useStudent } from "@/lib/StudentContext";
 import { useView } from "@/lib/ViewContext";
 import { useAuth } from "@/lib/AuthContext";
 import { entitlements } from "@/lib/entitlements";
 
 export const DashboardMain = () => {
-  const { selected, rosterLoading } = useStudent();
+  const { selected, rosterLoading, report, reportLoading, profile } = useStudent();
   const { view } = useView();
   const { user } = useAuth();
   const ent = entitlements(user?.plan);
+  const firstName = profile?.displayName?.split(/\s+/)[0];
 
   return (
     <main className="mx-auto grid max-w-[1600px] grid-cols-12 gap-8 px-6 py-8">
@@ -33,9 +35,19 @@ export const DashboardMain = () => {
               <>
                 <QuickStartGuide />
                 <PlayerOverview />
-                <LastGameCard />
-                <InsightCards />
-                <TacticalDiagnostic />
+                {report ? (
+                  <>
+                    <LastGameCard />
+                    <InsightCards />
+                    <TacticalDiagnostic />
+                  </>
+                ) : (
+                  reportLoading && (
+                    <Loader
+                      label={`Analyzing ${firstName ?? "their"}’s games`}
+                    />
+                  )
+                )}
               </>
             )}
 
