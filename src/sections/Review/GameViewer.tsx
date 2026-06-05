@@ -436,12 +436,9 @@ function ScoresheetPanel({
   const [zoom, setZoom] = useState(false);
   return (
     <>
-      <details
-        open
-        className="rounded-xl border border-line bg-card px-4 py-3"
-      >
+      <details className="rounded-xl border border-line bg-card px-4 py-3">
         <summary className="flex cursor-pointer items-center justify-between gap-3 text-sm font-medium text-muted">
-          <span>Original scoresheet</span>
+          <span>Original scoresheet — click to view</span>
           {current && (
             <span className="rounded-md bg-accent/10 px-2 py-0.5 font-mono text-[11px] font-semibold text-accent">
               find move {current.no} · {current.side} · {current.san}
