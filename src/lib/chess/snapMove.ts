@@ -1,25 +1,28 @@
 import { Chess } from "chess.js";
 
-// Smart move reconstruction for OCR'd scoresheets. Instead of demanding a
-// perfect token, we ask chess.js for the LEGAL moves in the position and snap
-// the scanned text to the most plausible one. The chess rules ARE the engine:
+// Smart move reconstruction for OCR'd scoresheets. The chess RULES are the
+// engine: we never trust a token blindly — we score it against the LEGAL moves
+// in the position and keep the most plausible reading.
+//
 //   • no leading piece letter  → it's a pawn move (e4, exd5, e8=Q)
 //   • a leading K/Q/R/B/N      → that piece
 //   • the destination square is the strongest signal
 //   • capture 'x' and promotion are matched too
-// Handwriting/OCR look-alikes (c↔e, b↔d, 1↔7, a↔o …) are forgiven, so "c4"
-// snaps to a legal "e4", "Bb5" to "Bd5", "o6" to "a6".
+//   • handwriting look-alikes (c↔e, b↔d, 1↔7, a↔o …) are forgiven
 //
-// We match what the player WROTE (closest legal move to the text), never the
-// engine's "best" move — a scoresheet records the actual game, blunders and all.
+// Crucially we DON'T decide each move in isolation (a wrong early "fix" would
+// cascade and make later legal moves look illegal). `reconstructMoves` runs a
+// BEAM SEARCH: it keeps several whole-game interpretations alive and lets global
+// legality prune the wrong ones — so the reading that stays legal the longest
+// wins. We always match what the player WROTE (closest legal move to the text),
+// never the engine's "best" move — a scoresheet records the real game, blunders
+// and all.
 
 export interface SnapResult {
   san: string;
-  /** True when we had to correct the token to a legal move. */
   corrected: boolean;
 }
 
-// Symmetric look-alike pairs across letters (files / pieces) and digits (ranks).
 const PAIRS: [string, string][] = [
   ["a", "o"], ["a", "d"], ["a", "e"], ["b", "d"], ["b", "h"], ["c", "e"],
   ["c", "o"], ["f", "t"], ["g", "q"], ["h", "n"], ["n", "m"], ["l", "1"],
@@ -39,7 +42,7 @@ function confusable(a: string, b: string): boolean {
 
 function norm(s: string): string {
   return s
-    .replace(/0/g, "O") // zero → letter O (castling)
+    .replace(/0/g, "O")
     .replace(/e\.?p\.?/gi, "")
     .replace(/[+#!?]+/g, "")
     .trim();
@@ -70,8 +73,6 @@ function weightedLev(a: string, b: string): number {
   return dp[m][n];
 }
 
-// How far a candidate destination is from the scanned one — 0 = same, small for
-// a single look-alike slip, large for a genuinely different square.
 function destPenalty(cand: string, scanned: string): number {
   let d = 0;
   for (const k of [0, 1]) {
@@ -81,73 +82,175 @@ function destPenalty(cand: string, scanned: string): number {
   return d;
 }
 
-/**
- * Apply the best legal move matching `rawToken` to `chess` (mutates it on a
- * successful match). Returns the SAN + whether it was corrected, or null when
- * even the best candidate is too unlike the token (caller should flag it).
- */
-export function snapMove(chess: Chess, rawToken: string): SnapResult | null {
-  const token = norm(rawToken);
-  if (!token) return null;
+interface VerboseMove {
+  san: string;
+  to: string;
+  piece: string;
+  captured?: string;
+  promotion?: string;
+}
 
-  // Exact legal move? (handles the clean case, incl. pawn moves with no letter)
-  try {
-    const m = chess.move(token);
-    if (m) return { san: m.san, corrected: false };
-  } catch {
-    /* not legal as-written — fall through to fuzzy snap */
-  }
+interface ParsedToken {
+  token: string;
+  dest: string | null;
+  pieceLetter: string | null;
+  isCapture: boolean;
+  promo: string | null;
+}
 
-  const legal = chess.moves({ verbose: true }) as unknown as {
-    san: string;
-    to: string;
-    piece: string;
-    captured?: string;
-    promotion?: string;
-  }[];
-  if (legal.length === 0) return null;
-
-  // Destination: prefer a real square; else a look-alike file (e.g. "o6") so a
-  // garbled file letter still gives us a target (destPenalty forgives it).
+function parseToken(token: string): ParsedToken {
   let dest = (token.match(/[a-h][1-8]/g) || []).pop() ?? null;
   if (!dest) {
     const loose = (token.match(/[a-z][1-8]/gi) || []).pop();
     if (loose) dest = loose.toLowerCase();
   }
-  const pieceLetter = /^[KQRBN]/.test(token) ? token[0] : null;
-  const isCapture = /x/i.test(token);
-  const promo = token.match(/=([QRBN])/i)?.[1]?.toUpperCase() ?? null;
+  return {
+    token,
+    dest,
+    pieceLetter: /^[KQRBN]/.test(token) ? token[0] : null,
+    isCapture: /x/i.test(token),
+    promo: token.match(/=([QRBN])/i)?.[1]?.toUpperCase() ?? null,
+  };
+}
 
-  let best: { san: string } | null = null;
-  let bestScore = -Infinity;
+// How well a legal move matches the scanned token (higher = better).
+function scoreMove(mv: VerboseMove, p: ParsedToken): number {
+  let score = 0;
+  if (p.dest) score += 4 - destPenalty(mv.to, p.dest);
+  if (p.pieceLetter) score += mv.piece.toUpperCase() === p.pieceLetter ? 2 : -3;
+  else score += mv.piece === "p" ? 1.5 : -1.5;
+  if (p.isCapture) score += mv.captured ? 1 : -1;
+  if (p.promo) score += mv.promotion?.toUpperCase() === p.promo ? 1.5 : -0.5;
+  score += -0.5 * weightedLev(p.token, norm(mv.san));
+  return score;
+}
 
-  for (const mv of legal) {
-    let score = 0;
+interface Candidate {
+  san: string;
+  corrected: boolean;
+  score: number;
+}
 
-    // Destination square — the dominant signal (confusion-aware).
-    if (dest) score += 4 - destPenalty(mv.to, dest);
+// Ranked legal readings of a token in the given position (does NOT mutate).
+// The exact legal move (if any) is included with a dominant score.
+function snapCandidates(chess: Chess, rawToken: string, limit = 4): Candidate[] {
+  const token = norm(rawToken);
+  if (!token) return [];
+  const legal = chess.moves({ verbose: true }) as unknown as VerboseMove[];
+  if (legal.length === 0) return [];
 
-    // Piece: explicit letter must match; no letter → it's a pawn.
-    if (pieceLetter) score += mv.piece.toUpperCase() === pieceLetter ? 2 : -3;
-    else score += mv.piece === "p" ? 1.5 : -1.5;
+  const out: Candidate[] = [];
 
-    // Capture + promotion agreement.
-    if (isCapture) score += mv.captured ? 1 : -1;
-    if (promo) score += mv.promotion?.toUpperCase() === promo ? 1.5 : -0.5;
+  // Exact legal move (tried on a clone so we don't mutate the caller's board).
+  try {
+    const clone = new Chess(chess.fen());
+    const m = clone.move(token);
+    if (m) out.push({ san: m.san, corrected: false, score: 100 });
+  } catch {
+    /* not legal as written */
+  }
 
-    // Tie-break on overall text similarity (confusion-aware).
-    score += -0.5 * weightedLev(token, norm(mv.san));
+  const p = parseToken(token);
+  const scored = legal
+    .map((mv) => ({ san: mv.san, corrected: true, score: scoreMove(mv, p) }))
+    .sort((a, b) => b.score - a.score);
 
-    if (score > bestScore) {
-      bestScore = score;
-      best = { san: mv.san };
+  for (const c of scored) {
+    if (out.length >= limit) break;
+    if (out.some((o) => o.san === c.san)) continue;
+    if (c.score < 1.5) break; // floor — keep options, not garbage
+    out.push(c);
+  }
+  return out.slice(0, limit);
+}
+
+/**
+ * Apply the single best legal reading of `rawToken` to `chess` (mutates on a
+ * match). Kept for callers that want one move; reconstructMoves is preferred.
+ */
+export function snapMove(chess: Chess, rawToken: string): SnapResult | null {
+  const cands = snapCandidates(chess, rawToken, 1);
+  const best = cands[0];
+  if (!best || best.score < 4) return null;
+  const m = chess.move(best.san);
+  if (!m) return null;
+  return { san: m.san, corrected: best.corrected };
+}
+
+interface BeamState {
+  fen: string;
+  sans: string[];
+  corr: { from: string; to: string }[];
+  score: number;
+}
+
+export interface Reconstruction {
+  sans: string[];
+  corrections: { from: string; to: string }[];
+  /** The first token no legal interpretation could place (the game stops here). */
+  failedToken: string | null;
+}
+
+/**
+ * Beam-search reconstruction of a whole game from OCR'd move tokens. Keeps the
+ * top few legal interpretations alive at every move, so a locally-best-but-
+ * globally-wrong correction gets pruned in favour of a reading that stays legal.
+ */
+export function reconstructMoves(tokens: string[], beam = 6): Reconstruction {
+  let states: BeamState[] = [
+    { fen: new Chess().fen(), sans: [], corr: [], score: 0 },
+  ];
+  let started = false;
+  let failedToken: string | null = null;
+
+  for (const raw of tokens) {
+    if (/^\d+\.+$/.test(raw)) continue; // "12."
+    if (/^(1-0|0-1|1\/2-1\/2|\*)$/.test(raw)) continue; // result
+
+    const next: BeamState[] = [];
+    for (const st of states) {
+      const board = new Chess(st.fen);
+      for (const cand of snapCandidates(board, raw, 4)) {
+        const c2 = new Chess(st.fen);
+        let m;
+        try {
+          m = c2.move(cand.san);
+        } catch {
+          m = null;
+        }
+        if (!m) continue;
+        next.push({
+          fen: c2.fen(),
+          sans: [...st.sans, m.san],
+          corr: cand.corrected ? [...st.corr, { from: raw, to: m.san }] : st.corr,
+          score: st.score + cand.score,
+        });
+      }
+    }
+
+    if (next.length === 0) {
+      // Nothing legal here. Skip clear preamble words before the game starts;
+      // otherwise this is where the readable game ends.
+      if (!started && !/[1-8]/.test(raw)) continue;
+      failedToken = raw;
+      break;
+    }
+    started = true;
+    next.sort((a, b) => b.score - a.score);
+    // Keep the top beam, de-duped by resulting position so the beam stays diverse.
+    const seen = new Set<string>();
+    states = [];
+    for (const s of next) {
+      if (seen.has(s.fen)) continue;
+      seen.add(s.fen);
+      states.push(s);
+      if (states.length >= beam) break;
     }
   }
 
-  // Only auto-correct when we're reasonably confident; else let the caller flag.
-  if (best && bestScore >= 4) {
-    const m = chess.move(best.san);
-    if (m) return { san: m.san, corrected: true };
-  }
-  return null;
+  const best = states.reduce(
+    (a, b) => (b.score > a.score ? b : a),
+    states[0] ?? { fen: "", sans: [], corr: [], score: 0 },
+  );
+  return { sans: best.sans, corrections: best.corr, failedToken };
 }

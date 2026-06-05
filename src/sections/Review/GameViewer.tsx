@@ -15,7 +15,7 @@ import type { Color } from "chess.js";
 import { InteractiveBoard } from "@/components/InteractiveBoard";
 import { useBoardSize } from "@/components/useBoardSize";
 import { importToLichess } from "@/lib/scoresheet";
-import { snapMove } from "@/lib/chess/snapMove";
+import { reconstructMoves } from "@/lib/chess/snapMove";
 
 interface ParsedGame {
   moves: string[];
@@ -53,7 +53,6 @@ function parseGame(pgn: string): ParsedGame {
     /* fall through to the smart token-by-token replay */
   }
 
-  const c = new Chess();
   const body = pgn
     .replace(/\[[^\]]*\]/g, " ") // headers
     .replace(/\{[^}]*\}/g, " ") // comments
@@ -62,25 +61,13 @@ function parseGame(pgn: string): ParsedGame {
     .replace(/\d+\.(\.\.)?/g, " "); // move numbers "12." / "12..."
   const tokens = body.split(/\s+/).filter(Boolean);
 
-  const moves: string[] = [];
-  const corrections: { from: string; to: string }[] = [];
-  let truncated: ParsedGame["truncated"] = null;
-  let started = false;
-  for (const raw of tokens) {
-    const snapped = snapMove(c, raw);
-    if (!snapped) {
-      // Ignore any leading prose the model may have added (e.g. "I'll
-      // reconstruct…") — but only skip clear non-move words (no rank digit),
-      // so a genuinely unreadable first move is still flagged, not skipped.
-      if (!started && !/[1-8]/.test(raw)) continue;
-      truncated = { atMoveNo: Math.floor(moves.length / 2) + 1, token: raw };
-      break;
-    }
-    started = true;
-    moves.push(snapped.san);
-    if (snapped.corrected) corrections.push({ from: raw, to: snapped.san });
-  }
-  return { moves, headers, ok: moves.length > 0, truncated, corrections };
+  // Beam-search reconstruction — keeps multiple legal interpretations alive so a
+  // single misread doesn't derail the whole game.
+  const { sans, corrections, failedToken } = reconstructMoves(tokens);
+  const truncated = failedToken
+    ? { atMoveNo: Math.floor(sans.length / 2) + 1, token: failedToken }
+    : null;
+  return { moves: sans, headers, ok: sans.length > 0, truncated, corrections };
 }
 
 // Step through a game from PGN move text. Read-only board + clickable move list,
