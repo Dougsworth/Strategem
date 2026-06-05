@@ -1,6 +1,5 @@
 import { firebaseEnabled, getFirebase } from "./firebase";
 import { Chess } from "chess.js";
-import { reconstructMoves } from "./chess/snapMove";
 
 // Scanned games a coach has captured (photo → PGN). Saved the same way as the
 // roster: Firestore `coaches/{uid}.scannedGames` when signed in (syncs across
@@ -18,9 +17,11 @@ export interface ScannedGame {
 const KEY = "strategem.scannedgames.v1";
 const CAP = 40;
 
-// Names + move count from the PGN. Uses the SAME beam reconstruction the viewer
-// does, so the sidebar count matches what actually loads (the old strict parser
-// truncated at the first OCR misread, badly under-counting messy scans).
+// Names + a FAST provisional move count from the PGN. Kept cheap (no beam) so it
+// never blocks the main thread on save/edit — a clean PGN counts exactly via the
+// strict loader, a raw OCR scan gets a quick move-token estimate. The exact count
+// is refined off-thread afterwards (refineCount + the worker), and the viewer
+// always shows the true reconstructed count.
 export function summarize(pgn: string): {
   white: string;
   black: string;
@@ -29,7 +30,7 @@ export function summarize(pgn: string): {
   const headers: Record<string, string> = {};
   for (const m of pgn.matchAll(/\[(\w+)\s+"([^"]*)"\]/g)) headers[m[1]] = m[2];
 
-  // Fast path: a clean PGN loads strictly.
+  // Fast path: a clean PGN loads strictly (exact count).
   try {
     const c = new Chess();
     c.loadPgn(pgn);
@@ -43,22 +44,28 @@ export function summarize(pgn: string): {
       };
     }
   } catch {
-    /* fall through to beam reconstruction */
+    /* fall through to the cheap token estimate */
   }
 
+  return {
+    white: headers.White || "White",
+    black: headers.Black || "Black",
+    moveCount: countMoveTokens(pgn),
+  };
+}
+
+// Cheap, legality-free count of move-looking tokens — a provisional figure for an
+// OCR scan that won't load strictly. O(n) string work, no chess.js replay.
+export function countMoveTokens(pgn: string): number {
   const body = pgn
     .replace(/\[[^\]]*\]/g, " ")
     .replace(/\{[^}]*\}/g, " ")
     .replace(/\$\d+/g, " ")
     .replace(/\b(1-0|0-1|1\/2-1\/2|\*)\b/g, " ")
     .replace(/\d+\.(\.\.)?/g, " ");
-  const tokens = body.split(/\s+/).filter(Boolean);
-  const { sans } = reconstructMoves(tokens);
-  return {
-    white: headers.White || "White",
-    black: headers.Black || "Black",
-    moveCount: sans.length,
-  };
+  return body
+    .split(/\s+/)
+    .filter((t) => /^O-O(-O)?[+#]?$/.test(t) || /[a-h][1-8]/.test(t)).length;
 }
 
 export function makeGame(pgn: string, savedAt: number): ScannedGame {

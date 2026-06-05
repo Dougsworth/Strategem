@@ -4,6 +4,7 @@ import { PlayerOverview } from "@/sections/DashboardMain/components/PlayerOvervi
 import { LastGameCard } from "@/sections/DashboardMain/components/LastGameCard";
 import { InsightCards } from "@/sections/DashboardMain/components/InsightCards";
 import { TacticalDiagnostic } from "@/sections/DashboardMain/components/TacticalDiagnostic";
+import { DailyPuzzle } from "@/sections/DashboardMain/components/DailyPuzzle";
 import { MistakePractice } from "@/sections/DashboardMain/components/MistakePractice";
 import { CurationEngine } from "@/sections/DashboardMain/components/CurationEngine";
 import { TrainingPlan } from "@/sections/DashboardMain/components/TrainingPlan";
@@ -48,6 +49,7 @@ export const DashboardMain = () => {
                     />
                   )
                 )}
+                <DailyPuzzle />
               </>
             )}
 

@@ -13,9 +13,12 @@ import {
   makeGame,
   persistScannedGames,
   summarize,
+  countMoveTokens,
   SCANNED_GAMES_CAP,
   type ScannedGame,
 } from "./scannedGames";
+import { runParseInWorker } from "./chess/runParseInWorker";
+import { resolveSharedFromUrl } from "./shareGame";
 
 interface ScannedGamesValue {
   games: ScannedGame[];
@@ -49,6 +52,49 @@ export function ScannedGamesProvider({ children }: { children: ReactNode }) {
     };
   }, [uid]);
 
+  // Opened via a share link (?g=...): drop the game straight into the viewer
+  // (transient — not added to the coach's own library). Runs once on mount.
+  useEffect(() => {
+    let cancelled = false;
+    resolveSharedFromUrl().then((s) => {
+      if (cancelled || !s) return;
+      setOpenGame({
+        id: `shared-${s.pgn.length.toString(36)}`,
+        pgn: s.pgn.trim(),
+        white: s.white,
+        black: s.black,
+        moveCount: countMoveTokens(s.pgn),
+        savedAt: 0,
+      });
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  // Replace the cheap provisional count with the exact reconstructed one, off the
+  // main thread (reuses the viewer's worker + cache — instant if already parsed).
+  const refineCount = useCallback(
+    (id: string, pgn: string) => {
+      runParseInWorker(pgn)
+        .then((p) => {
+          const exact = p.moves.length;
+          setGames((prev) => {
+            const g = prev.find((x) => x.id === id);
+            if (!g || g.pgn !== pgn || g.moveCount === exact) return prev;
+            const next = prev.map((x) => (x.id === id ? { ...x, moveCount: exact } : x));
+            void persistScannedGames(uid, next);
+            return next;
+          });
+          setOpenGame((o) =>
+            o?.id === id && o.pgn === pgn && o.moveCount !== exact ? { ...o, moveCount: exact } : o,
+          );
+        })
+        .catch(() => {});
+    },
+    [uid],
+  );
+
   const saveScan = useCallback(
     (pgn: string) => {
       const trimmed = pgn.trim();
@@ -62,9 +108,10 @@ export function ScannedGamesProvider({ children }: { children: ReactNode }) {
         void persistScannedGames(uid, next);
         return next;
       });
+      refineCount(g.id, trimmed);
       return g;
     },
-    [games, uid],
+    [games, uid, refineCount],
   );
 
   const updateGame = useCallback(
@@ -80,8 +127,9 @@ export function ScannedGamesProvider({ children }: { children: ReactNode }) {
       setOpenGame((o) =>
         o?.id === id ? { ...o, pgn: trimmed, ...summarize(trimmed) } : o,
       );
+      refineCount(id, trimmed);
     },
-    [uid],
+    [uid, refineCount],
   );
 
   const removeGame = useCallback(

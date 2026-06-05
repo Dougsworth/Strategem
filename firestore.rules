@@ -59,5 +59,20 @@ service cloud.firestore {
 
       allow create, delete: if false; // functions only
     }
+
+    // Shared games: a signed-in coach publishes a game to get a short share link;
+    // any signed-in coach with the link can read it. Immutable once created, and
+    // the payload is bounded so it can't be used as arbitrary storage.
+    match /sharedGames/{id} {
+      allow read: if request.auth != null;
+      allow create: if request.auth != null
+        && request.resource.data.keys().hasOnly(['w', 'b', 'p', 'createdAt'])
+        && request.resource.data.p is string
+        && request.resource.data.p.size() > 0
+        && request.resource.data.p.size() < 8000
+        && request.resource.data.w is string && request.resource.data.w.size() < 120
+        && request.resource.data.b is string && request.resource.data.b.size() < 120;
+      allow update, delete: if false; // share links are immutable
+    }
   }
 }

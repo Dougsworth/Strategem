@@ -24,10 +24,10 @@ export interface SnapResult {
 }
 
 const PAIRS: [string, string][] = [
-  ["a", "o"], ["a", "d"], ["a", "e"], ["b", "d"], ["b", "h"], ["c", "e"],
-  ["c", "o"], ["f", "t"], ["g", "q"], ["h", "n"], ["n", "m"], ["l", "1"],
-  ["o", "0"], ["1", "7"], ["3", "8"], ["5", "6"], ["5", "8"], ["6", "8"],
-  ["6", "0"], ["2", "7"], ["4", "9"],
+  ["a", "o"], ["a", "d"], ["a", "e"], ["a", "g"], ["b", "d"], ["b", "h"],
+  ["c", "e"], ["c", "o"], ["f", "t"], ["g", "q"], ["h", "n"],
+  ["n", "m"], ["l", "1"], ["o", "0"], ["1", "7"], ["3", "8"], ["5", "6"],
+  ["5", "8"], ["6", "8"], ["6", "0"], ["2", "7"], ["4", "9"],
 ];
 const CSET = new Set<string>();
 for (const [a, b] of PAIRS) {
@@ -38,6 +38,14 @@ function confusable(a: string, b: string): boolean {
   const x = a.toLowerCase();
   const y = b.toLowerCase();
   return x === y || CSET.has(`${x}|${y}`);
+}
+
+// Piece letters that look alike in handwriting (K↔R is the classic — both are
+// tall with a vertical stroke + angles). Used so an OCR'd "Kb4" can still match
+// a legal "Rb4" with only a soft penalty.
+const PIECE_CONFUSE = new Set(["K|R", "R|K", "B|R", "R|B", "Q|O", "O|Q"]);
+function pieceConfusable(a: string, b: string): boolean {
+  return a === b || PIECE_CONFUSE.has(`${a}|${b}`);
 }
 
 function norm(s: string): string {
@@ -98,20 +106,29 @@ interface ParsedToken {
   pieceLetter: string | null;
   isCapture: boolean;
   promo: string | null;
+  // Annotations the writer added (high signal — players rarely write a stray #).
+  // These are ANCHORS: the move we pick should deliver the check/mate they wrote.
+  check: boolean;
+  mate: boolean;
 }
 
-function parseToken(token: string): ParsedToken {
+// `raw` keeps the original annotations (norm() strips them, so they must be read
+// from the untouched token).
+function parseToken(token: string, raw = token): ParsedToken {
   let dest = (token.match(/[a-h][1-8]/g) || []).pop() ?? null;
   if (!dest) {
     const loose = (token.match(/[a-z][1-8]/gi) || []).pop();
     if (loose) dest = loose.toLowerCase();
   }
+  const mate = /#/.test(raw);
   return {
     token,
     dest,
     pieceLetter: /^[KQRBN]/.test(token) ? token[0] : null,
     isCapture: /x/i.test(token),
     promo: token.match(/=([QRBN])/i)?.[1]?.toUpperCase() ?? null,
+    mate,
+    check: !mate && /\+/.test(raw),
   };
 }
 
@@ -119,8 +136,12 @@ function parseToken(token: string): ParsedToken {
 function scoreMove(mv: VerboseMove, p: ParsedToken): number {
   let score = 0;
   if (p.dest) score += 4 - destPenalty(mv.to, p.dest);
-  if (p.pieceLetter) score += mv.piece.toUpperCase() === p.pieceLetter ? 2 : -3;
-  else score += mv.piece === "p" ? 1.5 : -1.5;
+  if (p.pieceLetter) {
+    const mvPiece = mv.piece.toUpperCase();
+    if (mvPiece === p.pieceLetter) score += 2;
+    else if (pieceConfusable(mvPiece, p.pieceLetter)) score += -0.5; // look-alike
+    else score += -3;
+  } else score += mv.piece === "p" ? 1.5 : -1.5;
   if (p.isCapture) score += mv.captured ? 1 : -1;
   if (p.promo) {
     score += mv.promotion?.toUpperCase() === p.promo ? 1.5 : -0.5;
@@ -128,6 +149,14 @@ function scoreMove(mv: VerboseMove, p: ParsedToken): number {
     // Promotion with no piece written → players almost always mean a queen.
     score += mv.promotion.toUpperCase() === "Q" ? 0.5 : -0.3;
   }
+  // Check / mate annotations are ANCHORS. A written '#' is near-certain, so a
+  // move that actually mates is strongly preferred and one that doesn't is
+  // heavily penalised. We never penalise a checking/mating move that simply
+  // wasn't annotated — players omit '+'/'#' all the time.
+  const sanMate = mv.san.includes("#");
+  const sanCheck = mv.san.includes("+");
+  if (p.mate) score += sanMate ? 3 : -4;
+  if (p.check) score += sanCheck ? 1 : -2;
   score += -0.5 * weightedLev(p.token, norm(mv.san));
   return score;
 }
@@ -157,7 +186,7 @@ function snapCandidates(chess: Chess, rawToken: string, limit = 4): Candidate[] 
     /* not legal as written */
   }
 
-  const p = parseToken(token);
+  const p = parseToken(token, rawToken);
   const scored = legal
     .map((mv) => ({ san: mv.san, corrected: true, score: scoreMove(mv, p) }))
     .sort((a, b) => b.score - a.score);
@@ -197,6 +226,8 @@ interface BeamState {
   corr: Correction[];
   ignored: string[]; // crossed-out / spurious tokens dropped mid-game
   tail: string[]; // tokens skipped since the last successful move
+  inferred: number[]; // sans indexes of bridge moves the OCR dropped
+  inserts: number; // consecutive bridge inserts (capped, anti-runaway)
   score: number;
 }
 
@@ -205,6 +236,9 @@ export interface Reconstruction {
   corrections: Correction[];
   /** Crossed-out / struck-through / spurious tokens skipped between real moves. */
   ignored: string[];
+  /** sans indexes of moves the OCR DROPPED that bridge search re-inserted to
+   *  re-sync the stream (not written on the sheet — surface for review). */
+  inferred: number[];
   /** The first token no legal interpretation could place (the game stops here). */
   failedToken: string | null;
 }
@@ -213,6 +247,21 @@ export interface Reconstruction {
 // easily beats this, so we only skip when placing the token leads to a dead end
 // — exactly what a crossed-out / spurious move causes.
 const SKIP_PENALTY = 4;
+// Cost of INSERTING a move the OCR missed (bridge search). Dearer than a skip so
+// it's a genuine last resort — only taken when inserting a connective move makes
+// the NEXT written move legal again (i.e. it demonstrably re-syncs the stream),
+// never a blind guess. Capped per run of inserts to stop runaway invention.
+const INSERT_PENALTY = 5;
+const MAX_INSERT = 1;
+// Only bridge when the token scores BELOW this directly — i.e. it genuinely can't
+// be read as any legal move in this position (the dropped-move symptom). A normal
+// correction scores well above this, so misreads stay corrections, not inserts.
+const INSERT_GATE = 2;
+// Only states within this score margin of the round's leader attempt inserts.
+const INSERT_MARGIN = 6;
+// A token matches "strongly" if it's an exact legal move (100) or a high-scoring
+// snap — used to gate bridge inserts (only bridge toward a strong re-sync).
+const STRONG = 6;
 
 /**
  * Beam-search reconstruction of a whole game from OCR'd move tokens. Keeps the
@@ -223,17 +272,32 @@ const SKIP_PENALTY = 4;
  */
 export function reconstructMoves(tokens: string[], beam = 24): Reconstruction {
   let states: BeamState[] = [
-    { fen: new Chess().fen(), sans: [], corr: [], ignored: [], tail: [], score: 0 },
+    { fen: new Chess().fen(), sans: [], corr: [], ignored: [], tail: [], inferred: [], inserts: 0, score: 0 },
   ];
+  // Goal anchor: if the writer marked the last move as mate, the reconstruction
+  // should END in mate. We use this to break ties at the finish line.
+  const lastMove = [...tokens].reverse().find((t) => !/^\d+\.+$/.test(t) && !/^(1-0|0-1|1\/2-1\/2|\*)$/.test(t));
+  const wantsMate = !!lastMove && /#/.test(lastMove);
 
   for (const raw of tokens) {
     if (/^\d+\.+$/.test(raw)) continue; // "12."
     if (/^(1-0|0-1|1\/2-1\/2|\*)$/.test(raw)) continue; // result
 
     const next: BeamState[] = [];
+    // Bridge inserts are expensive (O(legal²) per state), so only the leading
+    // states even attempt them — a branch already far behind can't win by
+    // inserting a move the others didn't need.
+    const topScore = states.reduce((mx, s) => Math.max(mx, s.score), -Infinity);
     for (const st of states) {
       const board = new Chess(st.fen);
-      for (const cand of snapCandidates(board, raw, 4)) {
+      const cands = snapCandidates(board, raw, 4);
+      // Placing confirms any pending skips as mid-game "ignored" tokens (only
+      // once the game has actually started — leading skips are just preamble).
+      const ignored =
+        st.sans.length > 0 && st.tail.length > 0
+          ? [...st.ignored, ...st.tail]
+          : st.ignored;
+      for (const cand of cands) {
         const c2 = new Chess(st.fen);
         let m;
         try {
@@ -243,12 +307,6 @@ export function reconstructMoves(tokens: string[], beam = 24): Reconstruction {
         }
         if (!m) continue;
         const editPenalty = cand.corrected ? 1.5 : 0;
-        // Placing confirms any pending skips as mid-game "ignored" tokens (only
-        // once the game has actually started — leading skips are just preamble).
-        const ignored =
-          st.sans.length > 0 && st.tail.length > 0
-            ? [...st.ignored, ...st.tail]
-            : st.ignored;
         next.push({
           fen: c2.fen(),
           sans: [...st.sans, m.san],
@@ -257,9 +315,54 @@ export function reconstructMoves(tokens: string[], beam = 24): Reconstruction {
             : st.corr,
           ignored,
           tail: [],
+          inferred: st.inferred,
+          inserts: 0, // a real placement breaks the insert run
           score: st.score + cand.score - editPenalty,
         });
       }
+
+      // BRIDGE / INSERT branch — only when the token DOESN'T already match well
+      // (the beam is struggling) and we haven't already inserted here. We try
+      // each legal connective move and keep it ONLY if the written token then
+      // becomes a STRONG match — i.e. the inserted move demonstrably re-syncs the
+      // OCR stream (a move the writer made but the scan dropped). Never a guess.
+      // Gate hard: only when the token can't be placed DIRECTLY at all (a real
+      // dropped-move symptom). A confusable misread still places as a correction
+      // (score well above this floor), so it never triggers an insert.
+      const bestDirect = cands[0]?.score ?? -Infinity;
+      if (st.inserts < MAX_INSERT && bestDirect < INSERT_GATE && st.score >= topScore - INSERT_MARGIN) {
+        for (const insSan of board.moves()) {
+          const b2 = new Chess(st.fen);
+          let ins;
+          try { ins = b2.move(insSan); } catch { ins = null; }
+          if (!ins) continue;
+          const after = snapCandidates(b2, raw, 1)[0];
+          if (!after || after.score < STRONG) continue; // must re-sync strongly
+          const b3 = new Chess(b2.fen());
+          let placed;
+          try { placed = b3.move(after.san); } catch { placed = null; }
+          if (!placed) continue;
+          const insIdx = st.sans.length;
+          const editPenalty = after.corrected ? 1.5 : 0;
+          // CAP the re-sync reward at a normal placement (STRONG), never the +100
+          // exact-match jackpot — otherwise "insert a move, claim the next token
+          // exact" out-scores honest reading and the beam fabricates.
+          const gain = Math.min(after.score, STRONG);
+          next.push({
+            fen: b3.fen(),
+            sans: [...st.sans, ins.san, placed.san],
+            corr: after.corrected
+              ? [...st.corr, { from: raw, to: placed.san, moveIndex: insIdx + 1 }]
+              : st.corr,
+            ignored,
+            tail: [],
+            inferred: [...st.inferred, insIdx],
+            inserts: st.inserts + 1,
+            score: st.score + gain - editPenalty - INSERT_PENALTY,
+          });
+        }
+      }
+
       // Skip branch — drop this token (crossed-out / spurious / preamble).
       next.push({
         fen: st.fen,
@@ -267,6 +370,8 @@ export function reconstructMoves(tokens: string[], beam = 24): Reconstruction {
         corr: st.corr,
         ignored: st.ignored,
         tail: [...st.tail, raw],
+        inferred: st.inferred,
+        inserts: st.inserts,
         score: st.score - SKIP_PENALTY,
       });
     }
@@ -284,15 +389,23 @@ export function reconstructMoves(tokens: string[], beam = 24): Reconstruction {
     }
   }
 
-  const best = states.reduce(
+  // If the sheet says the game ended in mate, prefer interpretations that
+  // actually deliver it — the endpoint disambiguates an otherwise-tied finish.
+  const finishers =
+    wantsMate && states.some((s) => s.sans[s.sans.length - 1]?.includes("#"))
+      ? states.filter((s) => s.sans[s.sans.length - 1]?.includes("#"))
+      : states;
+  const best = finishers.reduce(
     (a, b) => (b.score > a.score ? b : a),
-    states[0] ?? { fen: "", sans: [], corr: [], ignored: [], tail: [], score: 0 },
+    finishers[0] ??
+      { fen: "", sans: [], corr: [], ignored: [], tail: [], inferred: [], inserts: 0, score: 0 },
   );
   // Tokens skipped AFTER the last real move = where the readable game ends.
   return {
     sans: best.sans,
     corrections: best.corr,
     ignored: best.ignored,
+    inferred: best.inferred,
     failedToken: best.tail.length > 0 ? best.tail[0] : null,
   };
 }

@@ -66,3 +66,11 @@ export function bankFor(theme: string): Puzzle[] {
   const matches = ALL.filter((p) => p.themes.includes(theme));
   return matches.length ? matches : ALL;
 }
+
+/** Deterministic "puzzle of the day" from the bank — the offline fallback when
+ *  the live daily feed is unreachable. `seed` is a day index, so it's stable
+ *  for a given day and rotates through the bank. */
+export function dailyFromBank(seed: number): Puzzle {
+  const i = ((seed % ALL.length) + ALL.length) % ALL.length;
+  return ALL[i];
+}

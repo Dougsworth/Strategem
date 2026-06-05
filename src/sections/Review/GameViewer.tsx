@@ -16,74 +16,13 @@ import type { Color } from "chess.js";
 import { InteractiveBoard } from "@/components/InteractiveBoard";
 import { useBoardSize } from "@/components/useBoardSize";
 import { importToLichess } from "@/lib/scoresheet";
-import { reconstructMoves } from "@/lib/chess/snapMove";
+import { ShareMenu } from "@/components/ShareMenu";
+import { GameInsights } from "@/sections/Review/GameInsights";
+import { analyzeGame } from "@/lib/analysis/gameInsights";
+import { type ParsedGame, EMPTY_PARSED } from "@/lib/chess/parseGame";
+import { runParseInWorker } from "@/lib/chess/runParseInWorker";
 import { Loader } from "@/components/Loader";
 import { BoardThemePicker } from "@/components/BoardThemePicker";
-
-interface ParsedGame {
-  moves: string[];
-  headers: Record<string, string>;
-  ok: boolean;
-  /** Set when even the smart matcher couldn't place a move — we keep the legal prefix. */
-  truncated: { atMoveNo: number; token: string } | null;
-  /** Misreads we auto-corrected to a legal move, e.g. "c4" → "e4". */
-  corrections: { from: string; to: string; moveIndex: number }[];
-  /** Crossed-out / struck-through tokens we skipped. */
-  ignored: string[];
-}
-
-const EMPTY_PARSED: ParsedGame = {
-  moves: [],
-  headers: {},
-  ok: false,
-  truncated: null,
-  corrections: [],
-  ignored: [],
-};
-
-// Lenient PGN reader. Handwriting OCR is never perfect, so we replay token-by-
-// token and SNAP each one to the most plausible legal move (snapMove) — pawns
-// when there's no piece letter, nearest legal move otherwise — instead of
-// rejecting the game on the first imperfect token.
-function parseGame(pgn: string): ParsedGame {
-  const headers: Record<string, string> = {};
-  for (const m of pgn.matchAll(/\[(\w+)\s+"([^"]*)"\]/g)) headers[m[1]] = m[2];
-
-  // Fast path: a fully-legal game loads cleanly (no corrections needed).
-  try {
-    const c = new Chess();
-    c.loadPgn(pgn);
-    const moves = c.history();
-    if (moves.length > 0) {
-      return {
-        moves,
-        headers: { ...c.header(), ...headers },
-        ok: true,
-        truncated: null,
-        corrections: [],
-        ignored: [],
-      };
-    }
-  } catch {
-    /* fall through to the smart token-by-token replay */
-  }
-
-  const body = pgn
-    .replace(/\[[^\]]*\]/g, " ") // headers
-    .replace(/\{[^}]*\}/g, " ") // comments
-    .replace(/\$\d+/g, " ") // NAGs
-    .replace(/\b(1-0|0-1|1\/2-1\/2|\*)\b/g, " ") // results
-    .replace(/\d+\.(\.\.)?/g, " "); // move numbers "12." / "12..."
-  const tokens = body.split(/\s+/).filter(Boolean);
-
-  // Beam-search reconstruction — keeps multiple legal interpretations alive so a
-  // single misread doesn't derail the whole game.
-  const { sans, corrections, ignored, failedToken } = reconstructMoves(tokens);
-  const truncated = failedToken
-    ? { atMoveNo: Math.floor(sans.length / 2) + 1, token: failedToken }
-    : null;
-  return { moves: sans, headers, ok: sans.length > 0, truncated, corrections, ignored };
-}
 
 // Build clean, numbered PGN movetext from the reconstructed (legal) moves — this
 // is what we hand to Lichess / copy / download, so they get the corrected game,
@@ -118,9 +57,9 @@ export function GameViewer({
     setDraft(pgn);
   }, [pgn]);
 
-  // Beam reconstruction is heavy on long games, so we run it AFTER first paint —
-  // the loader shows immediately and the board mounts cleanly once it's ready
-  // (instead of into a frozen, half-rendered frame).
+  // Beam reconstruction is heavy on long games, so it runs in a Web Worker — the
+  // main thread never blocks, the loader shows immediately, and the board mounts
+  // once the result arrives. Re-opening the same game is instant (worker cache).
   const [parsed, setParsed] = useState<ParsedGame>(EMPTY_PARSED);
   const [parsing, setParsing] = useState(true);
   const [ply, setPly] = useState(0); // start at final position (set after parse)
@@ -128,13 +67,20 @@ export function GameViewer({
   useEffect(() => {
     setParsing(true);
     setParsed(EMPTY_PARSED);
-    const id = window.setTimeout(() => {
-      const result = parseGame(pgnText);
-      setParsed(result);
-      setPly(result.moves.length);
-      setParsing(false);
-    }, 16);
-    return () => window.clearTimeout(id);
+    let cancelled = false;
+    runParseInWorker(pgnText)
+      .then((result) => {
+        if (cancelled) return;
+        setParsed(result);
+        setPly(result.moves.length);
+        setParsing(false);
+      })
+      .catch(() => {
+        if (!cancelled) setParsing(false);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, [pgnText]);
 
   const [lichessBusy, setLichessBusy] = useState(false);
@@ -147,6 +93,15 @@ export function GameViewer({
   function applyEdits() {
     setPgnText(draft);
     onPgnChange?.(draft);
+  }
+
+  // Persist the reconstructed legal game in place of the raw OCR text. Loss-free
+  // (the corrected PGN re-parses to the identical moves — see verify:scan), so it
+  // only swaps a slow beam re-parse for the instant fast-path loader on re-open.
+  function lockInCorrections() {
+    setPgnText(exportPgn);
+    setDraft(exportPgn);
+    onPgnChange?.(exportPgn);
   }
 
   const total = parsed.moves.length;
@@ -183,6 +138,8 @@ export function GameViewer({
   // Exports use the reconstructed legal moves (what's on the board), so Lichess
   // / copy / download all get the corrected game — not the raw OCR text.
   const exportPgn = useMemo(() => pgnFromMoves(parsed.moves), [parsed.moves]);
+  // Engine-free per-game analysis (advantage curve, tactics, loose material).
+  const insights = useMemo(() => analyzeGame(parsed.moves), [parsed.moves]);
 
   async function copyPgn() {
     try {
@@ -315,6 +272,50 @@ export function GameViewer({
           </div>
         </div>
       )}
+      {parsed.inferred.length > 0 && (
+        <div className="rounded-xl border border-accent/40 bg-accent-soft px-4 py-3 text-sm">
+          <p className="font-semibold text-ink">
+            Filled in {parsed.inferred.length} move{parsed.inferred.length === 1 ? "" : "s"} the
+            scan seems to have dropped — please verify {parsed.inferred.length === 1 ? "it" : "them"}{" "}
+            against the photo.
+          </p>
+          <p className="mt-0.5 text-muted">
+            The sheet skipped a row, so we bridged the gap with a legal move to keep the game in
+            sync. This one’s a guess, not a read:
+          </p>
+          <div className="mt-2 flex flex-wrap gap-1.5">
+            {parsed.inferred.map((idx, i) => (
+              <button
+                key={i}
+                onClick={() => setPly(Math.min(total, idx + 1))}
+                title={`Jump to move ${Math.floor(idx / 2) + 1}`}
+                className="rounded-md bg-card px-2 py-0.5 font-mono text-xs ring-1 ring-accent/40 transition-colors hover:bg-ink-soft"
+              >
+                {Math.floor(idx / 2) + 1}
+                {idx % 2 === 0 ? "." : "…"} {parsed.moves[idx]} ⚠
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+      {parsed.ok &&
+        (parsed.corrections.length > 0 || parsed.inferred.length > 0) &&
+        pgnText.trim() !== exportPgn && (
+          <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-line bg-card px-4 py-2.5 text-sm">
+            <p className="min-w-0 text-muted">
+              Checked the moves against the photo?{" "}
+              <span className="font-medium text-ink">Lock them in</span> to save the corrected
+              game — re-opens become instant and these banners clear.
+            </p>
+            <button
+              onClick={lockInCorrections}
+              title="Save the reconstructed legal moves over the raw scan text"
+              className="shrink-0 rounded-lg bg-ink px-3 py-1.5 text-xs font-semibold text-card transition hover:opacity-90"
+            >
+              Lock in corrections
+            </button>
+          </div>
+        )}
       {parsed.truncated && (
         <div className="rounded-xl border border-accent/30 bg-accent-soft px-4 py-3 text-sm">
           <p className="font-semibold text-ink">
@@ -374,6 +375,7 @@ export function GameViewer({
                 <Download size={13} />
                 Save
               </ActionBtn>
+              <ShareMenu white={white} black={black} pgn={exportPgn} />
               <ActionBtn onClick={openInLichess} disabled={lichessBusy} title="Open in Lichess">
                 <ExternalLink size={13} />
                 {lichessBusy ? "Opening…" : "Lichess"}
@@ -441,6 +443,17 @@ export function GameViewer({
           </p>
         </div>
       </div>
+      {parsed.ok && (
+        <GameInsights
+          insights={insights}
+          moves={parsed.moves}
+          white={white}
+          black={black}
+          ply={ply}
+          total={total}
+          onSeek={(p) => setPly(Math.max(0, Math.min(total, p)))}
+        />
+      )}
       <MovesEditor draft={draft} setDraft={setDraft} onApply={applyEdits} moveIndex={curIdx} onSeek={(i) => setPly(Math.max(0, Math.min(total, i + 1)))} />
       {sheetOpen && imageUrl && (
         <div
