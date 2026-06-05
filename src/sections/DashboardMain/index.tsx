@@ -26,13 +26,13 @@ export const DashboardMain = () => {
 
   return (
     <main className="mx-auto grid max-w-[1600px] grid-cols-12 gap-8 px-6 py-8">
+      <DailyPuzzle />
       <ActiveRoster />
       <div className="col-span-12 md:col-span-9">
         {view === "lab" ? (
           <LabView />
         ) : (
           <div className="space-y-8">
-            {view === "roster" && <DailyPuzzle />}
             {selected ? (
               <>
             {view === "roster" && (
