@@ -46,7 +46,7 @@ export function GameInsights({
     setProgress({ done: 0, total: moves.length + 1 });
     try {
       const a = await analyzeWithEngine(moves, {
-        depth: 12,
+        movetime: 80,
         onProgress: (done, t) => setProgress({ done, total: t }),
         signal: abortRef.current,
       });
@@ -128,7 +128,7 @@ export function GameInsights({
         )}
         {engine && (
           <span className="rounded-md bg-ink-soft px-2 py-0.5 text-muted">
-            engine · depth {engine.depth}
+            Stockfish · {engine.movetime}ms/move
           </span>
         )}
       </div>

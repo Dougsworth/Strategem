@@ -63,11 +63,23 @@ export interface PosEval {
   mate: number | null;
 }
 
-function evalOnce(fen: string, depth: number): Promise<PosEval> {
+function evalOnce(fen: string, movetime: number): Promise<PosEval> {
   return new Promise<PosEval>((resolve) => {
     const sideSign = fen.split(" ")[1] === "b" ? -1 : 1; // engine reports for side-to-move
     let cp: number | null = null;
     let mate: number | null = null;
+    let done = false;
+    const finish = (timedOut: boolean) => {
+      if (done) return;
+      done = true;
+      clearTimeout(timer);
+      listeners.delete(onLine);
+      if (timedOut) send("stop"); // nudge the engine back to idle
+      resolve({
+        cp: cp === null ? null : cp * sideSign,
+        mate: mate === null ? null : mate * sideSign,
+      });
+    };
     const onLine: Listener = (line) => {
       if (line.startsWith("info") && line.includes(" score ")) {
         const m = line.match(/score mate (-?\d+)/);
@@ -80,23 +92,23 @@ function evalOnce(fen: string, depth: number): Promise<PosEval> {
           mate = null;
         }
       } else if (line.startsWith("bestmove")) {
-        listeners.delete(onLine);
-        resolve({
-          cp: cp === null ? null : cp * sideSign,
-          mate: mate === null ? null : mate * sideSign,
-        });
+        finish(false);
       }
     };
+    // Safety net: `go movetime` self-stops, but a pathological position must not
+    // hang the whole game analysis — bail with the best score seen so far.
+    const timer = setTimeout(() => finish(true), movetime + 2000);
     listeners.add(onLine);
     send(`position fen ${fen}`);
-    send(`go depth ${depth}`);
+    send(`go movetime ${movetime}`);
   });
 }
 
-/** Evaluate a position (WHITE's perspective). Calls are serialized internally. */
-export async function evaluate(fen: string, depth = 12): Promise<PosEval> {
+/** Evaluate a position (WHITE's perspective), capped to `movetime` ms. Calls are
+ *  serialized internally so the engine handles one position at a time. */
+export async function evaluate(fen: string, movetime = 80): Promise<PosEval> {
   await boot();
-  const run = () => evalOnce(fen, depth);
+  const run = () => evalOnce(fen, movetime);
   const p = chain.then(run, run);
   chain = p.catch(() => undefined);
   return p;

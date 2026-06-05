@@ -31,7 +31,8 @@ export interface EngineAnalysis {
   moves: EngineMove[];
   accuracyWhite: number;
   accuracyBlack: number;
-  depth: number;
+  /** ms per position the engine was given. */
+  movetime: number;
 }
 
 const MATE_CP = 10000;
@@ -53,7 +54,7 @@ function classify(drop: number, cpLoss: number): MoveClass {
 const cache = new Map<string, EngineAnalysis>();
 
 export interface AnalyzeOpts {
-  depth?: number;
+  movetime?: number;
   onProgress?: (done: number, total: number) => void;
   signal?: { aborted: boolean };
 }
@@ -62,8 +63,8 @@ export async function analyzeWithEngine(
   sans: string[],
   opts: AnalyzeOpts = {},
 ): Promise<EngineAnalysis> {
-  const depth = opts.depth ?? 12;
-  const key = `${sans.join(" ")}|d${depth}`;
+  const movetime = opts.movetime ?? 80;
+  const key = `${sans.join(" ")}|t${movetime}`;
   const hit = cache.get(key);
   if (hit) {
     opts.onProgress?.(hit.winWhite.length, hit.winWhite.length);
@@ -81,7 +82,16 @@ export async function analyzeWithEngine(
   const cpWhite: number[] = [];
   for (let i = 0; i < fens.length; i++) {
     if (opts.signal?.aborted) throw new Error("aborted");
-    cpWhite.push(toCpWhite(await evaluate(fens[i], depth)));
+    // Terminal positions (mate / stalemate) have no legal moves — the engine
+    // would stall on `go`, so resolve them directly and correctly.
+    const pos = new Chess(fens[i]);
+    if (pos.isCheckmate()) {
+      cpWhite.push(pos.turn() === "w" ? -MATE_CP : MATE_CP);
+    } else if (pos.isGameOver()) {
+      cpWhite.push(0); // stalemate / draw
+    } else {
+      cpWhite.push(toCpWhite(await evaluate(fens[i], movetime)));
+    }
     opts.onProgress?.(i + 1, fens.length);
   }
 
@@ -107,7 +117,7 @@ export async function analyzeWithEngine(
     moves,
     accuracyWhite: Math.round(blendAccuracies(accW) * 10) / 10,
     accuracyBlack: Math.round(blendAccuracies(accB) * 10) / 10,
-    depth,
+    movetime,
   };
   cache.set(key, analysis);
   return analysis;
