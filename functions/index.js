@@ -355,7 +355,10 @@ const SCORESHEET_PROMPT =
   "When a letter or digit is ambiguous, pick the reading that yields a LEGAL move in that " +
   "position; if two readings are both legal, prefer the one closest to the handwriting.\n" +
   "• If a move is truly illegible, infer the most likely LEGAL move that keeps the game " +
-  "consistent rather than emitting an illegal one.\n\n" +
+  "consistent rather than emitting an illegal one.\n" +
+  "• IGNORE crossed-out, struck-through, scribbled-over, or rewritten moves — a player " +
+  "who changes their mind strikes a line through the wrong move and writes the real one. " +
+  "Transcribe ONLY the final intended move in each cell, never the cancelled one.\n\n" +
   "Output ONLY the movetext — no headers, no result, no commentary, no code fences. " +
   "Do NOT write any sentence, explanation, or preamble: your reply MUST start with '1.'.";
 

@@ -25,6 +25,8 @@ interface ParsedGame {
   truncated: { atMoveNo: number; token: string } | null;
   /** Misreads we auto-corrected to a legal move, e.g. "c4" → "e4". */
   corrections: { from: string; to: string }[];
+  /** Crossed-out / struck-through tokens we skipped. */
+  ignored: string[];
 }
 
 // Lenient PGN reader. Handwriting OCR is never perfect, so we replay token-by-
@@ -47,6 +49,7 @@ function parseGame(pgn: string): ParsedGame {
         ok: true,
         truncated: null,
         corrections: [],
+        ignored: [],
       };
     }
   } catch {
@@ -63,11 +66,11 @@ function parseGame(pgn: string): ParsedGame {
 
   // Beam-search reconstruction — keeps multiple legal interpretations alive so a
   // single misread doesn't derail the whole game.
-  const { sans, corrections, failedToken } = reconstructMoves(tokens);
+  const { sans, corrections, ignored, failedToken } = reconstructMoves(tokens);
   const truncated = failedToken
     ? { atMoveNo: Math.floor(sans.length / 2) + 1, token: failedToken }
     : null;
-  return { moves: sans, headers, ok: sans.length > 0, truncated, corrections };
+  return { moves: sans, headers, ok: sans.length > 0, truncated, corrections, ignored };
 }
 
 // Build clean, numbered PGN movetext from the reconstructed (legal) moves — this
@@ -237,6 +240,21 @@ export function GameViewer({
   return (
     <div className="flex flex-col gap-3">
       {imageUrl && <ScoresheetPanel src={imageUrl} current={current} />}
+      {parsed.ignored.length > 0 && (
+        <div className="rounded-xl border border-line bg-ink-soft/60 px-4 py-3 text-sm">
+          <p className="font-semibold text-ink">
+            Skipped {parsed.ignored.length} crossed-out{" "}
+            {parsed.ignored.length === 1 ? "entry" : "entries"} on the sheet.
+          </p>
+          <p className="mt-0.5 text-muted">
+            Ignored what looked struck-through / rewritten:{" "}
+            <span className="font-mono text-xs">
+              {parsed.ignored.slice(0, 8).join(" · ")}
+              {parsed.ignored.length > 8 ? " …" : ""}
+            </span>
+          </p>
+        </div>
+      )}
       {parsed.corrections.length > 0 && (
         <div className="rounded-xl border border-positive/30 bg-positive/10 px-4 py-3 text-sm">
           <p className="font-semibold text-ink">

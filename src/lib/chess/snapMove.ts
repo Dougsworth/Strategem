@@ -188,27 +188,36 @@ interface BeamState {
   fen: string;
   sans: string[];
   corr: { from: string; to: string }[];
+  ignored: string[]; // crossed-out / spurious tokens dropped mid-game
+  tail: string[]; // tokens skipped since the last successful move
   score: number;
 }
 
 export interface Reconstruction {
   sans: string[];
   corrections: { from: string; to: string }[];
+  /** Crossed-out / struck-through / spurious tokens skipped between real moves. */
+  ignored: string[];
   /** The first token no legal interpretation could place (the game stops here). */
   failedToken: string | null;
 }
 
+// Cost of skipping a token. A confident move (esp. an exact legal match, +100)
+// easily beats this, so we only skip when placing the token leads to a dead end
+// — exactly what a crossed-out / spurious move causes.
+const SKIP_PENALTY = 4;
+
 /**
  * Beam-search reconstruction of a whole game from OCR'd move tokens. Keeps the
- * top few legal interpretations alive at every move, so a locally-best-but-
- * globally-wrong correction gets pruned in favour of a reading that stays legal.
+ * top few legal interpretations alive at every move (so a locally-best-but-
+ * globally-wrong correction gets pruned) AND can SKIP a token entirely — which
+ * recovers from crossed-out / struck-through moves the OCR picked up, leading
+ * prose, smudges, or doubled tokens.
  */
 export function reconstructMoves(tokens: string[], beam = 16): Reconstruction {
   let states: BeamState[] = [
-    { fen: new Chess().fen(), sans: [], corr: [], score: 0 },
+    { fen: new Chess().fen(), sans: [], corr: [], ignored: [], tail: [], score: 0 },
   ];
-  let started = false;
-  let failedToken: string | null = null;
 
   for (const raw of tokens) {
     if (/^\d+\.+$/.test(raw)) continue; // "12."
@@ -226,34 +235,41 @@ export function reconstructMoves(tokens: string[], beam = 16): Reconstruction {
           m = null;
         }
         if (!m) continue;
-        // Small penalty per correction → among equally-legal readings, prefer
-        // the one that changed the handwriting the least (most likely what was
-        // actually written).
         const editPenalty = cand.corrected ? 1.5 : 0;
+        // Placing confirms any pending skips as mid-game "ignored" tokens (only
+        // once the game has actually started — leading skips are just preamble).
+        const ignored =
+          st.sans.length > 0 && st.tail.length > 0
+            ? [...st.ignored, ...st.tail]
+            : st.ignored;
         next.push({
           fen: c2.fen(),
           sans: [...st.sans, m.san],
           corr: cand.corrected ? [...st.corr, { from: raw, to: m.san }] : st.corr,
+          ignored,
+          tail: [],
           score: st.score + cand.score - editPenalty,
         });
       }
+      // Skip branch — drop this token (crossed-out / spurious / preamble).
+      next.push({
+        fen: st.fen,
+        sans: st.sans,
+        corr: st.corr,
+        ignored: st.ignored,
+        tail: [...st.tail, raw],
+        score: st.score - SKIP_PENALTY,
+      });
     }
 
-    if (next.length === 0) {
-      // Nothing legal here. Skip clear preamble words before the game starts;
-      // otherwise this is where the readable game ends.
-      if (!started && !/[1-8]/.test(raw)) continue;
-      failedToken = raw;
-      break;
-    }
-    started = true;
     next.sort((a, b) => b.score - a.score);
-    // Keep the top beam, de-duped by resulting position so the beam stays diverse.
+    // De-dupe by (position + #skips-pending) so the beam stays diverse.
     const seen = new Set<string>();
     states = [];
     for (const s of next) {
-      if (seen.has(s.fen)) continue;
-      seen.add(s.fen);
+      const key = `${s.fen}|${s.tail.length}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
       states.push(s);
       if (states.length >= beam) break;
     }
@@ -261,7 +277,13 @@ export function reconstructMoves(tokens: string[], beam = 16): Reconstruction {
 
   const best = states.reduce(
     (a, b) => (b.score > a.score ? b : a),
-    states[0] ?? { fen: "", sans: [], corr: [], score: 0 },
+    states[0] ?? { fen: "", sans: [], corr: [], ignored: [], tail: [], score: 0 },
   );
-  return { sans: best.sans, corrections: best.corr, failedToken };
+  // Tokens skipped AFTER the last real move = where the readable game ends.
+  return {
+    sans: best.sans,
+    corrections: best.corr,
+    ignored: best.ignored,
+    failedToken: best.tail.length > 0 ? best.tail[0] : null,
+  };
 }
