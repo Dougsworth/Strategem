@@ -7,6 +7,7 @@ import {
   Download,
   ExternalLink,
   FlipVertical2,
+  Image as ImageIcon,
   SkipBack,
   SkipForward,
 } from "lucide-react";
@@ -113,6 +114,7 @@ export function GameViewer({
   const [lichessErr, setLichessErr] = useState<string | null>(null);
   const [orientation, setOrientation] = useState<Color>("w");
   const [copied, setCopied] = useState(false);
+  const [sheetOpen, setSheetOpen] = useState(false);
   const boardSize = useBoardSize(520);
 
   function applyEdits() {
@@ -316,6 +318,12 @@ export function GameViewer({
               {white} – {black}
             </p>
             <div className="flex items-center gap-1.5">
+              {imageUrl && (
+                <ActionBtn onClick={() => setSheetOpen(true)} title="View the scoresheet photo">
+                  <ImageIcon size={13} />
+                  Sheet
+                </ActionBtn>
+              )}
               <ActionBtn onClick={copyPgn} title="Copy PGN">
                 {copied ? <Check size={13} className="text-positive" /> : <Copy size={13} />}
                 {copied ? "Copied" : "PGN"}
@@ -392,6 +400,18 @@ export function GameViewer({
         </div>
       </div>
       <MovesEditor draft={draft} setDraft={setDraft} onApply={applyEdits} moveIndex={curIdx} onSeek={(i) => setPly(Math.max(0, Math.min(total, i + 1)))} />
+      {sheetOpen && imageUrl && (
+        <div
+          onClick={() => setSheetOpen(false)}
+          className="fixed inset-0 z-[140] grid cursor-zoom-out place-items-center bg-ink/85 p-4"
+        >
+          <img
+            src={imageUrl}
+            alt="Scanned scoresheet"
+            className="max-h-full max-w-full rounded-lg object-contain"
+          />
+        </div>
+      )}
     </div>
   );
 }
