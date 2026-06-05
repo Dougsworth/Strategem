@@ -45,6 +45,8 @@ function norm(s: string): string {
     .replace(/0/g, "O")
     .replace(/e\.?p\.?/gi, "")
     .replace(/[+#!?]+/g, "")
+    // Canonicalize promotions: f1Q, f1(Q), f1/Q, f1 =Q → f1=Q (rank 1 or 8).
+    .replace(/([a-h][18])\s*[=/(]?\s*([QRBN])\)?/i, (_m, sq, pc) => `${sq}=${pc.toUpperCase()}`)
     .trim();
 }
 
@@ -120,7 +122,12 @@ function scoreMove(mv: VerboseMove, p: ParsedToken): number {
   if (p.pieceLetter) score += mv.piece.toUpperCase() === p.pieceLetter ? 2 : -3;
   else score += mv.piece === "p" ? 1.5 : -1.5;
   if (p.isCapture) score += mv.captured ? 1 : -1;
-  if (p.promo) score += mv.promotion?.toUpperCase() === p.promo ? 1.5 : -0.5;
+  if (p.promo) {
+    score += mv.promotion?.toUpperCase() === p.promo ? 1.5 : -0.5;
+  } else if (mv.promotion) {
+    // Promotion with no piece written → players almost always mean a queen.
+    score += mv.promotion.toUpperCase() === "Q" ? 0.5 : -0.3;
+  }
   score += -0.5 * weightedLev(p.token, norm(mv.san));
   return score;
 }
@@ -196,7 +203,7 @@ export interface Reconstruction {
  * top few legal interpretations alive at every move, so a locally-best-but-
  * globally-wrong correction gets pruned in favour of a reading that stays legal.
  */
-export function reconstructMoves(tokens: string[], beam = 6): Reconstruction {
+export function reconstructMoves(tokens: string[], beam = 16): Reconstruction {
   let states: BeamState[] = [
     { fen: new Chess().fen(), sans: [], corr: [], score: 0 },
   ];
