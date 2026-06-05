@@ -1,12 +1,21 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
+import { ScanLine } from "lucide-react";
 import { GameViewer } from "@/sections/Review/GameViewer";
 import { useScannedGames } from "@/lib/ScannedGamesContext";
-import { getScanImage } from "@/lib/scanImages";
+import { getScanImage, saveScanImage, compressImage } from "@/lib/scanImages";
+import { transcribeScoresheet, fileToBase64 } from "@/lib/scoresheet";
+import { useAuth } from "@/lib/AuthContext";
+import { entitlements } from "@/lib/entitlements";
+import { dailyQuota } from "@/lib/guardrails";
 
 // Re-opens a saved scanned game full-screen, reusing the same scoresheet viewer.
 export const ScannedGameModal = () => {
   const { openGame, close, updateGame } = useScannedGames();
+  const { user } = useAuth();
   const refreshed = useRef<Set<string>>(new Set());
+  const fileRef = useRef<HTMLInputElement>(null);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const id = openGame?.id;
   const pgn = openGame?.pgn;
 
@@ -19,6 +28,35 @@ export const ScannedGameModal = () => {
     }
   }, [id, pgn, updateGame]);
 
+  // Re-scan: upload a (fresh) photo to re-transcribe this game with the latest
+  // OCR + reconstruction, and attach the photo for comparison.
+  async function rescan(file: File) {
+    if (!id) return;
+    setError(null);
+    const q = dailyQuota("scan", entitlements(user?.plan).scanPerDay);
+    if (q.remaining <= 0) {
+      setError(
+        `You've used your ${q.limit} scans for today. ${
+          user?.plan === "free" ? "Upgrade to Coach for more." : "Resets tomorrow."
+        }`,
+      );
+      return;
+    }
+    q.take();
+    setBusy(true);
+    try {
+      const { base64, mimeType } = await fileToBase64(file);
+      const result = await transcribeScoresheet(base64, mimeType);
+      updateGame(id, result);
+      const img = await compressImage(file);
+      saveScanImage(id, img);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Couldn’t read that scoresheet.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
   if (!openGame) return null;
 
   return (
@@ -30,15 +68,37 @@ export const ScannedGameModal = () => {
             {openGame.white} – {openGame.black}
           </h2>
         </div>
-        <button
-          onClick={close}
-          className="rounded-lg bg-ink px-4 py-2 text-sm font-medium text-paper transition-opacity hover:opacity-90"
-        >
-          Close
-        </button>
+        <div className="flex items-center gap-2">
+          <input
+            ref={fileRef}
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={(e) => {
+              const f = e.target.files?.[0];
+              if (f) void rescan(f);
+              e.target.value = "";
+            }}
+          />
+          <button
+            onClick={() => fileRef.current?.click()}
+            disabled={busy}
+            className="flex items-center gap-1.5 rounded-lg border border-line px-3 py-2 text-sm font-medium transition-colors hover:bg-ink-soft disabled:opacity-50"
+          >
+            <ScanLine size={14} />
+            {busy ? "Reading…" : "Rescan"}
+          </button>
+          <button
+            onClick={close}
+            className="rounded-lg bg-ink px-4 py-2 text-sm font-medium text-paper transition-opacity hover:opacity-90"
+          >
+            Close
+          </button>
+        </div>
       </header>
 
       <div className="mx-auto w-full max-w-6xl flex-1 overflow-y-auto p-6">
+        {error && <p className="mb-3 text-sm text-accent">{error}</p>}
         <GameViewer
           pgn={openGame.pgn}
           imageUrl={getScanImage(openGame.id)}
