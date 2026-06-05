@@ -7,6 +7,7 @@ import { useAuth } from "@/lib/AuthContext";
 import { entitlements } from "@/lib/entitlements";
 import { dailyQuota } from "@/lib/guardrails";
 import { compressImage, saveScanImage } from "@/lib/scanImages";
+import { ScanQuota } from "@/components/ScanQuota";
 
 type Stage = "input" | "reading" | "view";
 
@@ -138,6 +139,9 @@ export const ScoresheetModal = ({ onClose }: { onClose: () => void }) => {
                   A photo of the scoresheet — we’ll read the moves
                 </span>
               </button>
+              <div className="mt-2 flex justify-center">
+                <ScanQuota />
+              </div>
             </div>
 
             {error && <p className="text-center text-xs text-accent">{error}</p>}

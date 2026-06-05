@@ -6,7 +6,7 @@
 
 const PREFIX = "strategem.scanimg.";
 const IDX = "strategem.scanimg.ids";
-const CAP = 20;
+const CAP = 15;
 
 function ids(): string[] {
   try {
@@ -76,8 +76,8 @@ function loadImg(src: string): Promise<HTMLImageElement> {
 /** Downscale to maxDim and JPEG-compress → a small data URL for comparison. */
 export async function compressImage(
   file: File,
-  maxDim = 1200,
-  quality = 0.62,
+  maxDim = 1800,
+  quality = 0.6,
 ): Promise<string> {
   try {
     const url = await readFile(file);

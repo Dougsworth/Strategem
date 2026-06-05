@@ -406,12 +406,19 @@ export function GameViewer({
       {sheetOpen && imageUrl && (
         <div
           onClick={() => setSheetOpen(false)}
-          className="fixed inset-0 z-[140] grid cursor-zoom-out place-items-center bg-ink/85 p-4"
+          className="fixed inset-0 z-[140] overflow-auto bg-ink/90 p-4"
         >
+          <button
+            onClick={() => setSheetOpen(false)}
+            className="fixed right-4 top-4 z-10 rounded-lg bg-ink px-4 py-2 text-sm font-medium text-paper ring-1 ring-paper/20"
+          >
+            Close
+          </button>
           <img
             src={imageUrl}
             alt="Scanned scoresheet"
-            className="max-h-full max-w-full rounded-lg object-contain"
+            onClick={(e) => e.stopPropagation()}
+            className="mx-auto max-w-[min(100%,1500px)] rounded-lg"
           />
         </div>
       )}
@@ -456,12 +463,19 @@ function ScoresheetPanel({
       {zoom && (
         <div
           onClick={() => setZoom(false)}
-          className="fixed inset-0 z-[140] grid cursor-zoom-out place-items-center bg-ink/85 p-4"
+          className="fixed inset-0 z-[140] overflow-auto bg-ink/90 p-4"
         >
+          <button
+            onClick={() => setZoom(false)}
+            className="fixed right-4 top-4 z-10 rounded-lg bg-ink px-4 py-2 text-sm font-medium text-paper ring-1 ring-paper/20"
+          >
+            Close
+          </button>
           <img
             src={src}
             alt="Scanned scoresheet"
-            className="max-h-full max-w-full rounded-lg object-contain"
+            onClick={(e) => e.stopPropagation()}
+            className="mx-auto max-w-[min(100%,1500px)] rounded-lg"
           />
         </div>
       )}

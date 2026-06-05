@@ -7,6 +7,7 @@ import { transcribeScoresheet, fileToBase64 } from "@/lib/scoresheet";
 import { useAuth } from "@/lib/AuthContext";
 import { entitlements } from "@/lib/entitlements";
 import { dailyQuota } from "@/lib/guardrails";
+import { ScanQuota } from "@/components/ScanQuota";
 
 // Re-opens a saved scanned game full-screen, reusing the same scoresheet viewer.
 export const ScannedGameModal = () => {
@@ -68,7 +69,8 @@ export const ScannedGameModal = () => {
             {openGame.white} – {openGame.black}
           </h2>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
+          <ScanQuota className="hidden sm:inline-flex" />
           <input
             ref={fileRef}
             type="file"
