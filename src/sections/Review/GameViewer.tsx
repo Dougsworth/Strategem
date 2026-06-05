@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
+  AlertTriangle,
   Check,
   ChevronLeft,
   ChevronRight,
@@ -142,6 +143,26 @@ export function GameViewer({
   // Engine-free per-game analysis (advantage curve, tactics, loose material).
   const insights = useMemo(() => analyzeGame(parsed.moves), [parsed.moves]);
 
+  // Scan-notes summary (corrections / skips / fill-ins) — collapsed by default so
+  // the board stays the focus; expanded only when the coach wants to review.
+  const canLockIn =
+    parsed.ok &&
+    (parsed.corrections.length > 0 || parsed.inferred.length > 0) &&
+    pgnText.trim() !== exportPgn;
+  const hasNotes =
+    parsed.corrections.length > 0 ||
+    parsed.ignored.length > 0 ||
+    parsed.inferred.length > 0 ||
+    !!parsed.truncated;
+  const notesSummary = [
+    parsed.corrections.length ? `${parsed.corrections.length} auto-fixed` : null,
+    parsed.inferred.length ? `${parsed.inferred.length} filled-in` : null,
+    parsed.ignored.length ? `${parsed.ignored.length} skipped` : null,
+    parsed.truncated ? `stops at move ${parsed.truncated.atMoveNo}` : null,
+  ]
+    .filter(Boolean)
+    .join(" · ");
+
   async function copyPgn() {
     try {
       await navigator.clipboard.writeText(exportPgn);
@@ -238,7 +259,31 @@ export function GameViewer({
 
   return (
     <div className="flex flex-col gap-3">
-      {imageUrl && <ScoresheetPanel src={imageUrl} current={current} onOpen={() => setSheetOpen(true)} />}
+      {hasNotes && (
+        <details className="overflow-hidden rounded-xl border border-line bg-card">
+          <summary className="flex cursor-pointer items-center justify-between gap-3 px-4 py-2.5 text-sm [&::-webkit-details-marker]:hidden">
+            <span className="flex min-w-0 items-center gap-2">
+              <AlertTriangle size={14} className="shrink-0 text-accent" />
+              <span className="font-medium text-ink">Scan notes</span>
+              <span className="truncate text-xs text-muted">{notesSummary}</span>
+            </span>
+            <span className="flex shrink-0 items-center gap-2">
+              {canLockIn && (
+                <button
+                  onClick={(e) => {
+                    e.preventDefault();
+                    lockInCorrections();
+                  }}
+                  title="Save the reconstructed legal moves over the raw scan text"
+                  className="rounded-lg bg-ink px-2.5 py-1 text-xs font-semibold text-card transition hover:opacity-90"
+                >
+                  Lock in
+                </button>
+              )}
+              <span className="text-xs text-muted">review</span>
+            </span>
+          </summary>
+          <div className="flex flex-col gap-3 border-t border-line p-4">
       {parsed.ignored.length > 0 && (
         <div className="rounded-xl border border-line bg-ink-soft/60 px-4 py-3 text-sm">
           <p className="font-semibold text-ink">
@@ -302,24 +347,6 @@ export function GameViewer({
           </div>
         </div>
       )}
-      {parsed.ok &&
-        (parsed.corrections.length > 0 || parsed.inferred.length > 0) &&
-        pgnText.trim() !== exportPgn && (
-          <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-line bg-card px-4 py-2.5 text-sm">
-            <p className="min-w-0 text-muted">
-              Checked the moves against the photo?{" "}
-              <span className="font-medium text-ink">Lock them in</span> to save the corrected
-              game — re-opens become instant and these banners clear.
-            </p>
-            <button
-              onClick={lockInCorrections}
-              title="Save the reconstructed legal moves over the raw scan text"
-              className="shrink-0 rounded-lg bg-ink px-3 py-1.5 text-xs font-semibold text-card transition hover:opacity-90"
-            >
-              Lock in corrections
-            </button>
-          </div>
-        )}
       {parsed.truncated && (
         <div className="rounded-xl border border-accent/30 bg-accent-soft px-4 py-3 text-sm">
           <p className="font-semibold text-ink">
@@ -332,6 +359,9 @@ export function GameViewer({
             <span className="font-medium text-ink">Edit the moves</span> to read the rest.
           </p>
         </div>
+      )}
+          </div>
+        </details>
       )}
       <div className="flex flex-col gap-5 sm:flex-row">
         <div className="shrink-0">
