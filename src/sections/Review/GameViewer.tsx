@@ -70,6 +70,18 @@ function parseGame(pgn: string): ParsedGame {
   return { moves: sans, headers, ok: sans.length > 0, truncated, corrections };
 }
 
+// Build clean, numbered PGN movetext from the reconstructed (legal) moves — this
+// is what we hand to Lichess / copy / download, so they get the corrected game,
+// not the raw OCR text (which Lichess's strict parser would truncate).
+function pgnFromMoves(moves: string[]): string {
+  let out = "";
+  for (let i = 0; i < moves.length; i++) {
+    if (i % 2 === 0) out += `${i / 2 + 1}. `;
+    out += `${moves[i]} `;
+  }
+  return out.trim();
+}
+
 // Step through a game from PGN move text. Read-only board + clickable move list,
 // plus an "Edit the moves" box so misreads can be fixed right here.
 export function GameViewer({
@@ -136,9 +148,13 @@ export function GameViewer({
     if (s && bg) bg.style.transform = `translateY(${-s.scrollTop * 0.35}px)`;
   }
 
+  // Exports use the reconstructed legal moves (what's on the board), so Lichess
+  // / copy / download all get the corrected game — not the raw OCR text.
+  const exportPgn = useMemo(() => pgnFromMoves(parsed.moves), [parsed.moves]);
+
   async function copyPgn() {
     try {
-      await navigator.clipboard.writeText(pgnText.trim());
+      await navigator.clipboard.writeText(exportPgn);
       setCopied(true);
       setTimeout(() => setCopied(false), 1500);
     } catch {
@@ -147,7 +163,7 @@ export function GameViewer({
   }
 
   function downloadPgn() {
-    const blob = new Blob([pgnText.trim() + "\n"], { type: "application/x-chess-pgn" });
+    const blob = new Blob([exportPgn + "\n"], { type: "application/x-chess-pgn" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
@@ -160,7 +176,7 @@ export function GameViewer({
     setLichessBusy(true);
     setLichessErr(null);
     try {
-      const url = await importToLichess(pgnText);
+      const url = await importToLichess(exportPgn);
       window.open(url, "_blank", "noopener");
     } catch (e) {
       setLichessErr(e instanceof Error ? e.message : "Couldn’t open on Lichess.");
