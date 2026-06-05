@@ -1,6 +1,7 @@
 import { useId } from "react";
 import { Chessboard } from "react-chessboard";
 import type { Color } from "chess.js";
+import { useBoardTheme } from "@/lib/boardTheme";
 
 // Professional board via react-chessboard (real SVG piece set, drag-and-drop).
 // Same prop shape as before, so every consumer (trainers, evidence, viewer)
@@ -22,6 +23,7 @@ export const InteractiveBoard = ({
   size?: number;
 }) => {
   const id = useId();
+  const theme = useBoardTheme();
 
   const squareStyles: Record<string, React.CSSProperties> = {};
   if (lastMove) {
@@ -46,8 +48,8 @@ export const InteractiveBoard = ({
         borderRadius: "10px",
         boxShadow: "0 6px 20px rgba(0,0,0,0.14)",
       }}
-      customDarkSquareStyle={{ backgroundColor: "#7e9a64" }}
-      customLightSquareStyle={{ backgroundColor: "#ecefd6" }}
+      customDarkSquareStyle={{ backgroundColor: theme.dark }}
+      customLightSquareStyle={{ backgroundColor: theme.light }}
       arePremovesAllowed={false}
       showBoardNotation
     />

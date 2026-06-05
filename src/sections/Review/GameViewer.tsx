@@ -17,6 +17,8 @@ import { InteractiveBoard } from "@/components/InteractiveBoard";
 import { useBoardSize } from "@/components/useBoardSize";
 import { importToLichess } from "@/lib/scoresheet";
 import { reconstructMoves } from "@/lib/chess/snapMove";
+import { Loader } from "@/components/Loader";
+import { BoardThemePicker } from "@/components/BoardThemePicker";
 
 interface ParsedGame {
   moves: string[];
@@ -29,6 +31,15 @@ interface ParsedGame {
   /** Crossed-out / struck-through tokens we skipped. */
   ignored: string[];
 }
+
+const EMPTY_PARSED: ParsedGame = {
+  moves: [],
+  headers: {},
+  ok: false,
+  truncated: null,
+  corrections: [],
+  ignored: [],
+};
 
 // Lenient PGN reader. Handwriting OCR is never perfect, so we replay token-by-
 // token and SNAP each one to the most plausible legal move (snapMove) — pawns
@@ -107,9 +118,25 @@ export function GameViewer({
     setDraft(pgn);
   }, [pgn]);
 
-  const parsed = useMemo(() => parseGame(pgnText), [pgnText]);
+  // Beam reconstruction is heavy on long games, so we run it AFTER first paint —
+  // the loader shows immediately and the board mounts cleanly once it's ready
+  // (instead of into a frozen, half-rendered frame).
+  const [parsed, setParsed] = useState<ParsedGame>(EMPTY_PARSED);
+  const [parsing, setParsing] = useState(true);
+  const [ply, setPly] = useState(0); // start at final position (set after parse)
 
-  const [ply, setPly] = useState(parsed.moves.length); // start at final position
+  useEffect(() => {
+    setParsing(true);
+    setParsed(EMPTY_PARSED);
+    const id = window.setTimeout(() => {
+      const result = parseGame(pgnText);
+      setParsed(result);
+      setPly(result.moves.length);
+      setParsing(false);
+    }, 16);
+    return () => window.clearTimeout(id);
+  }, [pgnText]);
+
   const [lichessBusy, setLichessBusy] = useState(false);
   const [lichessErr, setLichessErr] = useState<string | null>(null);
   const [orientation, setOrientation] = useState<Color>("w");
@@ -216,6 +243,15 @@ export function GameViewer({
         }
       : null;
 
+  if (parsing) {
+    return (
+      <div className="flex flex-col gap-3">
+        {imageUrl && <ScoresheetPanel src={imageUrl} current={null} />}
+        <Loader label="Reading the game" />
+      </div>
+    );
+  }
+
   if (!parsed.ok) {
     return (
       <div className="flex flex-col gap-3">
@@ -312,6 +348,9 @@ export function GameViewer({
             <StepBtn onClick={() => setPly(total)} disabled={ply === total}><SkipForward size={16} /></StepBtn>
             <span className="mx-1 h-5 w-px bg-line" />
             <StepBtn onClick={() => setOrientation((o) => (o === "w" ? "b" : "w"))} title="Flip board"><FlipVertical2 size={16} /></StepBtn>
+          </div>
+          <div className="mt-3">
+            <BoardThemePicker />
           </div>
         </div>
 
