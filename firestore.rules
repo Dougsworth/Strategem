@@ -1,0 +1,63 @@
+rules_version = '2';
+
+// Each coach can only read/write their OWN document at coaches/{uid} — that's
+// what keeps one coach from ever seeing another's students.
+//
+// CRITICAL: `plan` and `usage` are SERVER-ONLY. The client may read them but
+// never write them — only the payment webhook (plan) and the scan function
+// (usage) set them, via the Admin SDK which bypasses these rules. This stops a
+// user from self-upgrading their plan or resetting their scan counter by
+// writing their own doc directly.
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function planUnchanged() {
+      return !('plan' in request.resource.data)
+        || request.resource.data.plan == resource.data.plan;
+    }
+    function usageUnchanged() {
+      return request.resource.data.get('usage', {}) == resource.data.get('usage', {});
+    }
+    function clubUnchanged() {
+      return request.resource.data.get('clubId', null) == resource.data.get('clubId', null);
+    }
+
+    match /coaches/{uid} {
+      allow read: if request.auth != null && request.auth.uid == uid;
+
+      // First sign-in: may create own doc, but only on the free plan and with
+      // no server-controlled fields (usage, clubId).
+      allow create: if request.auth != null && request.auth.uid == uid
+        && (!('plan' in request.resource.data) || request.resource.data.plan == 'free')
+        && !('usage' in request.resource.data)
+        && !('clubId' in request.resource.data);
+
+      // Normal updates (roster, selected, scannedGames, name, branding) — but
+      // plan, usage, and clubId are server-only (webhook / scan fn / club fns).
+      allow update: if request.auth != null && request.auth.uid == uid
+        && planUnchanged() && usageUnchanged() && clubUnchanged();
+
+      allow delete: if request.auth != null && request.auth.uid == uid;
+
+      // Any subcollections stay private to the owner.
+      match /{document=**} {
+        allow read, write: if request.auth != null && request.auth.uid == uid;
+      }
+    }
+
+    // Clubs: a shared roster for a team of coaches. Membership is managed only
+    // by the club Cloud Functions (admin SDK) — clients can't forge it.
+    match /clubs/{clubId} {
+      allow read: if request.auth != null
+        && request.auth.uid in resource.data.memberUids;
+
+      // Members edit the shared roster/selected, but never membership/owner/code.
+      allow update: if request.auth != null
+        && request.auth.uid in resource.data.memberUids
+        && request.resource.data.memberUids == resource.data.memberUids
+        && request.resource.data.ownerUid == resource.data.ownerUid
+        && request.resource.data.inviteCode == resource.data.inviteCode;
+
+      allow create, delete: if false; // functions only
+    }
+  }
+}

@@ -1,0 +1,48 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --radius: 0.75rem;
+}
+
+@layer base {
+  html {
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  body {
+    @apply bg-paper text-ink font-sans antialiased;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+}
+
+@layer components {
+  /* Shared surface used by every dashboard card. */
+  .card {
+    @apply bg-card rounded-xl ring-1 ring-line;
+  }
+
+  /* Uppercase eyebrow label used on card headers. */
+  .eyebrow {
+    @apply text-[10px] font-bold uppercase tracking-[1px] text-muted font-mono;
+  }
+}
+
+/* Print only the report card, edge-to-edge. */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  .report-card,
+  .report-card * {
+    visibility: visible;
+  }
+  .report-card {
+    position: absolute;
+    inset: 0;
+    max-width: none;
+    margin: 0;
+  }
+}
