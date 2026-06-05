@@ -15,6 +15,8 @@ export interface Entitlements {
   reportCardExport: boolean;
   /** Growth tracking over time ("since last review" deltas). */
   growthHistory: boolean;
+  /** AI-written, game-specific report-card summaries (Claude). */
+  aiNarrative: boolean;
   /** Your branding on report cards. */
   branding: boolean;
   /** Multiple coaches on one shared roster. */
@@ -30,6 +32,7 @@ const TABLE: Record<Plan, Entitlements> = {
     curriculum: false,
     reportCardExport: false,
     growthHistory: false,
+    aiNarrative: false,
     branding: false,
     multiCoach: false,
     scanPerDay: 1,
@@ -40,6 +43,7 @@ const TABLE: Record<Plan, Entitlements> = {
     curriculum: true,
     reportCardExport: true,
     growthHistory: true,
+    aiNarrative: true,
     branding: false,
     multiCoach: false,
     scanPerDay: 8,
@@ -50,6 +54,7 @@ const TABLE: Record<Plan, Entitlements> = {
     curriculum: true,
     reportCardExport: true,
     growthHistory: true,
+    aiNarrative: true,
     branding: true,
     multiCoach: false,
     scanPerDay: 20,
@@ -60,6 +65,7 @@ const TABLE: Record<Plan, Entitlements> = {
     curriculum: true,
     reportCardExport: true,
     growthHistory: true,
+    aiNarrative: true,
     branding: true,
     multiCoach: true,
     scanPerDay: 60,

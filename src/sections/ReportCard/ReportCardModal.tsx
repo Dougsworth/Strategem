@@ -1,9 +1,10 @@
-import { useMemo } from "react";
-import { Lock } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { Lock, Sparkles } from "lucide-react";
 import { useStudent } from "@/lib/StudentContext";
 import { useAuth } from "@/lib/AuthContext";
 import { entitlements } from "@/lib/entitlements";
 import { buildReportCard, type SkillLine } from "@/lib/reportCard";
+import { fetchNarrative } from "@/lib/narrative";
 import { Sparkline } from "@/components/Sparkline";
 import { Badge, TrendBadge } from "@/components/Badge";
 import type { Delta } from "@/lib/snapshots";
@@ -17,6 +18,26 @@ export const ReportCardModal = () => {
     () => (report ? buildReportCard(report, deltas?.rating) : null),
     [report, deltas],
   );
+
+  // Coach+ gets a Claude-written, game-specific summary (cached per report
+  // version). Free stays on the deterministic rules-based one.
+  const [aiNarrative, setAiNarrative] = useState<string | null>(null);
+  const [aiLoading, setAiLoading] = useState(false);
+  useEffect(() => {
+    if (!reportCardOpen || !report || !ent.aiNarrative) {
+      setAiNarrative(null);
+      return;
+    }
+    let cancelled = false;
+    setAiLoading(true);
+    fetchNarrative(report)
+      .then((n) => !cancelled && setAiNarrative(n || null))
+      .catch(() => !cancelled && setAiNarrative(null))
+      .finally(() => !cancelled && setAiLoading(false));
+    return () => {
+      cancelled = true;
+    };
+  }, [reportCardOpen, report, ent.aiNarrative]);
 
   if (!reportCardOpen || !report || !card) return null;
 
@@ -98,15 +119,38 @@ export const ReportCardModal = () => {
           </div>
         </div>
 
-        {/* Narrative */}
+        {/* Narrative — Claude-written for Coach+, rules-based otherwise. */}
         <div className="mt-5">
           <div className="mb-3 flex items-center gap-2">
             <p className="eyebrow">Coach Summary</p>
-            <span title="Auto-generated from the analysis. Numbers are exact; prose is templated (Claude-upgradeable).">
-              <Badge tone="meta">Auto</Badge>
-            </span>
+            {ent.aiNarrative ? (
+              <span
+                className="inline-flex items-center gap-1 rounded-full bg-accent/10 px-2 py-0.5 font-mono text-[10px] font-bold uppercase tracking-wide text-accent"
+                title="Written by Claude from this student's exact analysis. Numbers come straight from the data."
+              >
+                <Sparkles size={11} />
+                AI
+              </span>
+            ) : (
+              <span title="Auto-generated from the analysis. Numbers are exact; prose is templated.">
+                <Badge tone="meta">Auto</Badge>
+              </span>
+            )}
           </div>
-          <p className="leading-relaxed text-ink">{card.narrative}</p>
+          {ent.aiNarrative && aiLoading && !aiNarrative ? (
+            <div className="space-y-2">
+              <div className="h-4 w-full animate-pulse rounded bg-ink-soft" />
+              <div className="h-4 w-11/12 animate-pulse rounded bg-ink-soft" />
+              <div className="h-4 w-4/5 animate-pulse rounded bg-ink-soft" />
+              <p className="pt-1 font-mono text-[10px] uppercase tracking-wide text-muted/60">
+                Writing {report.displayName.split(/\s+/)[0]}’s summary…
+              </p>
+            </div>
+          ) : (
+            <p className="whitespace-pre-line leading-relaxed text-ink">
+              {aiNarrative ?? card.narrative}
+            </p>
+          )}
         </div>
 
         {/* Since last review — growth tracking is a Coach-plan feature. */}

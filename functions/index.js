@@ -244,6 +244,67 @@ exports.lunipayWebhook = onRequest(
   },
 );
 
+// AI report-card narrative (Coach+). Cheap (Haiku, cached client-side per report
+// version). Plan is checked server-side so only paid coaches can spend tokens.
+const NARRATIVE_SYSTEM =
+  "You are an experienced, encouraging chess coach writing a short report-card " +
+  "summary about a student, for their coach to read. You are given ONLY structured " +
+  "analysis data as JSON. Hard rules: use ONLY the numbers and facts provided — " +
+  "NEVER invent ratings, percentages, opponents, move names, or game details. Write " +
+  "2 short paragraphs (about 5–7 sentences total), warm but honest. Refer to their " +
+  "concrete patterns by name (the recurring mistakes, weakest phase, and last game). " +
+  "Finish with the single most important thing to work on next. Plain prose only — " +
+  "no markdown, headings, or bullet points.";
+
+exports.generateNarrative = onCall(
+  { secrets: [ANTHROPIC_KEY], maxInstances: 5, timeoutSeconds: 30 },
+  async (req) => {
+    if (!req.auth) {
+      throw new HttpsError("unauthenticated", "Please sign in first.");
+    }
+    // Coach plan or higher only — this is the gate that protects token spend.
+    const coachSnap = await db.doc(`coaches/${req.auth.uid}`).get();
+    const plan = coachSnap.exists ? coachSnap.data().plan : "free";
+    if (!plan || plan === "free") {
+      throw new HttpsError(
+        "permission-denied",
+        "AI coach summaries are part of the Coach plan.",
+      );
+    }
+    const summary = req.data && req.data.summary;
+    if (!summary) {
+      throw new HttpsError("invalid-argument", "No analysis data was provided.");
+    }
+
+    const resp = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: {
+        "x-api-key": ANTHROPIC_KEY.value(),
+        "anthropic-version": "2023-06-01",
+        "content-type": "application/json",
+      },
+      body: JSON.stringify({
+        model: "claude-haiku-4-5-20251001",
+        max_tokens: 500,
+        system: NARRATIVE_SYSTEM,
+        messages: [
+          {
+            role: "user",
+            content: "Student analysis data (JSON):\n" + JSON.stringify(summary),
+          },
+        ],
+      }),
+    });
+    if (!resp.ok) {
+      const text = await resp.text();
+      throw new HttpsError("internal", `Narrative failed: ${resp.status} ${text.slice(0, 200)}`);
+    }
+    const data = await resp.json();
+    const narrative = (data.content || []).map((c) => c.text || "").join("").trim();
+    return { narrative };
+  },
+);
+
 const SCORESHEET_PROMPT =
   "This image is a chess scoresheet (the paper players fill in during a game). " +
   "Transcribe ALL the moves into standard algebraic notation as PGN movetext only, " +

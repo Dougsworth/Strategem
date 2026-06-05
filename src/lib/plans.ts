@@ -35,10 +35,10 @@ export const PLANS: PlanTier[] = [
     recommended: true,
     features: [
       "Up to 8 students",
+      "AI-written, game-specific report summaries",
       "Curriculum — auto training plans per student",
       "Analytics — growth, consistency & mindset signals",
       "Shareable report-card PDFs",
-      "Growth tracking over time",
       "8 scoresheet scans / day",
     ],
   },
