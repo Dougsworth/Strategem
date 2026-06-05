@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { ScanLine } from "lucide-react";
+import { Check, FolderPlus, ScanLine } from "lucide-react";
 import { GameViewer } from "@/sections/Review/GameViewer";
 import { useScannedGames } from "@/lib/ScannedGamesContext";
 import { getScanImage, saveScanImage, compressImage } from "@/lib/scanImages";
@@ -11,23 +11,39 @@ import { ScanQuota } from "@/components/ScanQuota";
 
 // Re-opens a saved scanned game full-screen, reusing the same scoresheet viewer.
 export const ScannedGameModal = () => {
-  const { openGame, close, updateGame } = useScannedGames();
+  const { openGame, close, updateGame, saveScan, open } = useScannedGames();
   const { user } = useAuth();
   const refreshed = useRef<Set<string>>(new Set());
   const fileRef = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [saved, setSaved] = useState(false);
   const id = openGame?.id;
   const pgn = openGame?.pgn;
+  // Opened via a share link — transient, not yet in this coach's library.
+  const isShared = !!id && id.startsWith("shared-");
 
   // Refresh the saved game's summary (move count / names) the first time it's
-  // opened, in case it was saved before the beam reconstruction existed.
+  // opened — but only for OWNED games (a shared game isn't in the library).
   useEffect(() => {
-    if (id && pgn && !refreshed.current.has(id)) {
+    if (id && pgn && !isShared && !refreshed.current.has(id)) {
       refreshed.current.add(id);
       updateGame(id, pgn);
     }
-  }, [id, pgn, updateGame]);
+  }, [id, pgn, isShared, updateGame]);
+
+  // Keep this shared game: add it to the library and re-open the owned copy
+  // (so it stops being transient and gains Rescan / persistence).
+  function saveToLibrary() {
+    if (!openGame) return;
+    const g = saveScan(openGame.pgn);
+    if (g) {
+      setSaved(true);
+      open(g);
+    } else {
+      setError("Couldn’t save — nothing legible to keep.");
+    }
+  }
 
   // Re-scan: upload a (fresh) photo to re-transcribe this game with the latest
   // OCR + reconstruction, and attach the photo for comparison.
@@ -64,32 +80,45 @@ export const ScannedGameModal = () => {
     <div className="fixed inset-0 z-[120] flex animate-fade-in flex-col bg-paper">
       <header className="flex items-center justify-between border-b border-line px-6 py-3">
         <div>
-          <p className="eyebrow">Saved game</p>
+          <p className="eyebrow">{isShared ? "Shared game" : "Saved game"}</p>
           <h2 className="mt-0.5 font-display text-lg font-bold tracking-tight">
             {openGame.white} – {openGame.black}
           </h2>
         </div>
         <div className="flex items-center gap-3">
-          <ScanQuota className="hidden sm:inline-flex" />
-          <input
-            ref={fileRef}
-            type="file"
-            accept="image/*"
-            className="hidden"
-            onChange={(e) => {
-              const f = e.target.files?.[0];
-              if (f) void rescan(f);
-              e.target.value = "";
-            }}
-          />
-          <button
-            onClick={() => fileRef.current?.click()}
-            disabled={busy}
-            className="flex items-center gap-1.5 rounded-lg border border-line px-3 py-2 text-sm font-medium transition-colors hover:bg-ink-soft disabled:opacity-50"
-          >
-            <ScanLine size={14} />
-            {busy ? "Reading…" : "Rescan"}
-          </button>
+          {isShared ? (
+            <button
+              onClick={saveToLibrary}
+              disabled={saved}
+              className="flex items-center gap-1.5 rounded-lg border border-line px-3 py-2 text-sm font-medium transition-colors hover:bg-ink-soft disabled:opacity-50"
+            >
+              {saved ? <Check size={14} className="text-positive" /> : <FolderPlus size={14} />}
+              {saved ? "Saved" : "Save to my library"}
+            </button>
+          ) : (
+            <>
+              <ScanQuota className="hidden sm:inline-flex" />
+              <input
+                ref={fileRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={(e) => {
+                  const f = e.target.files?.[0];
+                  if (f) void rescan(f);
+                  e.target.value = "";
+                }}
+              />
+              <button
+                onClick={() => fileRef.current?.click()}
+                disabled={busy}
+                className="flex items-center gap-1.5 rounded-lg border border-line px-3 py-2 text-sm font-medium transition-colors hover:bg-ink-soft disabled:opacity-50"
+              >
+                <ScanLine size={14} />
+                {busy ? "Reading…" : "Rescan"}
+              </button>
+            </>
+          )}
           <button
             onClick={close}
             className="rounded-lg bg-ink px-4 py-2 text-sm font-medium text-paper transition-opacity hover:opacity-90"

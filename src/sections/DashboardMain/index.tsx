@@ -30,8 +30,11 @@ export const DashboardMain = () => {
       <div className="col-span-12 md:col-span-9">
         {view === "lab" ? (
           <LabView />
-        ) : selected ? (
+        ) : (
           <div className="space-y-8">
+            {view === "roster" && <DailyPuzzle />}
+            {selected ? (
+              <>
             {view === "roster" && (
               <>
                 <QuickStartGuide />
@@ -49,7 +52,6 @@ export const DashboardMain = () => {
                     />
                   )
                 )}
-                <DailyPuzzle />
               </>
             )}
 
@@ -86,22 +88,24 @@ export const DashboardMain = () => {
                   ]}
                 />
               ))}
+              </>
+            ) : (
+              !rosterLoading && (
+                <div className="grid min-h-[60vh] place-items-center rounded-2xl border border-dashed border-line">
+                  <div className="max-w-sm text-center">
+                    <h2 className="font-display text-2xl font-bold tracking-tight">
+                      Analyze any Lichess player
+                    </h2>
+                    <p className="mt-2 text-sm leading-relaxed text-muted">
+                      Paste a profile or game URL in the roster to pull their recent
+                      games, diagnose strengths and weaknesses, and generate a
+                      targeted training plan.
+                    </p>
+                  </div>
+                </div>
+              )
+            )}
           </div>
-        ) : (
-          !rosterLoading && (
-            <div className="grid min-h-[60vh] place-items-center rounded-2xl border border-dashed border-line">
-              <div className="max-w-sm text-center">
-                <h2 className="font-display text-2xl font-bold tracking-tight">
-                  Analyze any Lichess player
-                </h2>
-                <p className="mt-2 text-sm leading-relaxed text-muted">
-                  Paste a profile or game URL in the roster to pull their recent
-                  games, diagnose strengths and weaknesses, and generate a
-                  targeted training plan.
-                </p>
-              </div>
-            </div>
-          )
         )}
       </div>
     </main>
