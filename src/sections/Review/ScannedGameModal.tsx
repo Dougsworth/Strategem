@@ -3,7 +3,7 @@ import { useScannedGames } from "@/lib/ScannedGamesContext";
 
 // Re-opens a saved scanned game full-screen, reusing the same scoresheet viewer.
 export const ScannedGameModal = () => {
-  const { openGame, close } = useScannedGames();
+  const { openGame, close, updateGame } = useScannedGames();
   if (!openGame) return null;
 
   return (
@@ -24,7 +24,10 @@ export const ScannedGameModal = () => {
       </header>
 
       <div className="mx-auto w-full max-w-6xl flex-1 overflow-y-auto p-6">
-        <GameViewer pgn={openGame.pgn} />
+        <GameViewer
+          pgn={openGame.pgn}
+          onPgnChange={(p) => updateGame(openGame.id, p)}
+        />
       </div>
     </div>
   );

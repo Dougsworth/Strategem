@@ -16,8 +16,9 @@ export const ScoresheetModal = ({ onClose }: { onClose: () => void }) => {
   const [error, setError] = useState<string | null>(null);
   const [dragging, setDragging] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [savedId, setSavedId] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
-  const { saveScan } = useScannedGames();
+  const { saveScan, updateGame } = useScannedGames();
   const { user } = useAuth();
 
   // Keep a scanned/loaded game in the coach's library so it's there later.
@@ -25,7 +26,9 @@ export const ScoresheetModal = ({ onClose }: { onClose: () => void }) => {
     setPgn(text);
     setDraft(text);
     setStage("view");
-    setSaved(Boolean(saveScan(text)));
+    const g = saveScan(text);
+    setSaved(Boolean(g));
+    setSavedId(g?.id ?? null);
   }
 
   async function onFile(file: File) {
@@ -167,25 +170,15 @@ export const ScoresheetModal = ({ onClose }: { onClose: () => void }) => {
                 <span className="font-semibold">Scanned Games</span> in the sidebar.
               </div>
             )}
-            <GameViewer pgn={pgn} />
-            {/* Let the user fix any misread moves (handwriting OCR isn't perfect). */}
-            <details className="rounded-lg bg-ink-soft/60 px-3 py-2 text-sm">
-              <summary className="cursor-pointer font-medium text-muted">
-                Edit the moves (if anything was misread)
-              </summary>
-              <textarea
-                value={draft}
-                onChange={(e) => setDraft(e.target.value)}
-                rows={3}
-                className="mt-2 w-full rounded-lg border border-line bg-card px-3 py-2 text-sm outline-none ring-accent/30 focus:ring-2"
-              />
-              <button
-                onClick={() => setPgn(draft)}
-                className="mt-2 rounded-lg bg-ink px-3 py-1.5 text-sm font-medium text-paper"
-              >
-                Apply edits
-              </button>
-            </details>
+            {/* Edit-the-moves now lives inside the viewer; edits persist to the
+                saved library copy. */}
+            <GameViewer
+              pgn={pgn}
+              onPgnChange={(p) => {
+                setPgn(p);
+                if (savedId) updateGame(savedId, p);
+              }}
+            />
             <button
               onClick={() => {
                 setStage("input");

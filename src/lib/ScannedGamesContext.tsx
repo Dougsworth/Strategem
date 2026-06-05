@@ -12,6 +12,7 @@ import {
   loadScannedGames,
   makeGame,
   persistScannedGames,
+  summarize,
   SCANNED_GAMES_CAP,
   type ScannedGame,
 } from "./scannedGames";
@@ -20,6 +21,8 @@ interface ScannedGamesValue {
   games: ScannedGame[];
   /** Save a scanned PGN. Returns the saved (or already-existing) game. */
   saveScan: (pgn: string) => ScannedGame | null;
+  /** Replace a saved game's moves (e.g. after fixing a misread). */
+  updateGame: (id: string, pgn: string) => void;
   removeGame: (id: string) => void;
   /** The game currently open in the full-screen viewer, if any. */
   openGame: ScannedGame | null;
@@ -64,6 +67,23 @@ export function ScannedGamesProvider({ children }: { children: ReactNode }) {
     [games, uid],
   );
 
+  const updateGame = useCallback(
+    (id: string, pgn: string) => {
+      const trimmed = pgn.trim();
+      setGames((prev) => {
+        const next = prev.map((g) =>
+          g.id === id ? { ...g, pgn: trimmed, ...summarize(trimmed) } : g,
+        );
+        void persistScannedGames(uid, next);
+        return next;
+      });
+      setOpenGame((o) =>
+        o?.id === id ? { ...o, pgn: trimmed, ...summarize(trimmed) } : o,
+      );
+    },
+    [uid],
+  );
+
   const removeGame = useCallback(
     (id: string) => {
       setGames((prev) => {
@@ -80,12 +100,13 @@ export function ScannedGamesProvider({ children }: { children: ReactNode }) {
     () => ({
       games,
       saveScan,
+      updateGame,
       removeGame,
       openGame,
       open: setOpenGame,
       close: () => setOpenGame(null),
     }),
-    [games, saveScan, removeGame, openGame],
+    [games, saveScan, updateGame, removeGame, openGame],
   );
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;

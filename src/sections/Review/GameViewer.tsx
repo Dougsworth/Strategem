@@ -83,9 +83,25 @@ function parseGame(pgn: string): ParsedGame {
   return { moves, headers, ok: moves.length > 0, truncated, corrections };
 }
 
-// Step through a game from PGN move text. Read-only board + clickable move list.
-export function GameViewer({ pgn }: { pgn: string }) {
-  const parsed = useMemo(() => parseGame(pgn), [pgn]);
+// Step through a game from PGN move text. Read-only board + clickable move list,
+// plus an "Edit the moves" box so misreads can be fixed right here.
+export function GameViewer({
+  pgn,
+  onPgnChange,
+}: {
+  pgn: string;
+  /** Called when the user edits + applies the moves (so the parent can persist). */
+  onPgnChange?: (pgn: string) => void;
+}) {
+  // Internal copy so the moves can be edited in place; re-syncs if the prop changes.
+  const [pgnText, setPgnText] = useState(pgn);
+  const [draft, setDraft] = useState(pgn);
+  useEffect(() => {
+    setPgnText(pgn);
+    setDraft(pgn);
+  }, [pgn]);
+
+  const parsed = useMemo(() => parseGame(pgnText), [pgnText]);
 
   const [ply, setPly] = useState(parsed.moves.length); // start at final position
   const [lichessBusy, setLichessBusy] = useState(false);
@@ -93,6 +109,11 @@ export function GameViewer({ pgn }: { pgn: string }) {
   const [orientation, setOrientation] = useState<Color>("w");
   const [copied, setCopied] = useState(false);
   const boardSize = useBoardSize(520);
+
+  function applyEdits() {
+    setPgnText(draft);
+    onPgnChange?.(draft);
+  }
 
   const total = parsed.moves.length;
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -127,7 +148,7 @@ export function GameViewer({ pgn }: { pgn: string }) {
 
   async function copyPgn() {
     try {
-      await navigator.clipboard.writeText(pgn.trim());
+      await navigator.clipboard.writeText(pgnText.trim());
       setCopied(true);
       setTimeout(() => setCopied(false), 1500);
     } catch {
@@ -136,7 +157,7 @@ export function GameViewer({ pgn }: { pgn: string }) {
   }
 
   function downloadPgn() {
-    const blob = new Blob([pgn.trim() + "\n"], { type: "application/x-chess-pgn" });
+    const blob = new Blob([pgnText.trim() + "\n"], { type: "application/x-chess-pgn" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
@@ -149,7 +170,7 @@ export function GameViewer({ pgn }: { pgn: string }) {
     setLichessBusy(true);
     setLichessErr(null);
     try {
-      const url = await importToLichess(pgn);
+      const url = await importToLichess(pgnText);
       window.open(url, "_blank", "noopener");
     } catch (e) {
       setLichessErr(e instanceof Error ? e.message : "Couldn’t open on Lichess.");
@@ -174,9 +195,12 @@ export function GameViewer({ pgn }: { pgn: string }) {
 
   if (!parsed.ok) {
     return (
-      <div className="grid place-items-center rounded-xl bg-ink-soft p-8 text-center text-sm text-muted">
-        Couldn’t read the very first move. Check the notation in{" "}
-        <span className="font-medium text-ink">Edit the moves</span> and try again.
+      <div className="flex flex-col gap-3">
+        <div className="grid place-items-center rounded-xl bg-ink-soft p-8 text-center text-sm text-muted">
+          Couldn’t read the moves. Fix the notation in{" "}
+          <span className="font-medium text-ink">Edit the moves</span> below and apply.
+        </div>
+        <MovesEditor draft={draft} setDraft={setDraft} onApply={applyEdits} />
       </div>
     );
   }
@@ -329,7 +353,39 @@ export function GameViewer({ pgn }: { pgn: string }) {
           </p>
         </div>
       </div>
+      <MovesEditor draft={draft} setDraft={setDraft} onApply={applyEdits} />
     </div>
+  );
+}
+
+function MovesEditor({
+  draft,
+  setDraft,
+  onApply,
+}: {
+  draft: string;
+  setDraft: (s: string) => void;
+  onApply: () => void;
+}) {
+  return (
+    <details className="rounded-xl border border-line bg-card px-4 py-3">
+      <summary className="cursor-pointer text-sm font-medium text-muted">
+        Edit the moves (if anything was misread)
+      </summary>
+      <textarea
+        value={draft}
+        onChange={(e) => setDraft(e.target.value)}
+        rows={4}
+        spellCheck={false}
+        className="mt-3 w-full rounded-lg border border-line bg-paper px-3 py-2 font-mono text-sm outline-none ring-accent/30 focus:ring-2"
+      />
+      <button
+        onClick={onApply}
+        className="mt-2 rounded-lg bg-ink px-3 py-1.5 text-sm font-medium text-paper transition-opacity hover:opacity-90"
+      >
+        Apply edits
+      </button>
+    </details>
   );
 }
 
