@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { CheckCircle2, X } from "lucide-react";
 import { useAuth } from "@/lib/AuthContext";
 import { planName } from "@/lib/plans";
+import { confirmPendingCheckout } from "@/lib/checkout";
 
 // Handles the return from LuniPay's hosted checkout (`?checkout=success|cancel`).
 // The plan itself updates live via the coach-doc listener once the webhook
@@ -26,6 +27,9 @@ export function CheckoutToast() {
         "",
         window.location.pathname + (qs ? `?${qs}` : "") + window.location.hash,
       );
+      // Verify the payment ourselves right away — don't wait on the webhook.
+      // The coach-doc listener flips the UI to upgraded as soon as this lands.
+      if (c === "success") void confirmPendingCheckout();
     }
   }, []);
 

@@ -191,6 +191,41 @@ exports.leaveClub = onCall({ maxInstances: 5 }, async (req) => {
   return { ok: true };
 });
 
+// Confirm a checkout immediately on return from LuniPay — so the plan activates
+// without waiting on the (flaky in test mode) webhook. Re-fetches the session,
+// verifies it's paid AND belongs to the caller, then flips their plan. The
+// webhook stays as a backup; this is the fast path.
+exports.confirmCheckout = onCall(
+  { secrets: [LUNIPAY_SECRET], maxInstances: 5 },
+  async (req) => {
+    if (!req.auth) {
+      throw new HttpsError("unauthenticated", "Please sign in first.");
+    }
+    const sessionId = req.data && req.data.sessionId;
+    if (!sessionId) {
+      throw new HttpsError("invalid-argument", "No session id.");
+    }
+    const r = await fetch(`${LUNI_BASE}/checkout/sessions/${sessionId}`, {
+      headers: { Authorization: `Bearer ${LUNIPAY_SECRET.value()}` },
+    });
+    if (!r.ok) return { paid: false };
+    const session = await r.json();
+    const paid =
+      session.payment_status === "paid" || session.status === "COMPLETE";
+    const uid = session.metadata && session.metadata.uid;
+    const plan = session.metadata && session.metadata.plan;
+    // Only ever flip the caller's OWN session.
+    if (paid && uid === req.auth.uid && plan) {
+      await db.doc(`coaches/${req.auth.uid}`).set(
+        { plan, billing: { lastSession: sessionId, updatedAt: Date.now() } },
+        { merge: true },
+      );
+      return { paid: true, plan };
+    }
+    return { paid };
+  },
+);
+
 // Self-service downgrade to free. Plan is server-only now (rules block client
 // plan writes), so the "downgrade" button calls this. It can ONLY set free —
 // upgrades always go through paid checkout + the webhook.
