@@ -216,7 +216,7 @@ export function GameViewer({
           Couldn’t read the moves. Fix the notation in{" "}
           <span className="font-medium text-ink">Edit the moves</span> below and apply.
         </div>
-        <MovesEditor draft={draft} setDraft={setDraft} onApply={applyEdits} moveIndex={curIdx} />
+        <MovesEditor draft={draft} setDraft={setDraft} onApply={applyEdits} moveIndex={curIdx} onSeek={(i) => setPly(Math.max(0, Math.min(total, i + 1)))} />
       </div>
     );
   }
@@ -370,7 +370,7 @@ export function GameViewer({
           </p>
         </div>
       </div>
-      <MovesEditor draft={draft} setDraft={setDraft} onApply={applyEdits} moveIndex={curIdx} />
+      <MovesEditor draft={draft} setDraft={setDraft} onApply={applyEdits} moveIndex={curIdx} onSeek={(i) => setPly(Math.max(0, Math.min(total, i + 1)))} />
     </div>
   );
 }
@@ -453,17 +453,47 @@ function findMoveTokenRange(text: string, idx: number): [number, number] | null 
   return null;
 }
 
+// Inverse of findMoveTokenRange: the move index at (or just before) a caret
+// offset — so clicking in the text can jump the board to that move.
+function moveIndexAtOffset(text: string, offset: number): number {
+  const anchor = text.search(/\b1\s*\.\s*[a-hKQRBNO0]/);
+  const re = /\S+/g;
+  re.lastIndex = anchor >= 0 ? anchor : 0;
+  let count = 0;
+  let result = -1;
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(text))) {
+    const raw = m[0];
+    if (/^\d+\.+$/.test(raw)) continue;
+    if (/^(1-0|0-1|1\/2-1\/2|\*)$/.test(raw)) continue;
+    let s = m.index;
+    let tok = raw;
+    const num = tok.match(/^\d+\.+/);
+    if (num) {
+      s += num[0].length;
+      tok = tok.slice(num[0].length);
+    }
+    if (!tok) continue;
+    if (s <= offset) result = count;
+    count++;
+  }
+  return result;
+}
+
 // A textarea with a highlight band behind the active move. The backdrop mirrors
 // the textarea's text/layout exactly; the textarea sits on top (transparent bg)
-// so the caret + typing stay native while the highlight shows through.
+// so the caret + typing stay native while the highlight shows through. Clicking
+// in the text seeks the board to that move.
 function HighlightTextarea({
   value,
   onChange,
   range,
+  onSeek,
 }: {
   value: string;
   onChange: (s: string) => void;
   range: [number, number] | null;
+  onSeek?: (moveIndex: number) => void;
 }) {
   const taRef = useRef<HTMLTextAreaElement>(null);
   const bgRef = useRef<HTMLDivElement>(null);
@@ -484,6 +514,12 @@ function HighlightTextarea({
       sync();
     }
   }, [range, value]);
+
+  // Click (or arrow within) the text → jump the board to that move.
+  function seekFromCaret() {
+    if (!onSeek || !taRef.current) return;
+    onSeek(moveIndexAtOffset(value, taRef.current.selectionStart ?? 0));
+  }
 
   const shared =
     "whitespace-pre-wrap break-words px-3 py-2 font-mono text-sm leading-6";
@@ -512,6 +548,12 @@ function HighlightTextarea({
         value={value}
         onChange={(e) => onChange(e.target.value)}
         onScroll={sync}
+        onClick={seekFromCaret}
+        onKeyUp={(e) => {
+          if (e.key.startsWith("Arrow") || e.key === "Home" || e.key === "End") {
+            seekFromCaret();
+          }
+        }}
         spellCheck={false}
         className={`absolute inset-0 h-full w-full resize-none bg-transparent text-ink caret-ink outline-none ${shared}`}
       />
@@ -524,12 +566,15 @@ function MovesEditor({
   setDraft,
   onApply,
   moveIndex,
+  onSeek,
 }: {
   draft: string;
   setDraft: (s: string) => void;
   onApply: () => void;
   /** Index of the move currently on the board, to highlight in the text. */
   moveIndex: number;
+  /** Jump the board to a move index when the user clicks in the text. */
+  onSeek?: (moveIndex: number) => void;
 }) {
   const range = useMemo(
     () => findMoveTokenRange(draft, moveIndex),
@@ -538,9 +583,9 @@ function MovesEditor({
   return (
     <details open className="rounded-xl border border-line bg-card px-4 py-3">
       <summary className="cursor-pointer text-sm font-medium text-muted">
-        Edit the moves (if anything was misread)
+        Edit the moves (if anything was misread) · click a move to jump there
       </summary>
-      <HighlightTextarea value={draft} onChange={setDraft} range={range} />
+      <HighlightTextarea value={draft} onChange={setDraft} range={range} onSeek={onSeek} />
       <button
         onClick={onApply}
         className="mt-2 rounded-lg bg-ink px-3 py-1.5 text-sm font-medium text-paper transition-opacity hover:opacity-90"
