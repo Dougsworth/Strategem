@@ -15,42 +15,42 @@ import type { Color } from "chess.js";
 import { InteractiveBoard } from "@/components/InteractiveBoard";
 import { useBoardSize } from "@/components/useBoardSize";
 import { importToLichess } from "@/lib/scoresheet";
+import { snapMove } from "@/lib/chess/snapMove";
 
 interface ParsedGame {
   moves: string[];
   headers: Record<string, string>;
   ok: boolean;
-  /** Set when OCR produced an illegal move — we keep the legal prefix and flag where it broke. */
+  /** Set when even the smart matcher couldn't place a move — we keep the legal prefix. */
   truncated: { atMoveNo: number; token: string } | null;
+  /** Misreads we auto-corrected to a legal move, e.g. "c4" → "e4". */
+  corrections: { from: string; to: string }[];
 }
 
-// Normalize a single OCR'd SAN token: castling with zeros, stray check marks, e.p. tags.
-function normToken(t: string): string {
-  return t
-    .replace(/0-0-0/g, "O-O-O")
-    .replace(/0-0/g, "O-O")
-    .replace(/e\.?p\.?/gi, "")
-    .replace(/[+#!?]+$/g, "") // legality (check/mate) is recomputed by chess.js
-    .trim();
-}
-
-// Lenient PGN reader. Handwriting OCR is never perfect, so instead of rejecting the
-// whole game on one bad move, we replay token-by-token and keep every legal move up
-// to the first one that doesn't fit — then tell the user exactly where to look.
+// Lenient PGN reader. Handwriting OCR is never perfect, so we replay token-by-
+// token and SNAP each one to the most plausible legal move (snapMove) — pawns
+// when there's no piece letter, nearest legal move otherwise — instead of
+// rejecting the game on the first imperfect token.
 function parseGame(pgn: string): ParsedGame {
   const headers: Record<string, string> = {};
   for (const m of pgn.matchAll(/\[(\w+)\s+"([^"]*)"\]/g)) headers[m[1]] = m[2];
 
-  // Fast path: a fully-legal game loads cleanly.
+  // Fast path: a fully-legal game loads cleanly (no corrections needed).
   try {
     const c = new Chess();
     c.loadPgn(pgn);
     const moves = c.history();
     if (moves.length > 0) {
-      return { moves, headers: { ...c.header(), ...headers }, ok: true, truncated: null };
+      return {
+        moves,
+        headers: { ...c.header(), ...headers },
+        ok: true,
+        truncated: null,
+        corrections: [],
+      };
     }
   } catch {
-    /* fall through to lenient replay */
+    /* fall through to the smart token-by-token replay */
   }
 
   const c = new Chess();
@@ -63,23 +63,18 @@ function parseGame(pgn: string): ParsedGame {
   const tokens = body.split(/\s+/).filter(Boolean);
 
   const moves: string[] = [];
+  const corrections: { from: string; to: string }[] = [];
   let truncated: ParsedGame["truncated"] = null;
   for (const raw of tokens) {
-    const tok = normToken(raw);
-    if (!tok) continue;
-    try {
-      const m = c.move(tok);
-      if (!m) {
-        truncated = { atMoveNo: Math.floor(moves.length / 2) + 1, token: raw };
-        break;
-      }
-      moves.push(m.san);
-    } catch {
+    const snapped = snapMove(c, raw);
+    if (!snapped) {
       truncated = { atMoveNo: Math.floor(moves.length / 2) + 1, token: raw };
       break;
     }
+    moves.push(snapped.san);
+    if (snapped.corrected) corrections.push({ from: raw, to: snapped.san });
   }
-  return { moves, headers, ok: moves.length > 0, truncated };
+  return { moves, headers, ok: moves.length > 0, truncated, corrections };
 }
 
 // Step through a game from PGN move text. Read-only board + clickable move list.
@@ -192,6 +187,25 @@ export function GameViewer({ pgn }: { pgn: string }) {
 
   return (
     <div className="flex flex-col gap-3">
+      {parsed.corrections.length > 0 && (
+        <div className="rounded-xl border border-positive/30 bg-positive/10 px-4 py-3 text-sm">
+          <p className="font-semibold text-ink">
+            Auto-fixed {parsed.corrections.length}{" "}
+            {parsed.corrections.length === 1 ? "move" : "moves"} that looked misread.
+          </p>
+          <p className="mt-0.5 text-muted">
+            Snapped to the nearest legal move:{" "}
+            {parsed.corrections.slice(0, 6).map((c, i) => (
+              <span key={i} className="font-mono text-xs">
+                {i > 0 ? " · " : ""}
+                {c.from}→<span className="font-semibold text-ink">{c.to}</span>
+              </span>
+            ))}
+            {parsed.corrections.length > 6 ? " …" : ""}. Double-check them in{" "}
+            <span className="font-medium text-ink">Edit the moves</span> if needed.
+          </p>
+        </div>
+      )}
       {parsed.truncated && (
         <div className="rounded-xl border border-accent/30 bg-accent-soft px-4 py-3 text-sm">
           <p className="font-semibold text-ink">
