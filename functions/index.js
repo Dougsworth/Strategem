@@ -356,13 +356,19 @@ const SCORESHEET_PROMPT =
   "position; if two readings are both legal, prefer the one closest to the handwriting.\n" +
   "• If a move is truly illegible, infer the most likely LEGAL move that keeps the game " +
   "consistent rather than emitting an illegal one.\n\n" +
-  "Output ONLY the movetext — no headers, no result, no commentary, no code fences.";
+  "Output ONLY the movetext — no headers, no result, no commentary, no code fences. " +
+  "Do NOT write any sentence, explanation, or preamble: your reply MUST start with '1.'.";
 
 function cleanPgn(text) {
-  return text
+  let t = text
     .replace(/```[a-z]*/gi, "")
     .replace(/^\s*PGN[:\s]*/i, "")
     .trim();
+  // Models sometimes add a preamble ("I'll reconstruct…") before the moves.
+  // Cut everything before the first numbered move ("1." + a move).
+  const m = t.match(/\b1\s*\.\s*[a-hKQRBNO0]/);
+  if (m && m.index > 0) t = t.slice(m.index);
+  return t.trim();
 }
 
 exports.transcribeScoresheet = onCall(

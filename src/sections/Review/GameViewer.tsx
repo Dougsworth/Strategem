@@ -65,12 +65,18 @@ function parseGame(pgn: string): ParsedGame {
   const moves: string[] = [];
   const corrections: { from: string; to: string }[] = [];
   let truncated: ParsedGame["truncated"] = null;
+  let started = false;
   for (const raw of tokens) {
     const snapped = snapMove(c, raw);
     if (!snapped) {
+      // Ignore any leading prose the model may have added (e.g. "I'll
+      // reconstruct…") — but only skip clear non-move words (no rank digit),
+      // so a genuinely unreadable first move is still flagged, not skipped.
+      if (!started && !/[1-8]/.test(raw)) continue;
       truncated = { atMoveNo: Math.floor(moves.length / 2) + 1, token: raw };
       break;
     }
+    started = true;
     moves.push(snapped.san);
     if (snapped.corrected) corrections.push({ from: raw, to: snapped.san });
   }
