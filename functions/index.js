@@ -341,9 +341,18 @@ exports.generateNarrative = onCall(
 );
 
 const SCORESHEET_PROMPT =
-  "This image is a chess scoresheet (the paper players fill in during a game). " +
-  "Transcribe ALL the moves into standard algebraic notation as PGN movetext only, " +
-  "e.g. '1. e4 e5 2. Nf3 Nc6 3. Bb5 a6'. Read both columns (White then Black) row by row.\n\n" +
+  "This image is one or MORE chess scoresheets (the paper players fill in during a game). " +
+  "Transcribe the ENTIRE game as ONE continuous sequence of standard algebraic notation, " +
+  "PGN movetext only, e.g. '1. e4 e5 2. Nf3 Nc6 3. Bb5 a6'.\n\n" +
+  "READING ORDER (follow the move numbers):\n" +
+  "• A sheet has several numbered columns (e.g. moves 1–20, then 21–40, then 41–60). Read each " +
+  "column TOP-TO-BOTTOM, columns LEFT-TO-RIGHT. In each numbered row the WHITE move is the left " +
+  "cell, the BLACK move the right cell.\n" +
+  "• The image may contain MULTIPLE sheets placed side by side — a long game continued onto a " +
+  "second (or third) sheet. The sheet(s) to the RIGHT CONTINUE THE SAME GAME. Keep transcribing " +
+  "in order onto the end of the sequence. Continuation sheets often RESTART numbering at 1 — " +
+  "IGNORE the restart; do NOT begin a new game, just keep appending moves. Use the same two " +
+  "players throughout (read the names once).\n\n" +
   "CRITICAL — replay the game in your head as you read, and only ever output a move that " +
   "is LEGAL in the current position. Use these rules to resolve messy handwriting:\n" +
   "• No leading piece letter = a PAWN move (e4, exd5, e8=Q). A leading capital K/Q/R/B/N " +
@@ -398,7 +407,7 @@ exports.transcribeScoresheet = onCall(
       },
       body: JSON.stringify({
         model: "claude-sonnet-4-6",
-        max_tokens: 1024,
+        max_tokens: 2048, // multi-sheet games can run 100+ moves
         messages: [
           {
             role: "user",
