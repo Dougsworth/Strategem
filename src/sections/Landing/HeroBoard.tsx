@@ -12,9 +12,9 @@ import { CUSTOM_PIECES } from "@/components/chessPieces";
 // Auto-play pauses for a few seconds after anyone touches it, then resumes.
 // Floating analysis cards are decoration.
 
-// Warm, on-brand board palette — deliberately not the chess.com green.
-const LIGHT = "#ece6d8";
-const DARK = "#a99a82";
+// Original board palette.
+const LIGHT = "#eceed4";
+const DARK = "#7e9a64";
 
 const PLAY_INTERVAL = 1600; // ms between self-play moves
 const IDLE_AFTER_TOUCH = 6000; // pause self-play this long after a human move
