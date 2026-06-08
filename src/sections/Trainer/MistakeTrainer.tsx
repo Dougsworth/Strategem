@@ -1,9 +1,10 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { ExternalLink } from "lucide-react";
 import { Chess } from "chess.js";
 import { InteractiveBoard } from "@/components/InteractiveBoard";
 import { useBoardSize } from "@/components/useBoardSize";
 import type { Evidence } from "@/lib/types";
+import type { Grade } from "@/lib/fsrs";
 
 // Single-move drills built from the student's own mistakes. For each position
 // (taken from a real game, just before they went wrong), find the move the
@@ -46,10 +47,19 @@ export const MistakeTrainer = ({
   items,
   studentName,
   onClose,
+  onGrade,
+  srsMode = false,
 }: {
   items: Evidence[];
   studentName: string;
   onClose: () => void;
+  /**
+   * Called once per card with an auto-derived recall grade (first-try =
+   * Good, after a miss = Hard, revealed/failed = Again). Drives FSRS scheduling.
+   */
+  onGrade?: (index: number, grade: Grade) => void;
+  /** Spaced-review session — tweaks copy and the finish action. */
+  srsMode?: boolean;
 }) => {
   const [idx, setIdx] = useState(0);
   const [solvedCount, setSolvedCount] = useState(0);
@@ -59,6 +69,14 @@ export const MistakeTrainer = ({
   const [boardFen, setBoardFen] = useState(items[0]?.fen ?? "");
   const [lastMove, setLastMove] = useState<{ from: string; to: string } | null>(null);
   const boardSize = useBoardSize();
+
+  // Each card is graded exactly once, the moment it resolves.
+  const gradedRef = useRef<Set<number>>(new Set());
+  function grade(index: number, g: Grade) {
+    if (!onGrade || gradedRef.current.has(index)) return;
+    gradedRef.current.add(index);
+    onGrade(index, g);
+  }
 
   const ev = items[idx];
   const answerSan = useMemo(
@@ -87,7 +105,11 @@ export const MistakeTrainer = ({
         setBoardFen(applied.fen);
         setLastMove({ from: applied.from, to: applied.to });
       }
-      if (state === "solving") setSolvedCount((n) => n + 1);
+      if (state === "solving") {
+        setSolvedCount((n) => n + 1);
+        // attempts = wrong tries before this success.
+        grade(idx, attempts === 0 ? 3 : attempts === 1 ? 2 : 1);
+      }
       setState("correct");
       setFeedback(null);
     } else if (state === "solving") {
@@ -123,7 +145,9 @@ export const MistakeTrainer = ({
     <div className="fixed inset-0 z-[120] flex animate-fade-in flex-col bg-paper">
       <header className="flex items-center justify-between border-b border-line px-6 py-3">
         <div>
-          <p className="eyebrow">Fix your mistakes · from real games</p>
+          <p className="eyebrow">
+            {srsMode ? "Spaced review · resurfacing old mistakes" : "Fix your mistakes · from real games"}
+          </p>
           <h2 className="mt-0.5 font-display text-lg font-bold tracking-tight">
             Position {idx + 1} of {items.length}
           </h2>
@@ -189,7 +213,10 @@ export const MistakeTrainer = ({
             <div className="mt-auto flex flex-wrap gap-2 pt-4">
               {state === "solving" && attempts >= 1 && (
                 <button
-                  onClick={() => setState("revealed")}
+                  onClick={() => {
+                    grade(idx, 1); // revealed = didn't recall it
+                    setState("revealed");
+                  }}
                   className="rounded-lg bg-ink-soft px-4 py-2 text-sm font-semibold text-ink ring-1 ring-line transition-colors hover:bg-ink/10"
                 >
                   Reveal answer
@@ -205,12 +232,21 @@ export const MistakeTrainer = ({
                 Analyze on Lichess
               </a>
               {done ? (
-                <button
-                  onClick={restart}
-                  className="rounded-lg bg-accent px-4 py-2 text-sm font-bold text-paper transition-opacity hover:opacity-90"
-                >
-                  Done — {solvedCount}/{items.length} · Restart
-                </button>
+                srsMode ? (
+                  <button
+                    onClick={onClose}
+                    className="rounded-lg bg-accent px-4 py-2 text-sm font-bold text-paper transition-opacity hover:opacity-90"
+                  >
+                    Finish review — {solvedCount}/{items.length} solved
+                  </button>
+                ) : (
+                  <button
+                    onClick={restart}
+                    className="rounded-lg bg-accent px-4 py-2 text-sm font-bold text-paper transition-opacity hover:opacity-90"
+                  >
+                    Done — {solvedCount}/{items.length} · Restart
+                  </button>
+                )
               ) : (
                 state !== "solving" && (
                   <button

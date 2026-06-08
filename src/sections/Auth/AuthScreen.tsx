@@ -20,9 +20,13 @@ function GoogleIcon() {
   );
 }
 
-export const AuthScreen = () => {
+export const AuthScreen = ({
+  initialMode = "in",
+}: {
+  initialMode?: "in" | "up";
+}) => {
   const { signIn, signUp, signInWithGoogle } = useAuth();
-  const [mode, setMode] = useState<"in" | "up">("in");
+  const [mode, setMode] = useState<"in" | "up">(initialMode);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");

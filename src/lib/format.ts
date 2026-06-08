@@ -14,6 +14,21 @@ export function timeAgo(ms: number | null): string {
   return `${Math.round(days / 30)}mo ago`;
 }
 
+/** "in 3h", "tomorrow", "in 5 days". For future timestamps. */
+export function timeUntil(ms: number | null): string {
+  if (!ms) return "—";
+  const diff = ms - Date.now();
+  if (diff <= 0) return "now";
+  const hrs = Math.round(diff / 3_600_000);
+  if (hrs < 1) return "soon";
+  if (hrs < 24) return `in ${hrs}h`;
+  const days = Math.round(hrs / 24);
+  if (days === 1) return "tomorrow";
+  if (days < 30) return `in ${days} days`;
+  const mo = Math.round(days / 30);
+  return `in ${mo}mo`;
+}
+
 export const TREND_LABEL: Record<Trend, string> = {
   rising: "Rising",
   steady: "Steady",
