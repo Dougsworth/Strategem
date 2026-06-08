@@ -83,25 +83,37 @@ export const Features = () => (
       </p>
     </Reveal>
 
-    <div className="mt-14 grid overflow-hidden rounded-3xl border border-line bg-line md:grid-cols-3" style={{ gap: "1px" }}>
+    <div
+      className="mt-14 grid overflow-hidden rounded-3xl border border-line bg-line md:grid-cols-2"
+      style={{ gap: "1px" }}
+    >
       {FEATURES.map((f, i) => (
         <Reveal
           key={f.title}
-          delay={(i % 3) * 80}
-          className="group bg-card p-7 transition-colors hover:bg-ink-soft/40"
+          delay={(i % 2) * 80}
+          className="group relative overflow-hidden bg-card p-8 transition-colors duration-300 hover:bg-ink-soft/30 md:p-10"
         >
-          <div className="flex items-center justify-between">
-            <span className="grid h-11 w-11 place-items-center rounded-xl bg-accent-soft text-accent transition-transform duration-200 group-hover:-translate-y-0.5 group-hover:scale-105">
-              <f.icon size={20} />
+          {/* oversized index numeral — the editorial spine of the layout */}
+          <span className="pointer-events-none absolute -top-2 right-4 select-none font-display text-[6rem] font-bold leading-none text-ink/[0.045] transition-colors duration-300 group-hover:text-accent/10">
+            {String(i + 1).padStart(2, "0")}
+          </span>
+
+          <div className="relative flex items-center gap-3">
+            <span className="text-accent transition-transform duration-300 group-hover:-translate-y-0.5">
+              <f.icon size={22} strokeWidth={1.75} />
             </span>
-            <span className="font-mono text-[11px] text-muted/70">
-              {String(i + 1).padStart(2, "0")}
-            </span>
+            <span className="h-px flex-1 bg-line transition-colors duration-300 group-hover:bg-accent/30" />
           </div>
-          <h3 className="mt-5 font-display text-lg font-bold tracking-tight">
+
+          <h3 className="relative mt-6 font-display text-xl font-bold tracking-tight">
             {f.title}
           </h3>
-          <p className="mt-2 text-sm leading-relaxed text-muted">{f.body}</p>
+          <p className="relative mt-2.5 max-w-sm text-[15px] leading-relaxed text-muted">
+            {f.body}
+          </p>
+
+          {/* accent underline that grows on hover */}
+          <span className="absolute bottom-0 left-0 h-[3px] w-0 bg-accent transition-all duration-500 ease-out group-hover:w-full" />
         </Reveal>
       ))}
     </div>
@@ -137,25 +149,34 @@ export const HowItWorks = () => (
         </h2>
       </Reveal>
 
-      <div className="relative mt-14 grid gap-8 md:grid-cols-3">
-        {/* connecting line */}
-        <div className="pointer-events-none absolute left-0 right-0 top-[26px] hidden h-px bg-line md:block" />
-        {STEPS.map((s, i) => (
-          <Reveal key={s.title} delay={i * 110} className="relative">
-            <div className="flex items-center gap-4">
-              <span className="relative z-10 grid h-[52px] w-[52px] shrink-0 place-items-center rounded-2xl border border-line bg-card text-accent shadow-sm">
-                <s.icon size={22} />
-              </span>
-              <span className="font-mono text-sm text-muted/70">
+      <div className="relative mx-auto mt-16 max-w-3xl">
+        {/* vertical rail the numeral nodes sit on */}
+        <div className="pointer-events-none absolute bottom-8 left-7 top-6 w-px bg-gradient-to-b from-line via-line to-transparent md:left-8" />
+
+        <div className="space-y-11 md:space-y-14">
+          {STEPS.map((s, i) => (
+            <Reveal key={s.title} delay={i * 120} className="relative flex gap-6 md:gap-8">
+              {/* numeral node */}
+              <span className="relative z-10 grid h-14 w-14 shrink-0 place-items-center rounded-2xl bg-ink font-display text-xl font-bold text-paper shadow-[0_14px_30px_-12px_rgba(20,18,15,0.5)] md:h-16 md:w-16 md:text-2xl">
                 0{i + 1}
               </span>
-            </div>
-            <h3 className="mt-5 font-display text-lg font-bold tracking-tight">
-              {s.title}
-            </h3>
-            <p className="mt-2 text-sm leading-relaxed text-muted">{s.body}</p>
-          </Reveal>
-        ))}
+              <div className="pt-1.5 md:pt-3">
+                <div className="flex items-center gap-2 text-accent">
+                  <s.icon size={16} strokeWidth={2} />
+                  <span className="font-mono text-[11px] uppercase tracking-[0.18em]">
+                    Step {i + 1}
+                  </span>
+                </div>
+                <h3 className="mt-2 font-display text-xl font-bold tracking-tight md:text-2xl">
+                  {s.title}
+                </h3>
+                <p className="mt-2 max-w-lg text-[15px] leading-relaxed text-muted">
+                  {s.body}
+                </p>
+              </div>
+            </Reveal>
+          ))}
+        </div>
       </div>
     </div>
   </section>

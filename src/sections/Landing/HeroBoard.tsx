@@ -1,28 +1,105 @@
+import { useEffect, useRef, useState } from "react";
+import { Chessboard } from "react-chessboard";
+import { Chess } from "chess.js";
 import { Target, TrendingUp } from "lucide-react";
 
-// A stylized board "being read" by Strategem — last-move highlight, a flagged
-// blunder square, and floating analysis cards. Pure decoration; no chess logic.
+// A LIVE board for the hero: it plays itself with a slow trickle of legal moves,
+// and visitors can grab a piece and play their own — drags are validated by
+// chess.js, so only legal moves land. Auto-play pauses for a few seconds after
+// anyone touches it, then resumes, and the game resets once it ends or runs long
+// so it never grinds into a dead endgame. Floating analysis cards are decoration.
 
 const LIGHT = "#eceed4";
 const DARK = "#7e9a64";
 
-// A plausible middlegame snapshot (8 rows top→bottom, 8 files a→h).
-const POSITION: (string | null)[][] = [
-  ["♜", null, null, "♛", "♚", "♝", null, "♜"],
-  ["♟", "♟", null, null, null, "♟", "♟", "♟"],
-  [null, null, "♞", "♟", null, "♞", null, null],
-  [null, null, null, null, "♟", null, null, null],
-  [null, null, "♗", null, "♙", null, null, null],
-  [null, null, null, null, null, "♘", null, null],
-  ["♙", "♙", "♙", "♙", null, "♙", "♙", "♙"],
-  ["♖", "♘", "♗", "♕", "♔", null, null, "♖"],
-];
+// A recognizable, balanced middlegame to open on (Italian-ish). Always legal.
+const START_FEN =
+  "r1bq1rk1/pppp1ppp/2n2n2/2b1p3/2B1P3/2NP1N2/PPP2PPP/R1BQ1RK1 w - - 0 1";
 
-// r,c coordinates for highlights.
-const LAST_MOVE = new Set(["4,2", "2,2"]); // bishop landing + origin tint
-const BLUNDER = "3,4"; // the flagged square
+const PLAY_INTERVAL = 1500; // ms between self-play moves
+const IDLE_AFTER_TOUCH = 6000; // pause self-play this long after a human move
+const MAX_PLIES = 28; // reset before the position gets ugly
+
+function pickMove(game: Chess) {
+  const moves = game.moves({ verbose: true });
+  if (!moves.length) return null;
+  // Lightly favour captures so the self-play feels purposeful, not aimless.
+  const captures = moves.filter((m) => m.captured);
+  const pool = captures.length && captures.length < moves.length ? captures : moves;
+  return pool[Math.floor(Math.random() * pool.length)];
+}
 
 export const HeroBoard = () => {
+  const gameRef = useRef(new Chess(START_FEN));
+  const wrapRef = useRef<HTMLDivElement>(null);
+  const lastTouch = useRef(0);
+  const plies = useRef(0);
+
+  const [fen, setFen] = useState(gameRef.current.fen());
+  const [lastMove, setLastMove] = useState<{ from: string; to: string } | null>(null);
+  const [width, setWidth] = useState(380);
+
+  // Keep the board sized to its container (react-chessboard needs an explicit px).
+  useEffect(() => {
+    const el = wrapRef.current;
+    if (!el) return;
+    const ro = new ResizeObserver(([entry]) => {
+      setWidth(Math.round(entry.contentRect.width));
+    });
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
+  function reset() {
+    gameRef.current = new Chess(START_FEN);
+    plies.current = 0;
+    setFen(gameRef.current.fen());
+    setLastMove(null);
+  }
+
+  // Self-play loop. Skips a beat right after a human move so theirs stays visible.
+  useEffect(() => {
+    const id = setInterval(() => {
+      if (Date.now() - lastTouch.current < IDLE_AFTER_TOUCH) return;
+      const game = gameRef.current;
+      if (game.isGameOver() || plies.current >= MAX_PLIES) {
+        reset();
+        return;
+      }
+      const move = pickMove(game);
+      if (!move) {
+        reset();
+        return;
+      }
+      game.move(move);
+      plies.current += 1;
+      setFen(game.fen());
+      setLastMove({ from: move.from, to: move.to });
+    }, PLAY_INTERVAL);
+    return () => clearInterval(id);
+  }, []);
+
+  function onDrop(from: string, to: string) {
+    try {
+      const move = gameRef.current.move({ from, to, promotion: "q" });
+      if (!move) return false;
+      lastTouch.current = Date.now();
+      plies.current += 1;
+      setFen(gameRef.current.fen());
+      setLastMove({ from: move.from, to: move.to });
+      return true;
+    } catch {
+      return false; // illegal — snap the piece back
+    }
+  }
+
+  const squareStyles: Record<string, React.CSSProperties> = {};
+  if (lastMove) {
+    const hl = { background: "oklch(0.56 0.19 38 / 0.28)" };
+    squareStyles[lastMove.from] = hl;
+    squareStyles[lastMove.to] = hl;
+  }
+
   return (
     <div className="relative mx-auto w-full max-w-md">
       {/* ambient glows */}
@@ -32,46 +109,28 @@ export const HeroBoard = () => {
         style={{ animationDelay: "1.2s" }}
       />
 
-      {/* the board */}
-      <div className="relative animate-float rounded-[22px] border border-line bg-card p-3 shadow-[0_30px_70px_-28px_rgba(20,18,15,0.45)]">
-        <div className="overflow-hidden rounded-xl">
-          <div className="grid grid-cols-8">
-            {POSITION.map((row, r) =>
-              row.map((piece, c) => {
-                const key = `${r},${c}`;
-                const dark = (r + c) % 2 === 1;
-                const isLast = LAST_MOVE.has(key);
-                const isBlunder = key === BLUNDER;
-                return (
-                  <div
-                    key={key}
-                    className="relative grid aspect-square place-items-center"
-                    style={{ backgroundColor: dark ? DARK : LIGHT }}
-                  >
-                    {isLast && (
-                      <span className="absolute inset-0 bg-[oklch(0.56_0.19_38_/_0.28)]" />
-                    )}
-                    {isBlunder && (
-                      <span className="absolute inset-1 animate-glow-pulse rounded-md ring-2 ring-accent" />
-                    )}
-                    {piece && (
-                      <span
-                        className="relative z-10 text-[26px] leading-none sm:text-[30px]"
-                        style={{
-                          color: "#1c1b18",
-                          textShadow:
-                            "0 1px 0 rgba(255,255,255,0.35), 0 2px 3px rgba(0,0,0,0.25)",
-                        }}
-                      >
-                        {piece}
-                      </span>
-                    )}
-                  </div>
-                );
-              }),
-            )}
-          </div>
+      {/* the live board */}
+      <div className="relative rounded-[22px] border border-line bg-card p-3 shadow-[0_30px_70px_-28px_rgba(20,18,15,0.45)]">
+        <div ref={wrapRef} className="w-full">
+          <Chessboard
+            id="hero-board"
+            position={fen}
+            boardWidth={width}
+            onPieceDrop={onDrop}
+            customSquareStyles={squareStyles}
+            customBoardStyle={{ borderRadius: "12px" }}
+            customDarkSquareStyle={{ backgroundColor: DARK }}
+            customLightSquareStyle={{ backgroundColor: LIGHT }}
+            arePremovesAllowed={false}
+            animationDuration={300}
+            showBoardNotation={false}
+          />
         </div>
+      </div>
+
+      {/* drag-me hint */}
+      <div className="mt-3 text-center font-mono text-[10px] uppercase tracking-[0.18em] text-muted/70">
+        Live board — drag a piece to play
       </div>
 
       {/* floating accuracy card */}
@@ -83,9 +142,7 @@ export const HeroBoard = () => {
           Accuracy
         </p>
         <div className="mt-0.5 flex items-end gap-2">
-          <span className="font-display text-2xl font-bold tracking-tight">
-            79%
-          </span>
+          <span className="font-display text-2xl font-bold tracking-tight">79%</span>
           <span className="mb-0.5 flex items-center gap-0.5 text-[11px] font-semibold text-positive">
             <TrendingUp size={12} /> +4
           </span>
@@ -94,7 +151,7 @@ export const HeroBoard = () => {
 
       {/* floating next-focus card */}
       <div
-        className="absolute -left-4 bottom-10 hidden animate-float rounded-2xl border border-line bg-card/95 p-3 shadow-[0_18px_40px_-18px_rgba(20,18,15,0.4)] backdrop-blur sm:block md:-left-10"
+        className="absolute -left-4 bottom-14 hidden animate-float rounded-2xl border border-line bg-card/95 p-3 shadow-[0_18px_40px_-18px_rgba(20,18,15,0.4)] backdrop-blur sm:block md:-left-10"
         style={{ animationDelay: "1.6s" }}
       >
         <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-muted">
@@ -110,7 +167,7 @@ export const HeroBoard = () => {
 
       {/* blunder pill */}
       <div
-        className="absolute right-6 -bottom-3 animate-float rounded-full bg-accent px-3 py-1 text-[11px] font-semibold text-paper shadow-[0_10px_24px_-8px_oklch(0.56_0.19_38_/_0.6)]"
+        className="absolute right-6 bottom-4 animate-float rounded-full bg-accent px-3 py-1 text-[11px] font-semibold text-paper shadow-[0_10px_24px_-8px_oklch(0.56_0.19_38_/_0.6)]"
         style={{ animationDelay: "0.9s" }}
       >
         Blunder · move 24
