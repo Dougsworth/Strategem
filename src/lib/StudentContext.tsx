@@ -17,7 +17,13 @@ import {
 import { runReportInWorker } from "./analysis/runReportInWorker";
 import { parseLichessInput } from "./parseInput";
 import { fetchGamePlayers } from "./providers/lichess";
-import { computeDeltas, recordSnapshot, type Delta } from "./snapshots";
+import {
+  computeDeltas,
+  recordSnapshot,
+  pullSnapshots,
+  pushSnapshots,
+  type Delta,
+} from "./snapshots";
 import { loadCoachData, saveCoachData, type StoredStudent } from "./coachStore";
 import { useAuth } from "./AuthContext";
 import { canAddStudent, entitlements } from "./entitlements";
@@ -207,7 +213,17 @@ export function StudentProvider({ children }: { children: ReactNode }) {
           // Keep the accurate last-game time from stage 1 (true last game),
           // not the report's (which only sees analysed games).
           setProfile({ ...prof, lastGameAt: prof.lastGameAt ?? r.lastGameAt });
+          // Instant: record against the local cache and show deltas now.
           setDeltas(computeDeltas(recordSnapshot(r)));
+          // Then reconcile the history with the cloud and push the merge back,
+          // so progress deltas reach across devices (signed in only).
+          void (async () => {
+            await pullSnapshots(uid, r.username); // merges remote into local
+            const merged = recordSnapshot(r); // re-record over the merge
+            if (cancelled) return;
+            setDeltas(computeDeltas(merged));
+            void pushSnapshots(uid, r.username);
+          })();
         };
 
         // Stage 2 — cached report → instant; skip games fetch + worker.
