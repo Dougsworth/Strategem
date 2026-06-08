@@ -1,4 +1,12 @@
-import { useState } from "react";
+import {
+  Component,
+  lazy,
+  Suspense,
+  useEffect,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
 import {
   Crosshair,
   RefreshCw,
@@ -70,55 +78,162 @@ const FEATURES = [
   },
 ];
 
-export const Features = () => (
-  <section id="features" className="mx-auto max-w-screen-xl px-5 py-24 md:px-8 md:py-32">
-    <Reveal className="max-w-2xl">
-      <Eyebrow n="§ 01" label="What's inside" />
-      <h2 className="mt-5 font-display text-[1.9rem] font-bold tracking-[-0.02em] md:text-[2.75rem]">
-        Every tool a coach actually opens on a Tuesday night.
-      </h2>
-      <p className="mt-4 text-muted">
-        Not a giant feature graveyard. Six things, sharpened around the loop of
-        analyze, assign, retest.
-      </p>
-    </Reveal>
+// three.js king — lazy so it only loads on the landing page, never the app.
+const KingPiece3D = lazy(() => import("./KingPiece3D"));
 
-    <div
-      className="mt-14 grid overflow-hidden rounded-3xl border border-line bg-line md:grid-cols-2"
-      style={{ gap: "1px" }}
-    >
-      {FEATURES.map((f, i) => (
-        <Reveal
-          key={f.title}
-          delay={(i % 2) * 80}
-          className="group relative overflow-hidden bg-card p-8 transition-colors duration-300 hover:bg-ink-soft/30 md:p-10"
-        >
-          {/* oversized index numeral — the editorial spine of the layout */}
-          <span className="pointer-events-none absolute -top-2 right-4 select-none font-display text-[6rem] font-bold leading-none text-ink/[0.045] transition-colors duration-300 group-hover:text-accent/10">
-            {String(i + 1).padStart(2, "0")}
-          </span>
+// Defer mounting until near the viewport, so the 3D chunk only downloads when a
+// visitor actually scrolls toward it.
+function useInView<T extends HTMLElement>() {
+  const ref = useRef<T>(null);
+  const [inView, setInView] = useState(false);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const io = new IntersectionObserver(
+      ([e]) => {
+        if (e.isIntersecting) {
+          setInView(true);
+          io.disconnect();
+        }
+      },
+      { rootMargin: "200px" },
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
+  return [ref, inView] as const;
+}
 
-          <div className="relative flex items-center gap-3">
-            <span className="text-accent transition-transform duration-300 group-hover:-translate-y-0.5">
-              <f.icon size={22} strokeWidth={1.75} />
-            </span>
-            <span className="h-px flex-1 bg-line transition-colors duration-300 group-hover:bg-accent/30" />
-          </div>
+// WebGL unavailable / three.js throws → fall back to a glyph silhouette.
+class GLBoundary extends Component<
+  { children: ReactNode; fallback: ReactNode },
+  { failed: boolean }
+> {
+  state = { failed: false };
+  static getDerivedStateFromError() {
+    return { failed: true };
+  }
+  render() {
+    return this.state.failed ? this.props.fallback : this.props.children;
+  }
+}
 
-          <h3 className="relative mt-6 font-display text-xl font-bold tracking-tight">
-            {f.title}
-          </h3>
-          <p className="relative mt-2.5 max-w-sm text-[15px] leading-relaxed text-muted">
-            {f.body}
-          </p>
-
-          {/* accent underline that grows on hover */}
-          <span className="absolute bottom-0 left-0 h-[3px] w-0 bg-accent transition-all duration-500 ease-out group-hover:w-full" />
-        </Reveal>
-      ))}
-    </div>
-  </section>
+const KingGlyph = () => (
+  <div className="grid h-full w-full place-items-center">
+    <span className="animate-glow-pulse select-none text-[7rem] leading-none text-paper/15">
+      ♚
+    </span>
+  </div>
 );
+
+export const Features = () => {
+  const [stageRef, inView] = useInView<HTMLDivElement>();
+  const HeroIcon = FEATURES[0].icon;
+
+  return (
+    <section id="features" className="mx-auto max-w-screen-xl px-5 py-24 md:px-8 md:py-32">
+      <Reveal className="max-w-2xl">
+        <Eyebrow n="§ 01" label="What's inside" />
+        <h2 className="mt-5 font-display text-[1.9rem] font-bold tracking-[-0.02em] md:text-[2.75rem]">
+          Every tool a coach actually opens on a Tuesday night.
+        </h2>
+        <p className="mt-4 text-muted">
+          Not a giant feature graveyard. Six things, sharpened around the loop of
+          analyze, assign, retest.
+        </p>
+      </Reveal>
+
+      <div
+        ref={stageRef}
+        className="mt-14 grid gap-3 md:grid-cols-4 md:auto-rows-[200px]"
+      >
+        {/* 01 — big dark tile, live 3D king */}
+        <Reveal className="group relative overflow-hidden rounded-3xl bg-ink text-paper md:col-span-2 md:row-span-2">
+          <div className="absolute inset-0">
+            {inView ? (
+              <GLBoundary fallback={<KingGlyph />}>
+                <Suspense fallback={<KingGlyph />}>
+                  <KingPiece3D />
+                </Suspense>
+              </GLBoundary>
+            ) : (
+              <KingGlyph />
+            )}
+          </div>
+          {/* legibility gradient under the copy */}
+          <div className="pointer-events-none absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-ink via-ink/70 to-transparent" />
+          <div className="relative flex h-full flex-col justify-between p-7">
+            <div className="flex items-center justify-between">
+              <span className="grid h-10 w-10 place-items-center rounded-xl bg-paper/10 text-accent">
+                <HeroIcon size={19} strokeWidth={1.75} />
+              </span>
+              <span className="font-mono text-[11px] text-paper/40">01</span>
+            </div>
+            <div>
+              <h3 className="font-display text-2xl font-bold tracking-tight">
+                {FEATURES[0].title}
+              </h3>
+              <p className="mt-2 max-w-sm text-sm leading-relaxed text-paper/70">
+                {FEATURES[0].body}
+              </p>
+            </div>
+          </div>
+        </Reveal>
+
+        {/* 02–06 */}
+        {FEATURES.slice(1).map((f, k) => {
+          const i = k + 1;
+          const wide = i >= 3;
+          const dark = i === 5;
+          const Icon = f.icon;
+          return (
+            <Reveal
+              key={f.title}
+              delay={(k % 3) * 70}
+              className={`group relative flex flex-col justify-between overflow-hidden rounded-3xl p-6 transition-all duration-300 ${
+                wide ? "md:col-span-2" : ""
+              } ${
+                dark
+                  ? "bg-ink text-paper"
+                  : "border border-line bg-card hover:bg-ink-soft/30"
+              }`}
+            >
+              <div className="flex items-center justify-between">
+                <span
+                  className={`grid h-10 w-10 place-items-center rounded-xl transition-transform duration-300 group-hover:-translate-y-0.5 ${
+                    dark ? "bg-paper/10 text-accent" : "bg-accent-soft text-accent"
+                  }`}
+                >
+                  <Icon size={19} strokeWidth={1.75} />
+                </span>
+                <span
+                  className={`font-mono text-[11px] ${dark ? "text-paper/40" : "text-muted/60"}`}
+                >
+                  {String(i + 1).padStart(2, "0")}
+                </span>
+              </div>
+              <div>
+                <h3 className="font-display text-lg font-bold tracking-tight">
+                  {f.title}
+                </h3>
+                <p
+                  className={`mt-1.5 text-[13.5px] leading-relaxed ${
+                    wide ? "" : "line-clamp-2"
+                  } ${dark ? "text-paper/70" : "text-muted"}`}
+                >
+                  {f.body}
+                </p>
+              </div>
+              {!dark && (
+                <span className="absolute bottom-0 left-0 h-[3px] w-0 bg-accent transition-all duration-500 ease-out group-hover:w-full" />
+              )}
+            </Reveal>
+          );
+        })}
+      </div>
+    </section>
+  );
+};
 
 /* ── How it works ─────────────────────────────────────────────────────────── */
 const STEPS = [
@@ -139,6 +254,8 @@ const STEPS = [
   },
 ];
 
+const STEP_SPAN = ["md:col-span-2", "", "md:col-span-3"];
+
 export const HowItWorks = () => (
   <section id="how" className="border-t border-line bg-card/40">
     <div className="mx-auto max-w-screen-xl px-5 py-24 md:px-8 md:py-32">
@@ -149,34 +266,78 @@ export const HowItWorks = () => (
         </h2>
       </Reveal>
 
-      <div className="relative mx-auto mt-16 max-w-3xl">
-        {/* vertical rail the numeral nodes sit on */}
-        <div className="pointer-events-none absolute bottom-8 left-7 top-6 w-px bg-gradient-to-b from-line via-line to-transparent md:left-8" />
-
-        <div className="space-y-11 md:space-y-14">
-          {STEPS.map((s, i) => (
-            <Reveal key={s.title} delay={i * 120} className="relative flex gap-6 md:gap-8">
-              {/* numeral node */}
-              <span className="relative z-10 grid h-14 w-14 shrink-0 place-items-center rounded-2xl bg-ink font-display text-xl font-bold text-paper shadow-[0_14px_30px_-12px_rgba(20,18,15,0.5)] md:h-16 md:w-16 md:text-2xl">
-                0{i + 1}
-              </span>
-              <div className="pt-1.5 md:pt-3">
+      <div className="mt-14 grid gap-3 md:grid-cols-3 md:auto-rows-[230px]">
+        {STEPS.map((s, i) => {
+          const Icon = s.icon;
+          const dark = i === 0;
+          return (
+            <Reveal
+              key={s.title}
+              delay={i * 110}
+              className={`group relative flex flex-col justify-between overflow-hidden rounded-3xl p-7 transition-all duration-300 ${STEP_SPAN[i]} ${
+                dark
+                  ? "bg-ink text-paper"
+                  : "border border-line bg-card hover:bg-ink-soft/30"
+              }`}
+            >
+              <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2 text-accent">
-                  <s.icon size={16} strokeWidth={2} />
+                  <Icon size={17} strokeWidth={2} />
                   <span className="font-mono text-[11px] uppercase tracking-[0.18em]">
                     Step {i + 1}
                   </span>
                 </div>
-                <h3 className="mt-2 font-display text-xl font-bold tracking-tight md:text-2xl">
+                <span
+                  className={`font-display text-2xl font-bold ${dark ? "text-paper/15" : "text-line"}`}
+                >
+                  0{i + 1}
+                </span>
+              </div>
+
+              {/* per-step visual */}
+              {i === 0 && (
+                <div className="flex items-center gap-2 rounded-xl bg-paper/10 p-2.5 ring-1 ring-paper/10">
+                  <span className="grid h-7 w-7 place-items-center rounded-lg bg-accent text-sm font-bold text-paper">
+                    @
+                  </span>
+                  <span className="font-mono text-sm text-paper/90">magnus_jr</span>
+                  <span className="ml-auto rounded-md bg-paper/10 px-2 py-0.5 font-mono text-[10px] uppercase tracking-wide text-paper/60">
+                    Lichess
+                  </span>
+                </div>
+              )}
+              {i === 2 && (
+                <div className="flex flex-wrap gap-2">
+                  {["Back-rank weakness", "4 drills assigned", "Report card ✓"].map(
+                    (c) => (
+                      <span
+                        key={c}
+                        className="rounded-full border border-line bg-paper px-3 py-1 text-[12px] font-medium text-ink"
+                      >
+                        {c}
+                      </span>
+                    ),
+                  )}
+                </div>
+              )}
+
+              <div>
+                <h3 className="font-display text-xl font-bold tracking-tight md:text-2xl">
                   {s.title}
                 </h3>
-                <p className="mt-2 max-w-lg text-[15px] leading-relaxed text-muted">
+                <p
+                  className={`mt-2 max-w-lg text-[14.5px] leading-relaxed ${dark ? "text-paper/70" : "text-muted"}`}
+                >
                   {s.body}
                 </p>
               </div>
+
+              {!dark && (
+                <span className="absolute bottom-0 left-0 h-[3px] w-0 bg-accent transition-all duration-500 ease-out group-hover:w-full" />
+              )}
             </Reveal>
-          ))}
-        </div>
+          );
+        })}
       </div>
     </div>
   </section>

@@ -13,6 +13,7 @@
     "@radix-ui/react-slot": "^1.1.0",
     "@radix-ui/react-toggle": "^1.1.0",
     "@radix-ui/react-toggle-group": "^1.1.0",
+    "@react-three/fiber": "^8.18.0",
     "chess.js": "^1.0.0",
     "class-variance-authority": "^0.7.0",
     "firebase": "^10.14.1",
@@ -21,11 +22,13 @@
     "react-chessboard": "^4.7.3",
     "react-dom": "^18.2.0",
     "react-router-dom": "^6.8.1",
-    "stockfish.js": "^10.0.2"
+    "stockfish.js": "^10.0.2",
+    "three": "^0.160.1"
   },
   "devDependencies": {
     "@types/react": "18.2.0",
     "@types/react-dom": "18.2.0",
+    "@types/three": "^0.160.0",
     "@vitejs/plugin-react": "4.3.4",
     "esbuild": "0.25.5",
     "globals": "15.12.0",
