@@ -5,6 +5,7 @@ import {
   useEffect,
   useRef,
   useState,
+  type ReactElement,
   type ReactNode,
 } from "react";
 import {
@@ -23,6 +24,7 @@ import {
   ArrowRight,
 } from "lucide-react";
 import { PLANS } from "@/lib/plans";
+import { PieceArt } from "@/components/chessPieces";
 import { Reveal } from "./Reveal";
 import { Eyebrow } from "./ui";
 
@@ -141,6 +143,106 @@ const KingGlyph = () => (
   </div>
 );
 
+// ── Small decorative graphics for the wide Feature tiles ──────────────────────
+const ACCENT = "#e8662f";
+
+// Spaced-repetition deck (Fix-your-mistakes trainer)
+const FlashStack = () => (
+  <svg width="92" height="64" viewBox="0 0 92 64" fill="none" aria-hidden>
+    <rect x="20" y="8" width="58" height="40" rx="7" fill="#fff" stroke="#d7d1c4" strokeWidth="2" />
+    <rect x="12" y="15" width="58" height="40" rx="7" fill="#fff" stroke={ACCENT} strokeWidth="2" />
+    <circle cx="25" cy="35" r="4" fill={ACCENT} />
+    <rect x="34" y="33" width="28" height="4.5" rx="2.25" fill="#d7d1c4" />
+    <rect x="34" y="41" width="18" height="4.5" rx="2.25" fill="#e7e2d6" />
+  </svg>
+);
+
+// Upward trend (Growth tracking)
+const Sparkline = () => (
+  <svg width="136" height="60" viewBox="0 0 136 60" fill="none" aria-hidden>
+    <polyline
+      points="4,50 26,42 48,46 70,28 92,33 114,15 132,6"
+      fill="none"
+      stroke={ACCENT}
+      strokeWidth="2.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+    <circle cx="132" cy="6" r="3.5" fill={ACCENT} />
+  </svg>
+);
+
+// Knight-tour dot grid (The Lab) — light strokes for the dark tile
+const KnightGrid = () => (
+  <svg width="72" height="72" viewBox="0 0 72 72" fill="none" aria-hidden>
+    {[10, 27, 44, 61].map((y) =>
+      [10, 27, 44, 61].map((x) => (
+        <circle key={`${x}-${y}`} cx={x} cy={y} r="2.5" fill="rgba(255,255,255,0.28)" />
+      )),
+    )}
+    <polyline
+      points="10,44 44,61 61,27 27,10 10,27"
+      fill="none"
+      stroke={ACCENT}
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </svg>
+);
+
+const FEATURE_GRAPHIC: Partial<Record<number, () => ReactElement>> = {
+  1: FlashStack,
+  4: Sparkline,
+  5: KnightGrid,
+};
+
+// Steel-blue mini board (matches the hero) for the "analyze" step.
+const SB_LIGHT = "#e8edf1";
+const SB_DARK = "#6f8da9";
+const MINI_PIECES: Record<string, { s: "p" | "n" | "b" | "r" | "q" | "k"; l: boolean }> = {
+  "0,2": { s: "b", l: false },
+  "0,4": { s: "k", l: false },
+  "1,3": { s: "p", l: false },
+  "2,5": { s: "n", l: false },
+  "4,3": { s: "p", l: true },
+  "5,2": { s: "n", l: true },
+  "6,5": { s: "p", l: true },
+  "7,4": { s: "k", l: true },
+  "7,6": { s: "r", l: true },
+};
+const MINI_LASTMOVE = new Set(["2,5", "3,5"]);
+
+const MiniBoard = () => (
+  <div className="overflow-hidden rounded-lg shadow-sm ring-1 ring-black/10">
+    <div className="grid grid-cols-8">
+      {Array.from({ length: 64 }).map((_, idx) => {
+        const r = Math.floor(idx / 8);
+        const c = idx % 8;
+        const key = `${r},${c}`;
+        const dark = (r + c) % 2 === 1;
+        const p = MINI_PIECES[key];
+        return (
+          <div
+            key={idx}
+            className="relative aspect-square"
+            style={{ background: dark ? SB_DARK : SB_LIGHT }}
+          >
+            {MINI_LASTMOVE.has(key) && (
+              <span className="absolute inset-0 bg-[oklch(0.56_0.19_38_/_0.32)]" />
+            )}
+            {p && (
+              <div className="absolute inset-0">
+                <PieceArt shape={p.s} light={p.l} />
+              </div>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  </div>
+);
+
 export const Features = () => {
   const [stageRef, inView] = useInView<HTMLDivElement>();
   const isDesktop = useMediaQuery("(min-width: 768px)");
@@ -200,12 +302,14 @@ export const Features = () => {
           </div>
         </Reveal>
 
-        {/* 02–06 */}
+        {/* 02–06 — shuffled spans: trainer(02) wide, scan(03)+report(04) small,
+            growth(05) wide, lab(06) wide-dark. Wide tiles carry a graphic. */}
         {FEATURES.slice(1).map((f, k) => {
           const i = k + 1;
-          const wide = i >= 3;
+          const wide = i === 1 || i === 4 || i === 5;
           const dark = i === 5;
           const Icon = f.icon;
+          const Graphic = FEATURE_GRAPHIC[i];
           return (
             <Reveal
               key={f.title}
@@ -218,7 +322,7 @@ export const Features = () => {
                   : "border border-line bg-card hover:bg-ink-soft/30"
               }`}
             >
-              <div className="flex items-center justify-between">
+              <div className="relative z-10 flex items-center justify-between">
                 <span
                   className={`grid h-10 w-10 place-items-center rounded-xl transition-transform duration-300 group-hover:-translate-y-0.5 ${
                     dark ? "bg-paper/10 text-accent" : "bg-accent-soft text-accent"
@@ -232,13 +336,21 @@ export const Features = () => {
                   {String(i + 1).padStart(2, "0")}
                 </span>
               </div>
-              <div>
+
+              {/* graphic — sits bottom-right, copy stays clear of it */}
+              {Graphic && (
+                <div className="pointer-events-none absolute bottom-5 right-5 opacity-95">
+                  <Graphic />
+                </div>
+              )}
+
+              <div className="relative z-10">
                 <h3 className="font-display text-lg font-bold tracking-tight">
                   {f.title}
                 </h3>
                 <p
                   className={`mt-1.5 text-[13.5px] leading-relaxed ${
-                    wide ? "" : "line-clamp-2"
+                    Graphic ? "max-w-[58%]" : wide ? "" : "line-clamp-2"
                   } ${dark ? "text-paper/70" : "text-muted"}`}
                 >
                   {f.body}
@@ -274,22 +386,20 @@ const STEPS = [
   },
 ];
 
-const STEP_SPAN = ["md:col-span-2", "", "md:col-span-3"];
-// A little chess flavour: each step tagged like a move in an opening.
+// Visual-first: narrow username step, wide board step, full-width report step.
+const STEP_SPAN = ["md:col-span-1", "md:col-span-2", "md:col-span-3"];
 const STEP_MOVE = ["1. e4", "1…e5", "2. Nf3"];
 
-// Step 2 visual — a mini "analysis feed": real moves with engine verdicts.
 const ANALYSIS_FEED = [
   { mv: "Bxf7+", tag: "Brilliant", cls: "text-positive bg-positive/15" },
   { mv: "Nbd2", tag: "Inaccuracy", cls: "text-amber-600 bg-amber-500/15" },
   { mv: "Qh5??", tag: "Blunder", cls: "text-accent bg-accent-soft" },
 ];
-
-// Step 3 visual — a mini report card with weakness bars.
 const REPORT_BARS = [
   { label: "Rook endgames", pct: 58 },
   { label: "Back-rank", pct: 71 },
 ];
+const WEAKNESS_TAGS = ["Back-rank mates", "Time scrambles", "Rook endgames"];
 
 export const HowItWorks = () => (
   <section id="how" className="border-t border-line bg-card/40">
@@ -301,16 +411,15 @@ export const HowItWorks = () => (
         </h2>
       </Reveal>
 
-      <div className="mt-14 grid gap-3 md:grid-cols-3 md:auto-rows-[284px]">
+      <div className="mt-14 grid gap-3 md:grid-cols-3 md:auto-rows-[300px]">
         {STEPS.map((s, i) => {
           const Icon = s.icon;
           const dark = i === 0;
-          const wide = i === 2;
           return (
             <Reveal
               key={s.title}
               delay={i * 110}
-              className={`group relative flex flex-col overflow-hidden rounded-3xl p-7 transition-all duration-300 ${STEP_SPAN[i]} ${
+              className={`group relative flex flex-col overflow-hidden rounded-3xl p-6 transition-all duration-300 ${STEP_SPAN[i]} ${
                 dark
                   ? "bg-ink text-paper"
                   : "border border-line bg-card hover:bg-ink-soft/30"
@@ -333,107 +442,115 @@ export const HowItWorks = () => (
                 </span>
               </div>
 
-              {/* ── per-step product mockup (sits just under the header) ── */}
-
-              {/* 1 — username field with a blinking caret */}
-              {i === 0 && (
-                <div className="mt-5 flex items-center gap-2 rounded-xl border border-accent/40 bg-paper/[0.06] p-2.5">
-                  <span className="grid h-7 w-7 shrink-0 place-items-center rounded-lg bg-accent text-sm font-bold text-paper">
-                    @
-                  </span>
-                  <span className="font-mono text-sm text-paper/90">magnus_jr</span>
-                  <span className="-ml-1 inline-block h-4 w-px animate-pulse bg-accent" />
-                  <span className="ml-auto rounded-md bg-paper/10 px-2 py-0.5 font-mono text-[10px] uppercase tracking-wide text-paper/55">
-                    Lichess
-                  </span>
-                </div>
-              )}
-
-              {/* 2 — live engine-verdict feed */}
-              {i === 1 && (
-                <div className="mt-4 space-y-1.5">
-                  <div className="mb-1.5 flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.16em] text-muted">
-                    <span className="relative flex h-1.5 w-1.5">
-                      <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-accent opacity-75" />
-                      <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-accent" />
-                    </span>
-                    Analyzing 47 games
+              {/* ── visual region (the focus — minimal copy) ── */}
+              <div className="my-4 flex flex-1 items-center">
+                {/* 1 — username field */}
+                {i === 0 && (
+                  <div className="w-full">
+                    <div className="flex items-center gap-2 rounded-xl border border-accent/40 bg-paper/[0.06] p-2.5">
+                      <span className="grid h-7 w-7 shrink-0 place-items-center rounded-lg bg-accent text-sm font-bold text-paper">
+                        @
+                      </span>
+                      <span className="font-mono text-sm text-paper/90">magnus_jr</span>
+                      <span className="-ml-1 inline-block h-4 w-px animate-pulse bg-accent" />
+                      <span className="ml-auto rounded-md bg-paper/10 px-2 py-0.5 font-mono text-[10px] uppercase tracking-wide text-paper/55">
+                        Lichess
+                      </span>
+                    </div>
+                    <p className="mt-3 font-mono text-[11px] text-paper/45">
+                      No student account needed.
+                    </p>
                   </div>
-                  {ANALYSIS_FEED.map((r) => (
-                    <div
-                      key={r.mv}
-                      className="flex items-center justify-between rounded-lg border border-line bg-paper px-2.5 py-1.5"
-                    >
-                      <span className="font-mono text-[13px] font-medium text-ink">
-                        {r.mv}
-                      </span>
-                      <span
-                        className={`rounded px-1.5 py-0.5 text-[10px] font-semibold ${r.cls}`}
-                      >
-                        {r.tag}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              )}
+                )}
 
-              {/* footer: title + body, with the report card alongside for step 3 */}
-              <div
-                className={`mt-auto pt-5 ${
-                  wide
-                    ? "flex flex-col gap-5 md:flex-row md:items-end md:gap-8"
-                    : ""
-                }`}
-              >
-                <div className={wide ? "flex-1" : ""}>
-                  <h3 className="font-display text-xl font-bold tracking-tight md:text-2xl">
-                    {s.title}
-                  </h3>
-                  <p
-                    className={`mt-2 max-w-md text-[14.5px] leading-relaxed ${dark ? "text-paper/70" : "text-muted"}`}
-                  >
-                    {s.body}
-                  </p>
-                </div>
-
-                {/* 3 — mini report card */}
-                {i === 2 && (
-                  <div className="w-full shrink-0 rounded-2xl border border-line bg-paper p-4 shadow-sm md:w-72">
-                    <div className="flex items-center justify-between">
-                      <span className="font-mono text-[10px] uppercase tracking-[0.16em] text-muted">
-                        Report · Magnus Jr
-                      </span>
-                      <span className="flex items-center gap-1 text-[11px] font-semibold text-positive">
-                        <TrendingUp size={11} /> +6
-                      </span>
+                {/* 2 — mini board + live engine verdicts */}
+                {i === 1 && (
+                  <div className="flex w-full items-center gap-5">
+                    <div className="w-[168px] shrink-0">
+                      <MiniBoard />
                     </div>
-                    <div className="mt-3 space-y-2.5">
-                      {REPORT_BARS.map((b) => (
-                        <div key={b.label}>
-                          <div className="flex items-center justify-between text-[11.5px]">
-                            <span className="text-ink">{b.label}</span>
-                            <span className="font-mono text-muted">{b.pct}%</span>
-                          </div>
-                          <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-line">
-                            <span
-                              className="block h-full rounded-full bg-accent"
-                              style={{ width: `${b.pct}%` }}
-                            />
-                          </div>
+                    <div className="hidden flex-1 space-y-1.5 sm:block">
+                      <div className="mb-1 flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.16em] text-muted">
+                        <span className="relative flex h-1.5 w-1.5">
+                          <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-accent opacity-75" />
+                          <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-accent" />
+                        </span>
+                        Analyzing 47 games
+                      </div>
+                      {ANALYSIS_FEED.map((r) => (
+                        <div
+                          key={r.mv}
+                          className="flex items-center justify-between rounded-lg border border-line bg-paper px-2.5 py-1.5"
+                        >
+                          <span className="font-mono text-[13px] font-medium text-ink">
+                            {r.mv}
+                          </span>
+                          <span
+                            className={`rounded px-1.5 py-0.5 text-[10px] font-semibold ${r.cls}`}
+                          >
+                            {r.tag}
+                          </span>
                         </div>
                       ))}
                     </div>
-                    <div className="mt-3 flex items-center gap-2">
-                      <span className="rounded-full bg-accent-soft px-2.5 py-0.5 text-[11px] font-semibold text-accent">
-                        4 drills queued
-                      </span>
-                      <span className="rounded-full bg-positive/15 px-2.5 py-0.5 text-[11px] font-semibold text-positive">
-                        Card ✓
-                      </span>
+                  </div>
+                )}
+
+                {/* 3 — weakness tags + report card */}
+                {i === 2 && (
+                  <div className="flex w-full flex-col items-stretch gap-5 md:flex-row md:items-center md:gap-8">
+                    <div className="flex flex-1 flex-wrap content-center gap-2">
+                      {WEAKNESS_TAGS.map((t) => (
+                        <span
+                          key={t}
+                          className="rounded-full border border-line bg-paper px-3 py-1 text-[12.5px] font-medium text-ink"
+                        >
+                          {t}
+                        </span>
+                      ))}
+                    </div>
+                    <div className="w-full shrink-0 rounded-2xl border border-line bg-paper p-4 shadow-sm md:w-80">
+                      <div className="flex items-center justify-between">
+                        <span className="font-mono text-[10px] uppercase tracking-[0.16em] text-muted">
+                          Report · Magnus Jr
+                        </span>
+                        <span className="flex items-center gap-1 text-[11px] font-semibold text-positive">
+                          <TrendingUp size={11} /> +6
+                        </span>
+                      </div>
+                      <div className="mt-3 space-y-2.5">
+                        {REPORT_BARS.map((b) => (
+                          <div key={b.label}>
+                            <div className="flex items-center justify-between text-[11.5px]">
+                              <span className="text-ink">{b.label}</span>
+                              <span className="font-mono text-muted">{b.pct}%</span>
+                            </div>
+                            <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-line">
+                              <span
+                                className="block h-full rounded-full bg-accent"
+                                style={{ width: `${b.pct}%` }}
+                              />
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                      <div className="mt-3 flex items-center gap-2">
+                        <span className="rounded-full bg-accent-soft px-2.5 py-0.5 text-[11px] font-semibold text-accent">
+                          4 drills queued
+                        </span>
+                        <span className="rounded-full bg-positive/15 px-2.5 py-0.5 text-[11px] font-semibold text-positive">
+                          Card ✓
+                        </span>
+                      </div>
                     </div>
                   </div>
                 )}
               </div>
+
+              {/* title only — no body copy */}
+              <h3 className="font-display text-xl font-bold tracking-tight md:text-2xl">
+                {s.title}
+              </h3>
 
               {!dark && (
                 <span className="absolute bottom-0 left-0 h-[3px] w-0 bg-accent transition-all duration-500 ease-out group-hover:w-full" />
