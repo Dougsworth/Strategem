@@ -104,6 +104,21 @@ function useInView<T extends HTMLElement>() {
   return [ref, inView] as const;
 }
 
+// Track a media query (client-only SPA, so window is always available).
+function useMediaQuery(query: string) {
+  const [matches, setMatches] = useState(
+    typeof window !== "undefined" && window.matchMedia(query).matches,
+  );
+  useEffect(() => {
+    const m = window.matchMedia(query);
+    const on = () => setMatches(m.matches);
+    on();
+    m.addEventListener("change", on);
+    return () => m.removeEventListener("change", on);
+  }, [query]);
+  return matches;
+}
+
 // WebGL unavailable / three.js throws → fall back to a glyph silhouette.
 class GLBoundary extends Component<
   { children: ReactNode; fallback: ReactNode },
@@ -128,10 +143,14 @@ const KingGlyph = () => (
 
 export const Features = () => {
   const [stageRef, inView] = useInView<HTMLDivElement>();
+  const isDesktop = useMediaQuery("(min-width: 768px)");
   const HeroIcon = FEATURES[0].icon;
 
   return (
-    <section id="features" className="mx-auto max-w-screen-xl px-5 py-24 md:px-8 md:py-32">
+    <section
+      id="features"
+      className="mx-auto max-w-screen-xl px-5 py-16 sm:py-24 md:px-8 md:py-32"
+    >
       <Reveal className="max-w-2xl">
         <Eyebrow n="§ 01" label="What's inside" />
         <h2 className="mt-5 font-display text-[1.9rem] font-bold tracking-[-0.02em] md:text-[2.75rem]">
@@ -147,10 +166,11 @@ export const Features = () => {
         ref={stageRef}
         className="mt-14 grid gap-3 md:grid-cols-4 md:auto-rows-[200px]"
       >
-        {/* 01 — big dark tile, live 3D king */}
-        <Reveal className="group relative overflow-hidden rounded-3xl bg-ink text-paper md:col-span-2 md:row-span-2">
+        {/* 01 — big dark tile, live 3D king (desktop only; mobile gets the glyph
+            so phones never download the three.js chunk) */}
+        <Reveal className="group relative min-h-[300px] overflow-hidden rounded-3xl bg-ink text-paper md:col-span-2 md:row-span-2 md:min-h-0">
           <div className="absolute inset-0">
-            {inView ? (
+            {inView && isDesktop ? (
               <GLBoundary fallback={<KingGlyph />}>
                 <Suspense fallback={<KingGlyph />}>
                   <KingPiece3D />
@@ -273,7 +293,7 @@ const REPORT_BARS = [
 
 export const HowItWorks = () => (
   <section id="how" className="border-t border-line bg-card/40">
-    <div className="mx-auto max-w-screen-xl px-5 py-24 md:px-8 md:py-32">
+    <div className="mx-auto max-w-screen-xl px-5 py-16 sm:py-24 md:px-8 md:py-32">
       <Reveal className="max-w-2xl">
         <Eyebrow n="§ 02" label="How it works" />
         <h2 className="mt-5 font-display text-[1.9rem] font-bold tracking-[-0.02em] md:text-[2.75rem]">
@@ -359,7 +379,11 @@ export const HowItWorks = () => (
 
               {/* footer: title + body, with the report card alongside for step 3 */}
               <div
-                className={`mt-auto pt-5 ${wide ? "flex items-end gap-8" : ""}`}
+                className={`mt-auto pt-5 ${
+                  wide
+                    ? "flex flex-col gap-5 md:flex-row md:items-end md:gap-8"
+                    : ""
+                }`}
               >
                 <div className={wide ? "flex-1" : ""}>
                   <h3 className="font-display text-xl font-bold tracking-tight md:text-2xl">
@@ -374,7 +398,7 @@ export const HowItWorks = () => (
 
                 {/* 3 — mini report card */}
                 {i === 2 && (
-                  <div className="hidden w-72 shrink-0 rounded-2xl border border-line bg-paper p-4 shadow-sm md:block">
+                  <div className="w-full shrink-0 rounded-2xl border border-line bg-paper p-4 shadow-sm md:w-72">
                     <div className="flex items-center justify-between">
                       <span className="font-mono text-[10px] uppercase tracking-[0.16em] text-muted">
                         Report · Magnus Jr
@@ -431,7 +455,10 @@ const TAGLINE: Record<string, string> = {
 };
 
 export const Pricing = () => (
-  <section id="pricing" className="mx-auto max-w-screen-xl px-5 py-24 md:px-8 md:py-32">
+  <section
+    id="pricing"
+    className="mx-auto max-w-screen-xl px-5 py-16 sm:py-24 md:px-8 md:py-32"
+  >
     <Reveal className="max-w-2xl">
       <Eyebrow n="§ 03" label="Pricing" />
       <h2 className="mt-5 font-display text-[1.9rem] font-bold tracking-[-0.02em] md:text-[2.75rem]">
@@ -588,7 +615,7 @@ const FaqRow = ({ q, a, n }: { q: string; a: string; n: number }) => {
 
 export const Faq = () => (
   <section id="faq" className="border-t border-line">
-    <div className="mx-auto grid max-w-screen-xl gap-12 px-5 py-24 md:grid-cols-[1fr_1.4fr] md:px-8 md:py-32">
+    <div className="mx-auto grid max-w-screen-xl gap-10 px-5 py-16 sm:py-24 md:grid-cols-[1fr_1.4fr] md:gap-12 md:px-8 md:py-32">
       <Reveal>
         <Eyebrow n="§ 04" label="FAQ" />
         <h2 className="mt-5 font-display text-[1.9rem] font-bold tracking-[-0.02em] md:text-[2.5rem]">

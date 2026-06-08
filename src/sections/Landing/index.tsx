@@ -61,8 +61,8 @@ const Nav = () => (
 );
 
 const CtaBand = () => (
-  <section className="mx-auto max-w-screen-xl px-5 pb-24 md:px-8 md:pb-32">
-    <Reveal className="relative overflow-hidden rounded-[28px] bg-ink px-8 py-20 text-paper md:px-16 md:py-28">
+  <section className="mx-auto max-w-screen-xl px-5 pb-16 sm:pb-24 md:px-8 md:pb-32">
+    <Reveal className="relative overflow-hidden rounded-[24px] bg-ink px-6 py-14 text-paper sm:rounded-[28px] sm:px-8 sm:py-20 md:px-16 md:py-28">
       {/* glows + grid */}
       <div className="pointer-events-none absolute -right-20 -top-20 h-80 w-80 rounded-full bg-accent/40 blur-[80px]" />
       <div className="pointer-events-none absolute -bottom-32 -left-20 h-80 w-80 rounded-full bg-positive/20 blur-[80px]" />
