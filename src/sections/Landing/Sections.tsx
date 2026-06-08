@@ -255,6 +255,21 @@ const STEPS = [
 ];
 
 const STEP_SPAN = ["md:col-span-2", "", "md:col-span-3"];
+// A little chess flavour: each step tagged like a move in an opening.
+const STEP_MOVE = ["1. e4", "1…e5", "2. Nf3"];
+
+// Step 2 visual — a mini "analysis feed": real moves with engine verdicts.
+const ANALYSIS_FEED = [
+  { mv: "Bxf7+", tag: "Brilliant", cls: "text-positive bg-positive/15" },
+  { mv: "Nbd2", tag: "Inaccuracy", cls: "text-amber-600 bg-amber-500/15" },
+  { mv: "Qh5??", tag: "Blunder", cls: "text-accent bg-accent-soft" },
+];
+
+// Step 3 visual — a mini report card with weakness bars.
+const REPORT_BARS = [
+  { label: "Rook endgames", pct: 58 },
+  { label: "Back-rank", pct: 71 },
+];
 
 export const HowItWorks = () => (
   <section id="how" className="border-t border-line bg-card/40">
@@ -266,20 +281,22 @@ export const HowItWorks = () => (
         </h2>
       </Reveal>
 
-      <div className="mt-14 grid gap-3 md:grid-cols-3 md:auto-rows-[230px]">
+      <div className="mt-14 grid gap-3 md:grid-cols-3 md:auto-rows-[284px]">
         {STEPS.map((s, i) => {
           const Icon = s.icon;
           const dark = i === 0;
+          const wide = i === 2;
           return (
             <Reveal
               key={s.title}
               delay={i * 110}
-              className={`group relative flex flex-col justify-between overflow-hidden rounded-3xl p-7 transition-all duration-300 ${STEP_SPAN[i]} ${
+              className={`group relative flex flex-col overflow-hidden rounded-3xl p-7 transition-all duration-300 ${STEP_SPAN[i]} ${
                 dark
                   ? "bg-ink text-paper"
                   : "border border-line bg-card hover:bg-ink-soft/30"
               }`}
             >
+              {/* header: step label + chess-move tag */}
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2 text-accent">
                   <Icon size={17} strokeWidth={2} />
@@ -288,48 +305,110 @@ export const HowItWorks = () => (
                   </span>
                 </div>
                 <span
-                  className={`font-display text-2xl font-bold ${dark ? "text-paper/15" : "text-line"}`}
+                  className={`rounded-md px-2 py-0.5 font-mono text-[11px] ${
+                    dark ? "bg-paper/10 text-paper/55" : "bg-ink-soft text-muted"
+                  }`}
                 >
-                  0{i + 1}
+                  {STEP_MOVE[i]}
                 </span>
               </div>
 
-              {/* per-step visual */}
+              {/* ── per-step product mockup (sits just under the header) ── */}
+
+              {/* 1 — username field with a blinking caret */}
               {i === 0 && (
-                <div className="flex items-center gap-2 rounded-xl bg-paper/10 p-2.5 ring-1 ring-paper/10">
-                  <span className="grid h-7 w-7 place-items-center rounded-lg bg-accent text-sm font-bold text-paper">
+                <div className="mt-5 flex items-center gap-2 rounded-xl border border-accent/40 bg-paper/[0.06] p-2.5">
+                  <span className="grid h-7 w-7 shrink-0 place-items-center rounded-lg bg-accent text-sm font-bold text-paper">
                     @
                   </span>
                   <span className="font-mono text-sm text-paper/90">magnus_jr</span>
-                  <span className="ml-auto rounded-md bg-paper/10 px-2 py-0.5 font-mono text-[10px] uppercase tracking-wide text-paper/60">
+                  <span className="-ml-1 inline-block h-4 w-px animate-pulse bg-accent" />
+                  <span className="ml-auto rounded-md bg-paper/10 px-2 py-0.5 font-mono text-[10px] uppercase tracking-wide text-paper/55">
                     Lichess
                   </span>
                 </div>
               )}
-              {i === 2 && (
-                <div className="flex flex-wrap gap-2">
-                  {["Back-rank weakness", "4 drills assigned", "Report card ✓"].map(
-                    (c) => (
-                      <span
-                        key={c}
-                        className="rounded-full border border-line bg-paper px-3 py-1 text-[12px] font-medium text-ink"
-                      >
-                        {c}
+
+              {/* 2 — live engine-verdict feed */}
+              {i === 1 && (
+                <div className="mt-4 space-y-1.5">
+                  <div className="mb-1.5 flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.16em] text-muted">
+                    <span className="relative flex h-1.5 w-1.5">
+                      <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-accent opacity-75" />
+                      <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-accent" />
+                    </span>
+                    Analyzing 47 games
+                  </div>
+                  {ANALYSIS_FEED.map((r) => (
+                    <div
+                      key={r.mv}
+                      className="flex items-center justify-between rounded-lg border border-line bg-paper px-2.5 py-1.5"
+                    >
+                      <span className="font-mono text-[13px] font-medium text-ink">
+                        {r.mv}
                       </span>
-                    ),
-                  )}
+                      <span
+                        className={`rounded px-1.5 py-0.5 text-[10px] font-semibold ${r.cls}`}
+                      >
+                        {r.tag}
+                      </span>
+                    </div>
+                  ))}
                 </div>
               )}
 
-              <div>
-                <h3 className="font-display text-xl font-bold tracking-tight md:text-2xl">
-                  {s.title}
-                </h3>
-                <p
-                  className={`mt-2 max-w-lg text-[14.5px] leading-relaxed ${dark ? "text-paper/70" : "text-muted"}`}
-                >
-                  {s.body}
-                </p>
+              {/* footer: title + body, with the report card alongside for step 3 */}
+              <div
+                className={`mt-auto pt-5 ${wide ? "flex items-end gap-8" : ""}`}
+              >
+                <div className={wide ? "flex-1" : ""}>
+                  <h3 className="font-display text-xl font-bold tracking-tight md:text-2xl">
+                    {s.title}
+                  </h3>
+                  <p
+                    className={`mt-2 max-w-md text-[14.5px] leading-relaxed ${dark ? "text-paper/70" : "text-muted"}`}
+                  >
+                    {s.body}
+                  </p>
+                </div>
+
+                {/* 3 — mini report card */}
+                {i === 2 && (
+                  <div className="hidden w-72 shrink-0 rounded-2xl border border-line bg-paper p-4 shadow-sm md:block">
+                    <div className="flex items-center justify-between">
+                      <span className="font-mono text-[10px] uppercase tracking-[0.16em] text-muted">
+                        Report · Magnus Jr
+                      </span>
+                      <span className="flex items-center gap-1 text-[11px] font-semibold text-positive">
+                        <TrendingUp size={11} /> +6
+                      </span>
+                    </div>
+                    <div className="mt-3 space-y-2.5">
+                      {REPORT_BARS.map((b) => (
+                        <div key={b.label}>
+                          <div className="flex items-center justify-between text-[11.5px]">
+                            <span className="text-ink">{b.label}</span>
+                            <span className="font-mono text-muted">{b.pct}%</span>
+                          </div>
+                          <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-line">
+                            <span
+                              className="block h-full rounded-full bg-accent"
+                              style={{ width: `${b.pct}%` }}
+                            />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="mt-3 flex items-center gap-2">
+                      <span className="rounded-full bg-accent-soft px-2.5 py-0.5 text-[11px] font-semibold text-accent">
+                        4 drills queued
+                      </span>
+                      <span className="rounded-full bg-positive/15 px-2.5 py-0.5 text-[11px] font-semibold text-positive">
+                        Card ✓
+                      </span>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {!dark && (
