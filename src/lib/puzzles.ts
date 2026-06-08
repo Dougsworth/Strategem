@@ -2,6 +2,7 @@ import { Chess } from "chess.js";
 import type { StudentReport } from "./types";
 import { PHASE_LABEL } from "./format";
 import { bankFor } from "../data/puzzleBank";
+import { randomFromPool } from "../data/puzzlePool";
 
 // Turn a student's analysed weaknesses into real, assignable Lichess puzzles.
 // Lichess exposes ~60 puzzle "themes" that line up with what we detect, plus a
@@ -203,19 +204,28 @@ function parsePuzzle(data: PuzzleNextResponse): Puzzle {
 }
 
 /**
- * Get one real, solvable puzzle for a theme. Tries Lichess (with 429 backoff),
- * caches the result, and falls back to our local bank when the network is
- * unavailable or rate-limited — so practice never hits a dead end.
+ * Get one real, solvable puzzle for a theme. Primary source is the bundled CC0
+ * pool (4,700+ puzzles) — instant, offline, no rate limits, so practice is
+ * effectively unlimited and never repeats quickly. Lichess's live feed is a
+ * supplement for extra freshness, and the cached/house bank a final safety net.
  * `exclude` avoids immediately repeating the puzzle just shown.
  */
 export async function fetchPuzzle(
   theme: string,
   difficulty: Difficulty,
-  opts: { exclude?: string; retries?: number } = {},
+  opts: { exclude?: string; retries?: number; live?: boolean } = {},
 ): Promise<Puzzle | null> {
-  const { exclude, retries = 1 } = opts;
-  const url = `https://lichess.org/api/puzzle/next?angle=${encodeURIComponent(theme)}&difficulty=${difficulty}`;
+  const { exclude, retries = 1, live = false } = opts;
 
+  // 1) Instant, unlimited, offline: the bundled CC0 pool.
+  const fromPool = await randomFromPool({ theme, difficulty, exclude }).catch(
+    () => null,
+  );
+  if (fromPool && !live) return fromPool;
+
+  // 2) Lichess live feed (fresh puzzles beyond the pool). Used when the pool is
+  //    unavailable, or opportunistically when `live` is requested.
+  const url = `https://lichess.org/api/puzzle/next?angle=${encodeURIComponent(theme)}&difficulty=${difficulty}`;
   try {
     let res = await fetch(url);
     for (let i = 0; res.status === 429 && i < retries; i++) {
@@ -228,11 +238,11 @@ export async function fetchPuzzle(
       if (puzzle.id !== exclude) return puzzle;
     }
   } catch {
-    /* fall through to the local bank */
+    /* fall through */
   }
 
-  // Network failed or returned a repeat → draw from our cached bank, then from
-  // the shipped house bank (always available, offline, no rate limit).
+  // 3) Pool again (if we skipped it for `live`), then cached, then house bank.
+  if (fromPool) return fromPool;
   const cached = poolGet(theme).filter((p) => p.id !== exclude);
   if (cached.length) return cached[Math.floor(Math.random() * cached.length)];
   const house = bankFor(theme).filter((p) => p.id !== exclude);

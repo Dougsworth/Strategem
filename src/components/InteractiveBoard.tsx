@@ -2,7 +2,6 @@ import { useId } from "react";
 import { Chessboard } from "react-chessboard";
 import type { Color } from "chess.js";
 import { useBoardTheme } from "@/lib/boardTheme";
-import { CUSTOM_PIECES } from "@/components/chessPieces";
 
 // Professional board via react-chessboard (real SVG piece set, drag-and-drop).
 // Same prop shape as before, so every consumer (trainers, evidence, viewer)
@@ -44,7 +43,6 @@ export const InteractiveBoard = ({
         onMove(from, to);
         return false; // parent updates the fen if the move is accepted
       }}
-      customPieces={CUSTOM_PIECES}
       customSquareStyles={squareStyles}
       customBoardStyle={{
         borderRadius: "10px",

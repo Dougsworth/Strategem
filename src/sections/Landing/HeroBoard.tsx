@@ -3,7 +3,6 @@ import { Chessboard } from "react-chessboard";
 import { Chess } from "chess.js";
 import { Target, TrendingUp } from "lucide-react";
 import { HERO_POSITIONS } from "./heroPositions";
-import { CUSTOM_PIECES } from "@/components/chessPieces";
 
 // A LIVE board for the hero: it cycles through ~240 baked-in middlegame
 // positions (static FENs — no engine/AI at runtime), self-playing a few legal
@@ -121,7 +120,6 @@ export const HeroBoard = () => {
             position={fen}
             boardWidth={width}
             onPieceDrop={onDrop}
-            customPieces={CUSTOM_PIECES}
             customSquareStyles={squareStyles}
             customBoardStyle={{ borderRadius: "10px" }}
             customDarkSquareStyle={{ backgroundColor: DARK }}
