@@ -2,23 +2,21 @@ import { useEffect, useRef, useState } from "react";
 import { Chessboard } from "react-chessboard";
 import { Chess } from "chess.js";
 import { Target, TrendingUp } from "lucide-react";
+import { HERO_POSITIONS } from "./heroPositions";
 
-// A LIVE board for the hero: it plays itself with a slow trickle of legal moves,
-// and visitors can grab a piece and play their own — drags are validated by
-// chess.js, so only legal moves land. Auto-play pauses for a few seconds after
-// anyone touches it, then resumes, and the game resets once it ends or runs long
-// so it never grinds into a dead endgame. Floating analysis cards are decoration.
+// A LIVE board for the hero: it cycles through ~240 baked-in middlegame
+// positions (static FENs — no engine/AI at runtime), self-playing a few legal
+// moves from each before advancing to the next. Visitors can grab a piece and
+// play their own — drags are validated by chess.js, so only legal moves land.
+// Auto-play pauses for a few seconds after anyone touches it, then resumes.
+// Floating analysis cards are decoration.
 
 const LIGHT = "#eceed4";
 const DARK = "#7e9a64";
 
-// A recognizable, balanced middlegame to open on (Italian-ish). Always legal.
-const START_FEN =
-  "r1bq1rk1/pppp1ppp/2n2n2/2b1p3/2B1P3/2NP1N2/PPP2PPP/R1BQ1RK1 w - - 0 1";
-
-const PLAY_INTERVAL = 1500; // ms between self-play moves
+const PLAY_INTERVAL = 1600; // ms between self-play moves
 const IDLE_AFTER_TOUCH = 6000; // pause self-play this long after a human move
-const MAX_PLIES = 28; // reset before the position gets ugly
+const MOVES_PER_POSITION = 6; // self-play this many plies, then cycle to the next
 
 function pickMove(game: Chess) {
   const moves = game.moves({ verbose: true });
@@ -30,7 +28,9 @@ function pickMove(game: Chess) {
 }
 
 export const HeroBoard = () => {
-  const gameRef = useRef(new Chess(START_FEN));
+  // Start each page load on a different position, then cycle forward from there.
+  const idxRef = useRef((Math.random() * HERO_POSITIONS.length) | 0);
+  const gameRef = useRef(new Chess(HERO_POSITIONS[idxRef.current]));
   const wrapRef = useRef<HTMLDivElement>(null);
   const lastTouch = useRef(0);
   const plies = useRef(0);
@@ -50,8 +50,10 @@ export const HeroBoard = () => {
     return () => ro.disconnect();
   }, []);
 
-  function reset() {
-    gameRef.current = new Chess(START_FEN);
+  // Advance to the next baked-in position and play on from there.
+  function loadNext() {
+    idxRef.current = (idxRef.current + 1) % HERO_POSITIONS.length;
+    gameRef.current = new Chess(HERO_POSITIONS[idxRef.current]);
     plies.current = 0;
     setFen(gameRef.current.fen());
     setLastMove(null);
@@ -62,13 +64,13 @@ export const HeroBoard = () => {
     const id = setInterval(() => {
       if (Date.now() - lastTouch.current < IDLE_AFTER_TOUCH) return;
       const game = gameRef.current;
-      if (game.isGameOver() || plies.current >= MAX_PLIES) {
-        reset();
+      if (game.isGameOver() || plies.current >= MOVES_PER_POSITION) {
+        loadNext();
         return;
       }
       const move = pickMove(game);
       if (!move) {
-        reset();
+        loadNext();
         return;
       }
       game.move(move);
