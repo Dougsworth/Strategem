@@ -3,6 +3,7 @@ import { Chessboard } from "react-chessboard";
 import { Chess } from "chess.js";
 import { Target, TrendingUp } from "lucide-react";
 import { HERO_POSITIONS } from "./heroPositions";
+import { CUSTOM_PIECES } from "@/components/chessPieces";
 
 // A LIVE board for the hero: it cycles through ~240 baked-in middlegame
 // positions (static FENs — no engine/AI at runtime), self-playing a few legal
@@ -11,8 +12,9 @@ import { HERO_POSITIONS } from "./heroPositions";
 // Auto-play pauses for a few seconds after anyone touches it, then resumes.
 // Floating analysis cards are decoration.
 
-const LIGHT = "#eceed4";
-const DARK = "#7e9a64";
+// Warm, on-brand board palette — deliberately not the chess.com green.
+const LIGHT = "#ece6d8";
+const DARK = "#a99a82";
 
 const PLAY_INTERVAL = 1600; // ms between self-play moves
 const IDLE_AFTER_TOUCH = 6000; // pause self-play this long after a human move
@@ -112,15 +114,16 @@ export const HeroBoard = () => {
       />
 
       {/* the live board */}
-      <div className="relative rounded-[22px] border border-line bg-card p-3 shadow-[0_30px_70px_-28px_rgba(20,18,15,0.45)]">
+      <div className="relative rounded-[18px] border border-line bg-card p-2 shadow-[0_30px_70px_-28px_rgba(20,18,15,0.45)] sm:rounded-[22px] sm:p-3">
         <div ref={wrapRef} className="w-full">
           <Chessboard
             id="hero-board"
             position={fen}
             boardWidth={width}
             onPieceDrop={onDrop}
+            customPieces={CUSTOM_PIECES}
             customSquareStyles={squareStyles}
-            customBoardStyle={{ borderRadius: "12px" }}
+            customBoardStyle={{ borderRadius: "10px" }}
             customDarkSquareStyle={{ backgroundColor: DARK }}
             customLightSquareStyle={{ backgroundColor: LIGHT }}
             arePremovesAllowed={false}
