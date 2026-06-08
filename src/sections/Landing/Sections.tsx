@@ -5,7 +5,6 @@ import {
   useEffect,
   useRef,
   useState,
-  type ReactElement,
   type ReactNode,
 } from "react";
 import {
@@ -143,59 +142,142 @@ const KingGlyph = () => (
   </div>
 );
 
-// ── Small decorative graphics for the wide Feature tiles ──────────────────────
+// ── Bespoke per-feature visuals ───────────────────────────────────────────────
 const ACCENT = "#e8662f";
 
-// Spaced-repetition deck (Fix-your-mistakes trainer)
-const FlashStack = () => (
-  <svg width="92" height="64" viewBox="0 0 92 64" fill="none" aria-hidden>
-    <rect x="20" y="8" width="58" height="40" rx="7" fill="#fff" stroke="#d7d1c4" strokeWidth="2" />
-    <rect x="12" y="15" width="58" height="40" rx="7" fill="#fff" stroke={ACCENT} strokeWidth="2" />
-    <circle cx="25" cy="35" r="4" fill={ACCENT} />
-    <rect x="34" y="33" width="28" height="4.5" rx="2.25" fill="#d7d1c4" />
-    <rect x="34" y="41" width="18" height="4.5" rx="2.25" fill="#e7e2d6" />
-  </svg>
+// Hero overlay: a thin engine eval bar + best-move chip (Grandmaster analysis)
+const EvalBar = () => (
+  <div className="absolute left-5 top-5 bottom-5 hidden w-2 overflow-hidden rounded-full bg-paper/15 sm:block">
+    <div className="absolute inset-x-0 top-0 h-[38%] bg-paper" />
+  </div>
 );
 
-// Upward trend (Growth tracking)
-const Sparkline = () => (
-  <svg width="136" height="60" viewBox="0 0 136 60" fill="none" aria-hidden>
+// Rating / accuracy curve (Growth tracking)
+const RatingChart = () => (
+  <svg viewBox="0 0 240 92" className="w-full" fill="none" aria-hidden>
+    {[18, 44, 70].map((y) => (
+      <line key={y} x1="0" y1={y} x2="240" y2={y} stroke="#ece9e2" strokeWidth="1" />
+    ))}
+    <path
+      d="M4 76 40 67 76 71 112 49 148 53 184 30 220 21 236 12 236 88 4 88Z"
+      fill={ACCENT}
+      opacity="0.09"
+    />
     <polyline
-      points="4,50 26,42 48,46 70,28 92,33 114,15 132,6"
-      fill="none"
+      points="4,76 40,67 76,71 112,49 148,53 184,30 220,21 236,12"
       stroke={ACCENT}
       strokeWidth="2.5"
       strokeLinecap="round"
       strokeLinejoin="round"
     />
-    <circle cx="132" cy="6" r="3.5" fill={ACCENT} />
+    <circle cx="236" cy="12" r="3.5" fill={ACCENT} />
   </svg>
 );
 
-// Knight-tour dot grid (The Lab) — light strokes for the dark tile
-const KnightGrid = () => (
-  <svg width="72" height="72" viewBox="0 0 72 72" fill="none" aria-hidden>
-    {[10, 27, 44, 61].map((y) =>
-      [10, 27, 44, 61].map((x) => (
-        <circle key={`${x}-${y}`} cx={x} cy={y} r="2.5" fill="rgba(255,255,255,0.28)" />
-      )),
-    )}
+// Spaced-repetition flashcard deck (Fix-your-mistakes trainer)
+const TrainerDeck = () => (
+  <div className="relative mx-auto h-[68px] w-[110px]">
+    <div className="absolute left-1/2 top-3 h-12 w-[88px] -translate-x-1/2 -rotate-6 rounded-lg border border-line bg-paper" />
+    <div className="absolute left-1/2 top-1.5 h-12 w-[88px] -translate-x-1/2 rotate-3 rounded-lg border border-line bg-paper" />
+    <div className="absolute left-1/2 top-0 flex h-12 w-[88px] -translate-x-1/2 items-center justify-center rounded-lg border border-accent bg-paper shadow-sm">
+      <span className="font-mono text-[10px] font-semibold uppercase tracking-wide text-accent">
+        Due · 1
+      </span>
+    </div>
+  </div>
+);
+
+// Accuracy ring (AI report cards)
+const ReportRing = () => (
+  <div className="flex items-center gap-3">
+    <svg width="58" height="58" viewBox="0 0 58 58" aria-hidden>
+      <circle cx="29" cy="29" r="24" fill="none" stroke="#ece9e2" strokeWidth="6" />
+      <circle
+        cx="29"
+        cy="29"
+        r="24"
+        fill="none"
+        stroke={ACCENT}
+        strokeWidth="6"
+        strokeLinecap="round"
+        strokeDasharray="150.8"
+        strokeDashoffset="31.7"
+        transform="rotate(-90 29 29)"
+      />
+      <text x="29" y="33" textAnchor="middle" fontSize="13" fontWeight="700" fill="#1c1b18">
+        79%
+      </text>
+    </svg>
+    <div className="space-y-1.5">
+      <div className="h-1.5 w-16 rounded-full bg-line" />
+      <div className="h-1.5 w-12 rounded-full bg-line" />
+      <div className="h-1.5 w-14 rounded-full bg-line" />
+    </div>
+  </div>
+);
+
+// Handwritten scoresheet → digital game (Scan a paper scoresheet)
+const ScanTransform = () => (
+  <div className="flex items-center gap-3">
+    <div className="-rotate-3 rounded-md border border-line bg-paper p-2 shadow-sm">
+      <svg width="58" height="50" fill="none" aria-hidden>
+        {[10, 20, 30, 40].map((y) => (
+          <path
+            key={y}
+            d={`M6 ${y} q6 -4 12 0 t12 0 t12 0 t10 0`}
+            stroke="#bdb6a7"
+            strokeWidth="1.6"
+            strokeLinecap="round"
+          />
+        ))}
+      </svg>
+    </div>
+    <ArrowRight size={16} className="shrink-0 text-accent" />
+    <div className="rounded-md border border-line bg-card px-2.5 py-1.5 font-mono text-[10px] leading-[1.5] text-ink">
+      <div>1. e4 e5</div>
+      <div>2. Nf3 Nc6</div>
+      <div>3. Bb5 a6</div>
+    </div>
+  </div>
+);
+
+// Knight's-tour board (The Lab) — light on the dark tile
+const KnightTour = () => (
+  <svg viewBox="0 0 116 116" className="h-[104px] w-[104px]" aria-hidden>
+    {Array.from({ length: 16 }).map((_, idx) => {
+      const r = Math.floor(idx / 4);
+      const c = idx % 4;
+      const dark = (r + c) % 2 === 1;
+      return (
+        <rect
+          key={idx}
+          x={c * 29}
+          y={r * 29}
+          width="29"
+          height="29"
+          fill={dark ? "rgba(255,255,255,0.10)" : "rgba(255,255,255,0.04)"}
+        />
+      );
+    })}
     <polyline
-      points="10,44 44,61 61,27 27,10 10,27"
+      points="14,72 72,101 101,43 43,14 14,43 72,72"
       fill="none"
       stroke={ACCENT}
-      strokeWidth="2"
+      strokeWidth="2.5"
       strokeLinecap="round"
       strokeLinejoin="round"
+      strokeDasharray="3 5"
     />
+    {[
+      [14, 72],
+      [72, 101],
+      [101, 43],
+      [43, 14],
+    ].map(([x, y], k) => (
+      <circle key={k} cx={x} cy={y} r="4" fill={ACCENT} />
+    ))}
   </svg>
 );
-
-const FEATURE_GRAPHIC: Partial<Record<number, () => ReactElement>> = {
-  1: FlashStack,
-  4: Sparkline,
-  5: KnightGrid,
-};
 
 // Steel-blue mini board (matches the hero) for the "analyze" step.
 const SB_LIGHT = "#e8edf1";
@@ -243,6 +325,65 @@ const MiniBoard = () => (
   </div>
 );
 
+// Bento config — each tile carries a bespoke visual. `side` tiles lay copy
+// left / visual right; the rest stack icon → visual → title.
+const TILES = [
+  {
+    icon: TrendingUp,
+    num: "02",
+    title: "Growth tracking",
+    body: "Accuracy & rating trends that prove progress over weeks.",
+    span: "md:col-span-2",
+    tone: "light",
+    side: true,
+    visual: (
+      <div className="w-[220px] max-w-full">
+        <RatingChart />
+      </div>
+    ),
+  },
+  {
+    icon: RefreshCw,
+    num: "03",
+    title: "Fix-your-mistakes trainer",
+    body: "Their blunders, resurfaced right before they'd forget.",
+    span: "",
+    tone: "light",
+    side: false,
+    visual: <TrainerDeck />,
+  },
+  {
+    icon: FileText,
+    num: "04",
+    title: "AI report cards",
+    body: "Plain-language game summaries in seconds.",
+    span: "",
+    tone: "light",
+    side: false,
+    visual: <ReportRing />,
+  },
+  {
+    icon: ScanLine,
+    num: "05",
+    title: "Scan a paper scoresheet",
+    body: "Photo of a handwritten sheet → a clean digital game.",
+    span: "md:col-span-2",
+    tone: "light",
+    side: true,
+    visual: <ScanTransform />,
+  },
+  {
+    icon: Gamepad2,
+    num: "06",
+    title: "The Lab",
+    body: "Knight's tour, mazes & vision drills between training blocks.",
+    span: "md:col-span-2",
+    tone: "dark",
+    side: true,
+    visual: <KnightTour />,
+  },
+] as const;
+
 export const Features = () => {
   const [stageRef, inView] = useInView<HTMLDivElement>();
   const isDesktop = useMediaQuery("(min-width: 768px)");
@@ -266,11 +407,10 @@ export const Features = () => {
 
       <div
         ref={stageRef}
-        className="mt-14 grid gap-3 md:grid-cols-4 md:auto-rows-[200px]"
+        className="mt-14 grid gap-3 md:grid-cols-4 md:auto-rows-[210px]"
       >
-        {/* 01 — big dark tile, live 3D king (desktop only; mobile gets the glyph
-            so phones never download the three.js chunk) */}
-        <Reveal className="group relative min-h-[300px] overflow-hidden rounded-3xl bg-ink text-paper md:col-span-2 md:row-span-2 md:min-h-0">
+        {/* 01 — hero: live 3D king + engine eval overlay */}
+        <Reveal className="group relative min-h-[320px] overflow-hidden rounded-3xl bg-ink text-paper md:col-span-2 md:row-span-2 md:min-h-0">
           <div className="absolute inset-0">
             {inView && isDesktop ? (
               <GLBoundary fallback={<KingGlyph />}>
@@ -282,7 +422,11 @@ export const Features = () => {
               <KingGlyph />
             )}
           </div>
-          {/* legibility gradient under the copy */}
+          <EvalBar />
+          {/* floating best-move chip */}
+          <div className="absolute right-6 top-1/2 z-10 rounded-lg bg-paper/10 px-2.5 py-1.5 font-mono text-[11px] text-paper/80 backdrop-blur">
+            Best · <span className="text-accent">Nf5</span> +1.2
+          </div>
           <div className="pointer-events-none absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-ink via-ink/70 to-transparent" />
           <div className="relative flex h-full flex-col justify-between p-7">
             <div className="flex items-center justify-between">
@@ -296,66 +440,76 @@ export const Features = () => {
                 {FEATURES[0].title}
               </h3>
               <p className="mt-2 max-w-sm text-sm leading-relaxed text-paper/70">
-                {FEATURES[0].body}
+                Every move scored by Stockfish — themes, missed plans and the
+                critical moments, in coach-ready language.
               </p>
             </div>
           </div>
         </Reveal>
 
-        {/* 02–06 — shuffled spans: trainer(02) wide, scan(03)+report(04) small,
-            growth(05) wide, lab(06) wide-dark. Wide tiles carry a graphic. */}
-        {FEATURES.slice(1).map((f, k) => {
-          const i = k + 1;
-          const wide = i === 1 || i === 4 || i === 5;
-          const dark = i === 5;
-          const Icon = f.icon;
-          const Graphic = FEATURE_GRAPHIC[i];
+        {/* 02–06 — bespoke-visual tiles */}
+        {TILES.map((t, k) => {
+          const dark = t.tone === "dark";
+          const Icon = t.icon;
+          const head = (
+            <div className="flex items-center justify-between">
+              <span
+                className={`grid h-10 w-10 place-items-center rounded-xl transition-transform duration-300 group-hover:-translate-y-0.5 ${
+                  dark ? "bg-paper/10 text-accent" : "bg-accent-soft text-accent"
+                }`}
+              >
+                <Icon size={19} strokeWidth={1.75} />
+              </span>
+              <span
+                className={`font-mono text-[11px] ${dark ? "text-paper/40" : "text-muted/60"}`}
+              >
+                {t.num}
+              </span>
+            </div>
+          );
+          const titleBlock = (
+            <div>
+              <h3 className="font-display text-lg font-bold tracking-tight">
+                {t.title}
+              </h3>
+              <p
+                className={`mt-1.5 text-[13.5px] leading-relaxed ${dark ? "text-paper/70" : "text-muted"}`}
+              >
+                {t.body}
+              </p>
+            </div>
+          );
           return (
             <Reveal
-              key={f.title}
+              key={t.title}
               delay={(k % 3) * 70}
-              className={`group relative flex flex-col justify-between overflow-hidden rounded-3xl p-6 transition-all duration-300 ${
-                wide ? "md:col-span-2" : ""
-              } ${
+              className={`group relative overflow-hidden rounded-3xl p-6 transition-all duration-300 ${t.span} ${
                 dark
                   ? "bg-ink text-paper"
                   : "border border-line bg-card hover:bg-ink-soft/30"
               }`}
             >
-              <div className="relative z-10 flex items-center justify-between">
-                <span
-                  className={`grid h-10 w-10 place-items-center rounded-xl transition-transform duration-300 group-hover:-translate-y-0.5 ${
-                    dark ? "bg-paper/10 text-accent" : "bg-accent-soft text-accent"
-                  }`}
-                >
-                  <Icon size={19} strokeWidth={1.75} />
-                </span>
-                <span
-                  className={`font-mono text-[11px] ${dark ? "text-paper/40" : "text-muted/60"}`}
-                >
-                  {String(i + 1).padStart(2, "0")}
-                </span>
-              </div>
-
-              {/* graphic — sits bottom-right, copy stays clear of it */}
-              {Graphic && (
-                <div className="pointer-events-none absolute bottom-5 right-5 opacity-95">
-                  <Graphic />
+              {t.side ? (
+                <div className="flex h-full flex-col gap-5 md:flex-row md:items-center md:gap-6">
+                  <div className="flex flex-1 flex-col">
+                    {head}
+                    <div className="mt-auto pt-5">{titleBlock}</div>
+                  </div>
+                  <div className="flex shrink-0 items-center justify-center">
+                    {t.visual}
+                  </div>
+                </div>
+              ) : (
+                <div className="flex h-full flex-col">
+                  {head}
+                  <div className="flex flex-1 items-center justify-center py-2">
+                    {t.visual}
+                  </div>
+                  <h3 className="font-display text-base font-bold leading-snug tracking-tight">
+                    {t.title}
+                  </h3>
                 </div>
               )}
-
-              <div className="relative z-10">
-                <h3 className="font-display text-lg font-bold tracking-tight">
-                  {f.title}
-                </h3>
-                <p
-                  className={`mt-1.5 text-[13.5px] leading-relaxed ${
-                    Graphic ? "max-w-[58%]" : wide ? "" : "line-clamp-2"
-                  } ${dark ? "text-paper/70" : "text-muted"}`}
-                >
-                  {f.body}
-                </p>
-              </div>
               {!dark && (
                 <span className="absolute bottom-0 left-0 h-[3px] w-0 bg-accent transition-all duration-500 ease-out group-hover:w-full" />
               )}
