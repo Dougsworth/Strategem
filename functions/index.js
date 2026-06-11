@@ -3,33 +3,59 @@ const { defineSecret } = require("firebase-functions/params");
 const { initializeApp } = require("firebase-admin/app");
 const { getFirestore, FieldValue } = require("firebase-admin/firestore");
 
-// LuniPay (Stripe-based) checkout for Coach/Academy subscriptions.
-//   createCheckout  — client calls this; we create a hosted checkout session
-//                     with our SECRET key and return the URL to redirect to.
-//   lunipayWebhook  — LuniPay calls this when a session completes; we RE-FETCH
-//                     the session from LuniPay (source of truth) to verify it's
-//                     paid, then flip coaches/{uid}.plan in Firestore.
+// Polar (merchant of record) subscriptions for Coach/Academy/Club. Polar gives
+// us real auto-renewing subscriptions AND pays out to Jamaica (via Stripe
+// Connect Express), and handles VAT/sales tax as the merchant of record.
+//   createCheckout  — client calls this; we create a hosted Polar checkout for
+//                     the plan's product and return the URL to redirect to.
+//   confirmCheckout — on return, we read the checkout status and flip the plan
+//                     instantly (fast path; the webhook is the source of truth).
+//   polarWebhook    — Polar calls this on subscription/order events; we verify
+//                     the Standard-Webhooks signature, then reconcile
+//                     coaches/{uid}.plan (active/renewed → paid; revoked → free).
 //
-// The secret key never reaches the browser — it's a Firebase secret:
-//   firebase functions:secrets:set LUNIPAY_SECRET_KEY
+// Secrets never reach the browser — set them as Firebase secrets:
+//   firebase functions:secrets:set POLAR_ACCESS_TOKEN
+//   firebase functions:secrets:set POLAR_WEBHOOK_SECRET
 
 initializeApp();
 const db = getFirestore();
 
-const LUNIPAY_SECRET = defineSecret("LUNIPAY_SECRET_KEY");
-const LUNI_BASE = "https://www.lunipay.io/api/v1";
+const POLAR_ACCESS_TOKEN = defineSecret("POLAR_ACCESS_TOKEN");
+const POLAR_WEBHOOK_SECRET = defineSecret("POLAR_WEBHOOK_SECRET");
+
+// "sandbox" while testing, "production" once Polar is live. Flip this and
+// redeploy createCheckout + confirmCheckout to switch environments.
+const POLAR_SERVER = "sandbox";
+
+// Plan → Polar product id. Create one product per plan in the Polar dashboard
+// (Coach $19/mo, Academy $39/mo, Club $99/mo) and paste their ids here.
+// TODO(launch): replace the REPLACE_ME_* placeholders with real product ids.
+const POLAR_PRODUCTS = {
+  pro: "REPLACE_ME_COACH_PRODUCT_ID",
+  team: "REPLACE_ME_ACADEMY_PRODUCT_ID",
+  club: "REPLACE_ME_CLUB_PRODUCT_ID",
+};
+
+// Reverse map (product id → plan) so a webhook can resolve the plan even if the
+// event metadata is ever missing.
+const PLAN_BY_PRODUCT = Object.fromEntries(
+  Object.entries(POLAR_PRODUCTS).map(([plan, pid]) => [pid, plan]),
+);
+
+// Lazy Polar client — so the non-payment functions in this file don't pay the
+// SDK import cost on cold start.
+function polarClient() {
+  const { Polar } = require("@polar-sh/sdk");
+  return new Polar({
+    accessToken: POLAR_ACCESS_TOKEN.value(),
+    server: POLAR_SERVER,
+  });
+}
 
 // Claude (Anthropic) API key for reading scoresheet photos. Set with:
 //   firebase functions:secrets:set ANTHROPIC_API_KEY
 const ANTHROPIC_KEY = defineSecret("ANTHROPIC_API_KEY");
-
-// Plan → price in the smallest currency unit (cents). Keep in sync with
-// src/lib/plans.ts.
-const PRICES = {
-  pro: { amount: 1900, name: "Strategem Coach (monthly)" },
-  team: { amount: 3900, name: "Strategem Academy (monthly)" },
-  club: { amount: 9900, name: "Strategem Club (monthly)" },
-};
 
 const DEFAULT_ORIGIN = "https://chesssage-f5370.web.app";
 
@@ -64,45 +90,42 @@ async function enforceScanQuota(uid) {
 // maxInstances caps concurrency → caps the blast radius of any bug, so a
 // runaway can't rack up a surprise bill. Plenty for a coaching-app's volume.
 exports.createCheckout = onCall(
-  { secrets: [LUNIPAY_SECRET], cors: true, maxInstances: 5 },
+  { secrets: [POLAR_ACCESS_TOKEN], cors: true, maxInstances: 5 },
   async (req) => {
     if (!req.auth) {
       throw new HttpsError("unauthenticated", "Please sign in first.");
     }
     const plan = req.data && req.data.plan;
     const origin = (req.data && req.data.origin) || DEFAULT_ORIGIN;
-    const price = PRICES[plan];
-    if (!price) {
+    const product = POLAR_PRODUCTS[plan];
+    if (!product) {
       throw new HttpsError("invalid-argument", `Unknown plan: ${plan}`);
     }
-
-    const resp = await fetch(`${LUNI_BASE}/checkout/sessions`, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${LUNIPAY_SECRET.value()}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        amount: price.amount,
-        currency: "usd",
-        line_items: [{ name: price.name, quantity: 1, amount: price.amount }],
-        success_url: `${origin}/?checkout=success`,
-        cancel_url: `${origin}/?checkout=cancel`,
-        customer_email: req.auth.token.email || undefined,
-        // Reconciliation: the webhook reads these back to know who/what to flip.
-        metadata: { uid: req.auth.uid, plan },
-      }),
-    });
-
-    if (!resp.ok) {
-      const text = await resp.text();
+    if (product.startsWith("REPLACE_ME")) {
       throw new HttpsError(
-        "internal",
-        `LuniPay create-session failed: ${resp.status} ${text.slice(0, 200)}`,
+        "failed-precondition",
+        "Billing isn't configured yet (missing Polar product id).",
       );
     }
-    const session = await resp.json();
-    return { url: session.url, id: session.id };
+
+    let checkout;
+    try {
+      checkout = await polarClient().checkouts.create({
+        products: [product],
+        successUrl: `${origin}/?checkout=success`,
+        customerEmail: req.auth.token.email || undefined,
+        // Reconciliation: the webhook + confirm path read these back to know
+        // who/what to flip. Polar copies checkout metadata onto the resulting
+        // order and subscription.
+        metadata: { uid: req.auth.uid, plan },
+      });
+    } catch (err) {
+      throw new HttpsError(
+        "internal",
+        `Polar checkout failed: ${(err && err.message) || err}`,
+      );
+    }
+    return { url: checkout.url, id: checkout.id };
   },
 );
 
@@ -191,12 +214,12 @@ exports.leaveClub = onCall({ maxInstances: 5 }, async (req) => {
   return { ok: true };
 });
 
-// Confirm a checkout immediately on return from LuniPay — so the plan activates
-// without waiting on the (flaky in test mode) webhook. Re-fetches the session,
-// verifies it's paid AND belongs to the caller, then flips their plan. The
-// webhook stays as a backup; this is the fast path.
+// Confirm a checkout immediately on return from Polar — so the plan activates
+// without waiting on the webhook. Reads the checkout, verifies it succeeded AND
+// belongs to the caller, then flips their plan. The webhook stays the source of
+// truth (and handles renewals + cancellations).
 exports.confirmCheckout = onCall(
-  { secrets: [LUNIPAY_SECRET], maxInstances: 5 },
+  { secrets: [POLAR_ACCESS_TOKEN], maxInstances: 5 },
   async (req) => {
     if (!req.auth) {
       throw new HttpsError("unauthenticated", "Please sign in first.");
@@ -205,22 +228,28 @@ exports.confirmCheckout = onCall(
     if (!sessionId) {
       throw new HttpsError("invalid-argument", "No session id.");
     }
-    const r = await fetch(`${LUNI_BASE}/checkout/sessions/${sessionId}`, {
-      headers: { Authorization: `Bearer ${LUNIPAY_SECRET.value()}` },
-    });
-    if (!r.ok) return { paid: false };
-    const session = await r.json();
+    let checkout;
+    try {
+      checkout = await polarClient().checkouts.get({ id: sessionId });
+    } catch {
+      return { paid: false };
+    }
+    // Polar checkout status goes open → confirmed → succeeded. Either of the
+    // latter two means the payment is captured and the subscription is being
+    // provisioned, so it's safe to grant access.
     const paid =
-      session.payment_status === "paid" || session.status === "COMPLETE";
-    const uid = session.metadata && session.metadata.uid;
-    const plan = session.metadata && session.metadata.plan;
-    // Only ever flip the caller's OWN session.
-    if (paid && uid === req.auth.uid && plan) {
+      checkout.status === "succeeded" || checkout.status === "confirmed";
+    const md = checkout.metadata || {};
+    // Only ever flip the caller's OWN checkout.
+    if (paid && md.uid === req.auth.uid && md.plan) {
       await db.doc(`coaches/${req.auth.uid}`).set(
-        { plan, billing: { lastSession: sessionId, updatedAt: Date.now() } },
+        {
+          plan: md.plan,
+          billing: { lastCheckout: sessionId, updatedAt: Date.now() },
+        },
         { merge: true },
       );
-      return { paid: true, plan };
+      return { paid: true, plan: md.plan };
     }
     return { paid };
   },
@@ -237,44 +266,71 @@ exports.selfDowngrade = onCall({ maxInstances: 5 }, async (req) => {
   return { ok: true };
 });
 
-exports.lunipayWebhook = onRequest(
-  { secrets: [LUNIPAY_SECRET], maxInstances: 5 },
+// Polar calls this on subscription/order events. We verify the Standard-Webhooks
+// signature with our endpoint secret (so a forged request can't grant a plan),
+// then reconcile coaches/{uid}.plan:
+//   active / created / updated / order.paid → set the paid plan (covers renewals)
+//   revoked (access actually ended)         → downgrade to free
+// A cancel that's still inside the paid period, and past_due (Polar dunning),
+// keep the plan until Polar ultimately revokes it.
+exports.polarWebhook = onRequest(
+  { secrets: [POLAR_WEBHOOK_SECRET], maxInstances: 5 },
   async (req, res) => {
+    let event;
     try {
-      const event = req.body || {};
-      // Be defensive about the event shape; we only need the session id.
-      const sessionId =
-        (event.data && (event.data.id || (event.data.object && event.data.object.id))) ||
-        event.id;
-      if (!sessionId) {
-        res.status(400).send("missing session id");
-        return;
-      }
+      const { validateEvent } = require("@polar-sh/sdk/webhooks");
+      event = validateEvent(
+        req.rawBody,
+        req.headers,
+        POLAR_WEBHOOK_SECRET.value(),
+      );
+    } catch (err) {
+      console.error("polar webhook signature invalid", err && err.message);
+      res.status(403).send("invalid signature");
+      return;
+    }
 
-      // Verify against LuniPay directly — safe even if the webhook were forged.
-      const r = await fetch(`${LUNI_BASE}/checkout/sessions/${sessionId}`, {
-        headers: { Authorization: `Bearer ${LUNIPAY_SECRET.value()}` },
-      });
-      if (!r.ok) {
-        res.status(200).send("ignored");
-        return;
-      }
-      const session = await r.json();
-      const paid =
-        session.payment_status === "paid" || session.status === "COMPLETE";
-      const uid = session.metadata && session.metadata.uid;
-      const plan = session.metadata && session.metadata.plan;
+    try {
+      const data = event.data || {};
+      const md = data.metadata || {};
+      const uid = md.uid;
+      // Plan from metadata, falling back to the product-id mapping.
+      const plan =
+        md.plan || PLAN_BY_PRODUCT[data.productId || data.product_id] || null;
 
-      if (paid && uid && plan) {
+      const setPlan = async (p) => {
+        if (!uid) return;
         await db.doc(`coaches/${uid}`).set(
-          { plan, billing: { lastSession: sessionId, updatedAt: Date.now() } },
+          {
+            plan: p,
+            billing: {
+              subscriptionId: data.id || data.subscriptionId || null,
+              status: data.status || event.type,
+              updatedAt: Date.now(),
+            },
+          },
           { merge: true },
         );
+      };
+
+      switch (event.type) {
+        case "subscription.active":
+        case "subscription.created":
+        case "subscription.updated":
+        case "order.paid":
+          if (plan) await setPlan(plan);
+          break;
+        case "subscription.revoked":
+          await setPlan("free");
+          break;
+        // subscription.canceled / uncanceled / past_due → no plan change yet.
+        default:
+          break;
       }
       res.status(200).send("ok");
     } catch (err) {
-      console.error("webhook error", err);
-      res.status(200).send("ok"); // ack so LuniPay doesn't hammer retries
+      console.error("polar webhook error", err);
+      res.status(200).send("ok"); // ack so Polar doesn't hammer retries
     }
   },
 );
