@@ -20,14 +20,9 @@ import {
 } from "./accuracy";
 import { classifyPhase } from "../chess/phase";
 import { hangingPieces, motifsOfMove, type Motif } from "./motifs";
-import {
-  fetchGames,
-  fetchLastGameAt,
-  fetchRatingHistory,
-  fetchUser,
-  type LichessEvalNode,
-  type LichessGame,
-} from "../providers/lichess";
+import type { Platform } from "../types";
+import { provider } from "../providers";
+import type { LichessEvalNode, LichessGame } from "../providers/lichess";
 
 const PHASES: Phase[] = ["opening", "middlegame", "endgame"];
 const CP_CAP = 1000; // Lichess caps per-move centipawn loss here.
@@ -535,8 +530,11 @@ export interface ResolvedProfile {
  */
 export async function resolveProfile(
   username: string,
-  opts: { perf?: string } = {},
+  opts: { perf?: string; platform?: Platform } = {},
 ): Promise<ResolvedProfile> {
+  const { fetchUser, fetchRatingHistory, fetchLastGameAt } = provider(
+    opts.platform,
+  );
   const user = await fetchUser(username);
 
   const availablePerfs: PerfSummary[] = PERF_ORDER.map(({ key, label }) => ({
@@ -594,8 +592,13 @@ export async function fetchReportGames(
   username: string,
   perf: string,
   max = APP_MAX_GAMES,
+  platform: Platform = "lichess",
 ) {
-  return fetchGames(username, { max, onlyAnalysed: true, perfType: perf });
+  return provider(platform).fetchGames(username, {
+    max,
+    onlyAnalysed: true,
+    perfType: perf,
+  });
 }
 
 /**

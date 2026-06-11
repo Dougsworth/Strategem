@@ -4,6 +4,12 @@ import { ScannedGamesList } from "@/sections/DashboardMain/components/ScannedGam
 import { useStudent, EXAMPLE_USERNAMES } from "@/lib/StudentContext";
 import { useAuth } from "@/lib/AuthContext";
 import { studentCapLabel } from "@/lib/entitlements";
+import type { Platform } from "@/lib/types";
+
+const PLATFORMS: { id: Platform; label: string }[] = [
+  { id: "lichess", label: "Lichess" },
+  { id: "chesscom", label: "Chess.com" },
+];
 
 export const ActiveRoster = () => {
   const { roster, rosterLoading, selected, select, addByInput, removeStudent } =
@@ -11,15 +17,16 @@ export const ActiveRoster = () => {
   const { user } = useAuth();
   const capLabel = studentCapLabel(user?.plan);
   const [value, setValue] = useState("");
+  const [platform, setPlatform] = useState<Platform>("lichess");
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
-  async function add(input: string) {
+  async function add(input: string, plat: Platform = platform) {
     if (!input.trim()) return;
     setBusy(true);
     setError(null);
     try {
-      await addByInput(input);
+      await addByInput(input, plat);
       setValue("");
     } catch (e) {
       setError(e instanceof Error ? e.message : "Couldn't add that student.");
@@ -47,11 +54,32 @@ export const ActiveRoster = () => {
         }}
         className="mb-4"
       >
+        {/* platform toggle */}
+        <div className="mb-2 inline-flex rounded-lg border border-line bg-card p-0.5">
+          {PLATFORMS.map((p) => (
+            <button
+              key={p.id}
+              type="button"
+              onClick={() => setPlatform(p.id)}
+              className={`rounded-md px-2.5 py-1 text-xs font-medium transition-colors ${
+                platform === p.id
+                  ? "bg-ink text-paper"
+                  : "text-muted hover:text-ink"
+              }`}
+            >
+              {p.label}
+            </button>
+          ))}
+        </div>
         <div className="flex gap-2">
           <input
             value={value}
             onChange={(e) => setValue(e.target.value)}
-            placeholder="Paste Lichess URL or username"
+            placeholder={
+              platform === "chesscom"
+                ? "Chess.com URL or username"
+                : "Lichess URL or username"
+            }
             className="min-w-0 flex-1 rounded-lg border border-line bg-card px-3 py-2 text-sm outline-none ring-accent/30 placeholder:text-muted/60 focus:ring-2"
           />
           <button
@@ -64,7 +92,9 @@ export const ActiveRoster = () => {
         </div>
         {error && <p className="mt-1.5 text-xs text-accent">{error}</p>}
         <p className="mt-1.5 font-mono text-[10px] text-muted/70">
-          Profile, game URL, or username
+          {platform === "chesscom"
+            ? "Profile or username · deep analysis coming soon"
+            : "Profile, game URL, or username"}
         </p>
       </form>
 
@@ -83,7 +113,7 @@ export const ActiveRoster = () => {
             {EXAMPLE_USERNAMES.map((u) => (
               <button
                 key={u}
-                onClick={() => add(u)}
+                onClick={() => add(u, "lichess")}
                 disabled={busy}
                 className="rounded-full bg-ink-soft px-2.5 py-1 font-mono text-xs text-ink transition-colors hover:bg-ink/10 disabled:opacity-50"
               >

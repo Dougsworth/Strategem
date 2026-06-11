@@ -1,5 +1,5 @@
-import type { RosterEntry, Trend } from "./types";
-import { fetchRatingHistory, fetchUser } from "./providers/lichess";
+import type { Platform, RosterEntry, Trend } from "./types";
+import { provider } from "./providers";
 
 function initialsOf(name: string): string {
   const parts = name.trim().split(/\s+/);
@@ -15,7 +15,11 @@ function trendFromDrift(drift: number, points: number): Trend {
 }
 
 /** Light-weight roster summary (rating + trend) — no game analysis. */
-export async function fetchRosterEntry(username: string): Promise<RosterEntry> {
+export async function fetchRosterEntry(
+  username: string,
+  platform: Platform = "lichess",
+): Promise<RosterEntry> {
+  const { fetchUser, fetchRatingHistory } = provider(platform);
   const [user, history] = await Promise.all([
     fetchUser(username),
     fetchRatingHistory(username).catch(() => []),
@@ -27,12 +31,13 @@ export async function fetchRosterEntry(username: string): Promise<RosterEntry> {
     user.perfs?.blitz?.rating ??
     user.perfs?.rapid?.rating ??
     user.perfs?.bullet?.rating ??
+    user.perfs?.classical?.rating ??
     null;
   const tail = history.slice(-20);
   const drift =
     tail.length >= 2 ? tail[tail.length - 1].rating - tail[0].rating : 0;
   return {
-    platform: "lichess",
+    platform,
     username: user.username,
     displayName,
     initials: initialsOf(displayName),

@@ -29,3 +29,22 @@ export function parseLichessInput(raw: string): LichessInput | null {
 
   return null;
 }
+
+const CC_USER_URL = /chess\.com\/(?:member|@)\/([\w-]+)/i;
+
+/** Platform-aware parse. Chess.com supports a profile URL or bare username
+ *  (game-URL import isn't wired for Chess.com yet). Lichess uses the existing
+ *  profile/game/username parser. */
+export function parseHandle(
+  raw: string,
+  platform: "lichess" | "chesscom",
+): LichessInput | null {
+  if (platform !== "chesscom") return parseLichessInput(raw);
+  const input = raw.trim();
+  if (!input) return null;
+  const url = input.match(CC_USER_URL);
+  if (url) return { kind: "user", username: url[1] };
+  const bare = input.match(/^@?([\w-]{2,30})$/);
+  if (bare) return { kind: "user", username: bare[1] };
+  return null;
+}

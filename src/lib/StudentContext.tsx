@@ -8,15 +8,15 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import type { ReportProfile, RosterEntry, StudentReport } from "./types";
+import type { Platform, ReportProfile, RosterEntry, StudentReport } from "./types";
 import { fetchRosterEntry } from "./roster";
 import {
   fetchReportGames,
   resolveProfile,
 } from "./analysis/computeReport";
 import { runReportInWorker } from "./analysis/runReportInWorker";
-import { parseLichessInput } from "./parseInput";
-import { fetchGamePlayers } from "./providers/lichess";
+import { parseHandle } from "./parseInput";
+import { provider } from "./providers";
 import {
   computeDeltas,
   recordSnapshot,
@@ -80,8 +80,8 @@ interface StudentContextValue {
   rosterLoading: boolean;
   selected: string | null;
   select: (username: string) => void;
-  /** Add by pasted profile URL, game URL, or bare username. */
-  addByInput: (input: string) => Promise<void>;
+  /** Add by pasted profile URL, game URL, or bare username, for a platform. */
+  addByInput: (input: string, platform?: Platform) => Promise<void>;
   removeStudent: (username: string) => void;
   /** Switch the time-control (bullet/blitz/rapid/classical) for the selected student. */
   setPerf: (perf: string) => void;
@@ -198,12 +198,15 @@ export function StudentProvider({ children }: { children: ReactNode }) {
     setReport(null);
 
     const desiredPerf = perfOverrides[selected];
+    const platform =
+      roster.find((r) => r.username === selected)?.platform ?? "lichess";
 
     (async () => {
       try {
         // Stage 1 — identity + rating (renders the header immediately).
         const { profile: prof, buildBase, perf } = await resolveProfile(selected, {
           perf: desiredPerf,
+          platform,
         });
         if (cancelled) return;
         setProfile(prof);
@@ -227,7 +230,7 @@ export function StudentProvider({ children }: { children: ReactNode }) {
         };
 
         // Stage 2 — cached report → instant; skip games fetch + worker.
-        const key = cacheKey(selected, perf);
+        const key = cacheKey(`${platform}:${selected}`, perf);
         const cached = reportCache.get(key);
         if (cached) {
           applyReport(cached);
@@ -235,7 +238,7 @@ export function StudentProvider({ children }: { children: ReactNode }) {
         }
 
         // Stage 3 — fetch games, analyze off the main thread, cache.
-        const games = await fetchReportGames(selected, perf);
+        const games = await fetchReportGames(selected, perf, undefined, platform);
         if (cancelled) return;
         const report = await runReportInWorker({ ...buildBase, games });
         if (cancelled) return;
@@ -281,11 +284,13 @@ export function StudentProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const addByInput = useCallback(
-    async (input: string) => {
-      const parsed = parseLichessInput(input);
+    async (input: string, platform: Platform = "lichess") => {
+      const parsed = parseHandle(input, platform);
       if (!parsed) {
         throw new Error(
-          "Paste a Lichess profile URL, game URL, or username.",
+          platform === "chesscom"
+            ? "Paste a Chess.com profile URL or username."
+            : "Paste a Lichess profile URL, game URL, or username.",
         );
       }
       // Enforce the plan's student cap (real gating, not just a pricing label).
@@ -298,15 +303,17 @@ export function StudentProvider({ children }: { children: ReactNode }) {
         );
       }
       if (parsed.kind === "user") {
-        const entry = await fetchRosterEntry(parsed.username);
+        const entry = await fetchRosterEntry(parsed.username, platform);
         upsert(entry);
         setSelected(entry.username);
         return;
       }
       // Game URL → add both players, but never past the plan's student cap.
-      const names = await fetchGamePlayers(parsed.gameId);
+      const names = await provider(platform).fetchGamePlayers(parsed.gameId);
       if (names.length === 0) throw new Error("No players found in that game.");
-      const entries = await Promise.all(names.map((n) => fetchRosterEntry(n)));
+      const entries = await Promise.all(
+        names.map((n: string) => fetchRosterEntry(n, platform)),
+      );
       const max = clubId ? Infinity : entitlements(plan).maxStudents;
       const remaining =
         max === Infinity ? entries.length : Math.max(0, max - roster.length);
