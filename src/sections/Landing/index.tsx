@@ -1,16 +1,23 @@
-import type { MouseEvent } from "react";
+import { useEffect, useState, type MouseEvent } from "react";
 import { ArrowRight } from "lucide-react";
 import { Reveal } from "./Reveal";
 import { PrimaryCta } from "./ui";
 import { Hero } from "./Hero";
 import { Logos, Features, HowItWorks, Pricing, Faq } from "./Sections";
+import { LegalPage, type LegalDoc } from "../Legal/LegalPage";
 
-// Public marketing page. Every CTA is an <a href="#start"> / #signin / #sample;
-// click delegation here routes those into the auth flow, and smooth-scrolls the
-// in-page anchors (#features, #pricing, #faq) — so all links work without
-// wiring a handler into every nested component.
+// Public marketing page. Every CTA is an <a href="#start"> / #signin; click
+// delegation here routes those into the auth flow, smooth-scrolls the in-page
+// anchors (#features, #pricing, #faq, #sample→#how), and opens the static legal
+// pages (#privacy, #terms, #contact) — so all links work without wiring a
+// handler into every nested component.
 
-const AUTH_HASHES = new Set(["#start", "#signin", "#sample"]);
+const AUTH_HASHES = new Set(["#start", "#signin"]);
+const LEGAL_HASHES: Record<string, LegalDoc> = {
+  "#privacy": "privacy",
+  "#terms": "terms",
+  "#contact": "contact",
+};
 
 const BrandMark = () => (
   <a href="#top" className="flex items-center gap-2">
@@ -139,9 +146,9 @@ const Footer = () => (
         </p>
         <ul className="mt-4 space-y-2.5 text-sm">
           {[
-            ["Contact", "#start"],
-            ["Privacy", "#start"],
-            ["Terms", "#start"],
+            ["Contact", "#contact"],
+            ["Privacy", "#privacy"],
+            ["Terms", "#terms"],
           ].map(([l, h], i) => (
             <li key={`${h}-${i}`}>
               <a href={h} className="text-muted transition-colors hover:text-ink">
@@ -168,6 +175,27 @@ export const LandingPage = ({
 }: {
   onGetStarted: (mode: "in" | "up") => void;
 }) => {
+  // Static legal/contact pages render in place of the marketing page; the URL
+  // hash drives them so they're deep-linkable and the browser Back button works.
+  const [legal, setLegal] = useState<LegalDoc | null>(
+    () => LEGAL_HASHES[window.location.hash] ?? null,
+  );
+
+  useEffect(() => {
+    const onHash = () => setLegal(LEGAL_HASHES[window.location.hash] ?? null);
+    window.addEventListener("hashchange", onHash);
+    return () => window.removeEventListener("hashchange", onHash);
+  }, []);
+
+  function closeLegal() {
+    if (window.location.hash) {
+      // drop the hash without adding a history entry, then sync state
+      history.replaceState(null, "", window.location.pathname + window.location.search);
+    }
+    setLegal(null);
+    window.scrollTo({ top: 0 });
+  }
+
   function handleClick(e: MouseEvent<HTMLDivElement>) {
     const anchor = (e.target as HTMLElement).closest("a[href]");
     if (!anchor) return;
@@ -179,14 +207,23 @@ export const LandingPage = ({
       onGetStarted(href === "#signin" ? "in" : "up");
       return;
     }
+    if (LEGAL_HASHES[href]) {
+      setLegal(LEGAL_HASHES[href]);
+      window.scrollTo({ top: 0 });
+      return;
+    }
     if (href === "#top") {
       window.scrollTo({ top: 0, behavior: "smooth" });
       return;
     }
+    // "See a sample report" → the How-it-works walkthrough (real product shots).
+    const targetId = href === "#sample" ? "how" : href.slice(1);
     document
-      .getElementById(href.slice(1))
+      .getElementById(targetId)
       ?.scrollIntoView({ behavior: "smooth", block: "start" });
   }
+
+  if (legal) return <LegalPage doc={legal} onBack={closeLegal} />;
 
   return (
     <div id="top" onClick={handleClick} className="min-h-screen bg-paper text-ink">
