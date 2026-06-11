@@ -70,7 +70,7 @@ const Privacy = () => (
       </li>
       <li>
         <strong>Payment data.</strong> If you subscribe, payments are processed by
-        our payment provider (LuniPay). We receive a confirmation of your plan and
+        Polar, our merchant of record. We receive a confirmation of your plan and
         status; <strong>we never see or store your full card number.</strong>
       </li>
       <li>
@@ -103,7 +103,8 @@ const Privacy = () => (
         serverless functions.
       </li>
       <li>
-        <strong>LuniPay</strong> — payment processing for subscriptions.
+        <strong>Polar</strong> — our merchant of record; processes subscription
+        payments and handles sales tax/VAT.
       </li>
       <li>
         <strong>Anthropic (Claude)</strong> — to transcribe uploaded scoresheets
@@ -195,8 +196,8 @@ const Terms = () => (
         Starter plan is available at no cost.
       </li>
       <li>
-        Payments are handled by LuniPay. By subscribing you also agree to their
-        terms.
+        Payments are handled by Polar, our merchant of record. By subscribing you
+        also agree to their terms.
       </li>
       <li>
         You can downgrade to the free plan at any time from within the app; access
@@ -213,7 +214,7 @@ const Terms = () => (
     <H2>6. Third-party data &amp; services</H2>
     <P>
       The Service reads public data from Lichess and Chess.com and uses Google,
-      LuniPay, and Anthropic to operate. We are not responsible for the
+      Polar, and Anthropic to operate. We are not responsible for the
       availability or accuracy of those third-party services.
     </P>
 

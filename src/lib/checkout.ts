@@ -4,7 +4,7 @@ import type { Plan } from "./AuthContext";
 const PENDING_KEY = "strategem.pendingCheckout";
 
 // Calls the createCheckout Cloud Function, then redirects the browser to the
-// LuniPay hosted checkout page. The secret key + charging all happen server-
+// Polar hosted checkout page. The access token + charging all happen server-
 // side; the client only ever receives a URL to send the coach to.
 export async function startCheckout(plan: Plan, origin: string): Promise<void> {
   await getFirebase(); // ensures the Firebase app is initialized
@@ -29,7 +29,7 @@ export async function startCheckout(plan: Plan, origin: string): Promise<void> {
   window.location.href = url;
 }
 
-// On return from LuniPay, verify the session server-side and flip the plan
+// On return from Polar, verify the checkout server-side and flip the plan
 // right away. Retries a few times in case the session is marked paid a beat
 // late. Returns true once the plan is upgraded.
 export async function confirmPendingCheckout(): Promise<boolean> {

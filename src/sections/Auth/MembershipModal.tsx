@@ -156,8 +156,8 @@ export const MembershipModal = () => {
 
         <p className="mt-6 text-center font-mono text-[10px] uppercase tracking-wide text-muted/60">
           {firebaseEnabled
-            ? "Secure checkout via LuniPay · cancel anytime"
-            : "Demo — plan switches are local until LuniPay is connected"}
+            ? "Secure checkout via Polar · cancel anytime"
+            : "Demo — plan switches are local until Polar is connected"}
         </p>
       </div>
 

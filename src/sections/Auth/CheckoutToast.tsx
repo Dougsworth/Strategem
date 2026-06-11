@@ -4,7 +4,7 @@ import { useAuth } from "@/lib/AuthContext";
 import { planName } from "@/lib/plans";
 import { confirmPendingCheckout } from "@/lib/checkout";
 
-// Handles the return from LuniPay's hosted checkout (`?checkout=success|cancel`).
+// Handles the return from Polar's hosted checkout (`?checkout=success|cancel`).
 // The plan itself updates live via the coach-doc listener once the webhook
 // flips it — this is just the human-facing confirmation. We strip the query
 // param so a refresh doesn't re-show it.

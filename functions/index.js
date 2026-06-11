@@ -32,7 +32,7 @@ const POLAR_SERVER = "sandbox";
 // (Coach $19/mo, Academy $39/mo, Club $99/mo) and paste their ids here.
 // TODO(launch): replace the REPLACE_ME_* placeholders with real product ids.
 const POLAR_PRODUCTS = {
-  pro: "REPLACE_ME_COACH_PRODUCT_ID",
+  pro: "d93c2652-082c-4e58-82a4-9c6ff54e0050", // Strategem Coach (sandbox)
   team: "REPLACE_ME_ACADEMY_PRODUCT_ID",
   club: "REPLACE_ME_CLUB_PRODUCT_ID",
 };
