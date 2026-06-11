@@ -26,15 +26,13 @@ const POLAR_WEBHOOK_SECRET = defineSecret("POLAR_WEBHOOK_SECRET");
 
 // "sandbox" while testing, "production" once Polar is live. Flip this and
 // redeploy createCheckout + confirmCheckout to switch environments.
-const POLAR_SERVER = "sandbox";
+const POLAR_SERVER = "production";
 
-// Plan → Polar product id. Create one product per plan in the Polar dashboard
-// (Coach $19/mo, Academy $39/mo, Club $99/mo) and paste their ids here.
-// TODO(launch): replace the REPLACE_ME_* placeholders with real product ids.
+// Plan → Polar product id (production). Keep prices in sync with src/lib/plans.ts.
 const POLAR_PRODUCTS = {
-  pro: "d93c2652-082c-4e58-82a4-9c6ff54e0050", // Strategem Coach (sandbox)
-  team: "REPLACE_ME_ACADEMY_PRODUCT_ID",
-  club: "REPLACE_ME_CLUB_PRODUCT_ID",
+  pro: "b4970e0b-0367-4c23-837e-6a6a00f1a7c0", // Strategem Coach $19/mo
+  team: "0fea5249-16b1-4efe-a770-14ebe134bea1", // Strategem Academy $39/mo
+  club: "1a91e6bd-305d-4ec9-a7e4-7c27f1b7f225", // Strategem Club $99/mo
 };
 
 // Reverse map (product id → plan) so a webhook can resolve the plan even if the
