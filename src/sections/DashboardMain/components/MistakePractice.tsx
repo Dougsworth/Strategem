@@ -89,7 +89,7 @@ export const MistakePractice = () => {
             <CheckCircle2 size={20} />
           </span>
           <div>
-            <h3 className="font-display text-xl font-bold tracking-tight">
+            <h3 className="font-display text-xl font-semibold tracking-tight">
               {firstName} is all caught up
             </h3>
             <p className="mt-1 max-w-md text-sm leading-relaxed text-muted">
@@ -117,11 +117,11 @@ export const MistakePractice = () => {
             <Target size={20} />
           </span>
           <div>
-            <h3 className="font-display text-xl font-bold tracking-tight">
+            <h3 className="font-display text-xl font-semibold tracking-tight">
               Review {firstName}’s mistakes
             </h3>
             <p className="mt-1 max-w-md text-sm leading-relaxed text-paper/85">
-              {parts.join(" · ")} — positions from {firstName}’s real games,
+              {parts.join(" · ")}, positions from {firstName}’s real games,
               resurfaced right before they’d slip. Re-solving the exact moments
               they got wrong is the most effective way to improve.
             </p>

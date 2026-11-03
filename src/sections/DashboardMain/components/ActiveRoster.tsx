@@ -115,7 +115,7 @@ export const ActiveRoster = () => {
                 key={u}
                 onClick={() => add(u, "lichess")}
                 disabled={busy}
-                className="rounded-full bg-ink-soft px-2.5 py-1 font-mono text-xs text-ink transition-colors hover:bg-ink/10 disabled:opacity-50"
+                className="rounded-md bg-ink-soft px-2.5 py-1 font-mono text-xs text-ink transition-colors hover:bg-ink/10 disabled:opacity-50"
               >
                 {u}
               </button>

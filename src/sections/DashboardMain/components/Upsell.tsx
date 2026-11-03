@@ -21,7 +21,7 @@ export const Upsell = ({
       <p className="mt-4 text-xs text-accent">
         Coach plan
       </p>
-      <h2 className="mt-1 font-display text-2xl font-bold tracking-tight">{title}</h2>
+      <h2 className="mt-1 font-display text-2xl font-semibold tracking-tight">{title}</h2>
       <p className="mx-auto mt-2 max-w-md text-sm leading-relaxed text-muted">{blurb}</p>
 
       <ul className="mx-auto mt-5 max-w-sm space-y-2 text-left">

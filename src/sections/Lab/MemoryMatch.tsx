@@ -77,7 +77,7 @@ export const MemoryMatch = () => {
             <button
               key={i}
               onClick={() => flip(i)}
-              className={`grid h-16 w-16 place-items-center rounded-xl text-3xl transition-all ${
+              className={`grid h-16 w-16 place-items-center rounded-xl text-3xl transition-[background-color,border-color,color,opacity,transform] ${
                 showing
                   ? card.matched
                     ? "bg-positive/15 text-positive"
@@ -92,7 +92,7 @@ export const MemoryMatch = () => {
       </div>
 
       {won && (
-        <p className="mt-4 font-display text-lg font-bold text-positive">
+        <p className="mt-4 font-display text-lg font-semibold text-positive">
           All matched in {moves} flips
         </p>
       )}

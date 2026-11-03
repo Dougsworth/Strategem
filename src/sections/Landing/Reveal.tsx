@@ -45,7 +45,7 @@ export const Reveal = ({
     <Tag
       // @ts-expect-error — ref type varies with the polymorphic tag, harmless here
       ref={ref}
-      className={`transition-all duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] ${className}`}
+      className={`transition-[opacity,transform] duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] ${className}`}
       style={{
         transitionDelay: shown ? `${delay}ms` : "0ms",
         opacity: shown ? 1 : 0,

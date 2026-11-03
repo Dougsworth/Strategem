@@ -13,7 +13,7 @@ export const Hero = () => {
           </p>
 
           <h1
-            className="mt-5 animate-fade-up font-display text-[2.6rem] font-bold leading-[1.02] tracking-[-0.03em] md:text-[4.25rem]"
+            className="mt-5 animate-fade-up font-display text-[2.6rem] font-semibold leading-[1.02] tracking-[-0.03em] md:text-[4.25rem]"
             style={{ animationDelay: "0.08s" }}
           >
             Coach smarter.
@@ -44,7 +44,7 @@ export const Hero = () => {
             style={{ animationDelay: "0.16s" }}
           >
             Strategem pulls your students&rsquo; Lichess and Chess.com games,
-            runs grandmaster-grade analysis, and tells you exactly what to fix
+            runs Stockfish analysis, and tells you exactly what to fix
             next, drills included.
           </p>
 

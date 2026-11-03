@@ -27,7 +27,7 @@ const BrandMark = () => (
       <span />
       <span className="bg-paper" />
     </span>
-    <span className="font-display text-lg font-bold tracking-tight">
+    <span className="font-display text-lg font-semibold tracking-tight">
       STRATEGEM
     </span>
   </a>
@@ -72,7 +72,7 @@ const CtaBand = () => (
     <Reveal className="relative overflow-hidden rounded-[24px] bg-ink px-6 py-14 text-paper sm:rounded-[28px] sm:px-8 sm:py-20 md:px-16 md:py-28">
       <div className="relative max-w-2xl">
         <p className="text-sm text-paper/70">Ready when you are</p>
-        <h2 className="mt-5 font-display text-[2rem] font-bold leading-[1.05] tracking-[-0.02em] md:text-[3.5rem]">
+        <h2 className="mt-5 font-display text-[2rem] font-semibold leading-[1.05] tracking-[-0.02em] md:text-[3.5rem]">
           See every game clearly.{" "}
           <span className="text-accent">Start free.</span>
         </h2>

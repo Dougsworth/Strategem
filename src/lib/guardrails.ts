@@ -69,7 +69,7 @@ export async function politeFetch(
     if (attempt >= retries) {
       throw new Error(
         res.status === 429
-          ? "Lichess is rate-limiting us — give it a few seconds and try again."
+          ? "Lichess is rate-limiting us. Give it a few seconds and try again."
           : `Lichess is having trouble (${res.status}). Try again shortly.`,
       );
     }

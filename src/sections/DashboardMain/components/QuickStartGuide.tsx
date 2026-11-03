@@ -37,7 +37,7 @@ export const QuickStartGuide = () => {
       icon: ClipboardList,
       label: "Roster",
       tab: "roster",
-      body: "This page — the snapshot. Strengths by phase, the mistakes they repeat, and their rating trend.",
+      body: "This page: the snapshot. Strengths by phase, the mistakes they repeat, and their rating trend.",
     },
     {
       icon: GraduationCap,
@@ -49,7 +49,7 @@ export const QuickStartGuide = () => {
       icon: LineChart,
       label: "Analytics",
       tab: "analytics",
-      body: "The deep dive — growth curve, how consistent they are, and the mindset behind their mistakes.",
+      body: "The deep dive: growth curve, how consistent they are, and the mindset behind their mistakes.",
     },
   ];
 
@@ -63,11 +63,11 @@ export const QuickStartGuide = () => {
         <X size={16} />
       </button>
       <p className="eyebrow">New here?</p>
-      <h3 className="mt-0.5 font-display text-lg font-bold tracking-tight">
+      <h3 className="mt-0.5 font-display text-lg font-semibold tracking-tight">
         Where everything lives
       </h3>
       <p className="mt-1 text-sm text-muted">
-        Three tabs up top, each with a job. Tap one to jump there — or hit{" "}
+        Three tabs up top, each with a job. Tap one to jump there, or hit{" "}
         <span className="font-semibold text-ink">Report Card</span> (top-right) for
         a shareable summary.
       </p>

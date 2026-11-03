@@ -18,7 +18,7 @@ export const Navbar = ({ onScan }: { onScan: () => void }) => {
         <div className="flex items-center gap-3">
           <button
             onClick={onScan}
-            className="flex items-center gap-1.5 rounded-full border border-line px-3 py-1.5 text-xs font-semibold transition-colors hover:bg-ink-soft"
+            className="flex items-center gap-1.5 rounded-md border border-line px-3 py-1.5 text-xs font-semibold transition-colors hover:bg-ink-soft"
           >
             <ScanLine size={14} />
             <span className="hidden sm:inline">Scan game</span>
@@ -26,7 +26,7 @@ export const Navbar = ({ onScan }: { onScan: () => void }) => {
           {user?.plan === "free" && (
             <button
               onClick={openMembership}
-              className="hidden rounded-full bg-accent px-3 py-1.5 text-xs font-bold text-paper transition-opacity hover:opacity-90 sm:block"
+              className="hidden rounded-md bg-accent px-3 py-1.5 text-xs font-bold text-paper transition-opacity hover:opacity-90 sm:block"
             >
               Upgrade
             </button>

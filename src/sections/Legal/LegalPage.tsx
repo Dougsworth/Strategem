@@ -22,14 +22,14 @@ const BrandMark = ({ onBack }: { onBack: () => void }) => (
       <span />
       <span className="bg-paper" />
     </span>
-    <span className="font-display text-lg font-bold tracking-tight">
+    <span className="font-display text-lg font-semibold tracking-tight">
       STRATEGEM
     </span>
   </button>
 );
 
 const H2 = ({ children }: { children: React.ReactNode }) => (
-  <h2 className="mt-10 font-display text-xl font-bold tracking-tight text-ink">
+  <h2 className="mt-10 font-display text-xl font-semibold tracking-tight text-ink">
     {children}
   </h2>
 );
@@ -52,7 +52,7 @@ const Privacy = () => (
       their students&rsquo; publicly available games, scan paper scoresheets, and
       track improvement over time. This policy explains what we collect, why, and
       what choices you have. It covers <strong>coaches</strong> (people who create
-      an account) — not the chess players whose public games are analyzed.
+      an account), not the chess players whose public games are analyzed.
     </P>
 
     <H2>2. Information we collect</H2>
@@ -88,7 +88,7 @@ const Privacy = () => (
 
     <H2>4. How we use your information</H2>
     <UL>
-      <li>To provide the service — analysis, report cards, scanning, and training.</li>
+      <li>To provide the service: analysis, report cards, scanning, and training.</li>
       <li>To authenticate you and sync your data across your devices.</li>
       <li>To enforce plan limits and process subscriptions.</li>
       <li>To generate AI-written report summaries and transcribe scoresheets.</li>
@@ -99,20 +99,20 @@ const Privacy = () => (
     <P>We rely on a small set of trusted providers:</P>
     <UL>
       <li>
-        <strong>Google Firebase</strong> — authentication, database, hosting, and
+        <strong>Google Firebase</strong>: authentication, database, hosting, and
         serverless functions.
       </li>
       <li>
-        <strong>Polar</strong> — our merchant of record; processes subscription
+        <strong>Polar</strong>: our merchant of record; processes subscription
         payments and handles sales tax/VAT.
       </li>
       <li>
-        <strong>Anthropic (Claude)</strong> — to transcribe uploaded scoresheets
+        <strong>Anthropic (Claude)</strong>: to transcribe uploaded scoresheets
         and write report-card summaries. Only the data needed for that task is
         sent, and it is not used to train their models on your behalf.
       </li>
       <li>
-        <strong>Lichess &amp; Chess.com</strong> — public APIs we read game data
+        <strong>Lichess &amp; Chess.com</strong>: public APIs we read game data
         from. We send the usernames you add; we send no personal data of yours.
       </li>
     </UL>
@@ -169,7 +169,7 @@ const Terms = () => (
     <P>
       Strategem analyzes publicly available chess games, transcribes scoresheet
       photos, generates coaching reports, and provides training tools. Analysis is
-      a best-effort estimate produced by chess engines and heuristics — it is a
+      a best-effort estimate produced by chess engines and heuristics, it is a
       coaching aid, not a guarantee of accuracy or results.
     </P>
 
@@ -206,7 +206,7 @@ const Terms = () => (
       <li>
         Because the Service delivers value immediately and relies on metered
         third-party costs (AI scanning), fees are generally non-refundable except
-        where required by law. If something goes wrong, contact us — we&rsquo;ll make
+        where required by law. If something goes wrong, contact us, we&rsquo;ll make
         it right.
       </li>
     </UL>
@@ -276,19 +276,19 @@ const Contact = () => (
     <H2>Common requests</H2>
     <UL>
       <li>
-        <strong>Delete my account &amp; data</strong> — email us from your account
+        <strong>Delete my account &amp; data</strong>: email us from your account
         address and we&rsquo;ll erase everything.
       </li>
       <li>
-        <strong>Billing &amp; subscriptions</strong> — upgrades, downgrades, and
+        <strong>Billing &amp; subscriptions</strong>: upgrades, downgrades, and
         receipts.
       </li>
       <li>
-        <strong>A scan or report looks wrong</strong> — send the game and we&rsquo;ll
+        <strong>A scan or report looks wrong</strong>: send the game and we&rsquo;ll
         take a look.
       </li>
       <li>
-        <strong>Feature ideas</strong> — Strategem is built with coaches; we want
+        <strong>Feature ideas</strong>: Strategem is built with coaches; we want
         to hear them.
       </li>
     </UL>
@@ -337,7 +337,7 @@ export const LegalPage = ({
         <p className="text-xs text-accent">
           {meta.subtitle}
         </p>
-        <h1 className="mt-3 font-display text-[2.25rem] font-bold leading-[1.05] tracking-[-0.02em] md:text-[3rem]">
+        <h1 className="mt-3 font-display text-[2.25rem] font-semibold leading-[1.05] tracking-[-0.02em] md:text-[3rem]">
           {meta.title}
         </h1>
 

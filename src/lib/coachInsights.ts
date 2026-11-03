@@ -17,18 +17,18 @@ const PHASE_LABEL: Record<Phase, string> = {
 const PHASE_DRILLS: Record<Phase, string[]> = {
   opening: [
     "Pick a 2–3 line repertoire for White and Black and play only those for two weeks.",
-    "After each game, find the first move you left book — learn the right one before the next game.",
+    "After each game, find the first move you left book, learn the right one before the next game.",
     "Know the *plan* behind your openings, not just the moves (where do the pieces belong?).",
   ],
   middlegame: [
-    "Before every move, say the opponent’s main threat first — then choose your move.",
+    "Before every move, say the opponent’s main threat first, then choose your move.",
     "Study 3 annotated middlegames a week in your own openings; note the recurring plans.",
-    "Solve “find the plan” positions, not just tactics — train evaluation, not only calculation.",
+    "Solve “find the plan” positions, not just tactics, train evaluation, not only calculation.",
   ],
   endgame: [
     "Drill the essentials cold: K+P vs K, Lucena, Philidor, rook-behind-the-passer.",
     "Play won and lost endings out against the engine to build real conversion technique.",
-    "Slow down at the start of the endgame — that’s where most of the rating is won or lost.",
+    "Slow down at the start of the endgame, that’s where most of the rating is won or lost.",
   ],
 };
 
@@ -60,9 +60,9 @@ const MINDSET: Record<string, MindsetDef> = {
   hung: {
     signal: "Pieces left hanging",
     meaning:
-      "Board-vision lapses — usually rushing, or tunnel-vision on your own plan while the opponent’s threat sits in plain sight.",
+      "Board-vision lapses, usually rushing, or tunnel-vision on your own plan while the opponent’s threat sits in plain sight.",
     habit:
-      "Blunder-check every move: scan all checks, captures, and undefended pieces — both sides — before you commit.",
+      "Blunder-check every move: scan all checks, captures, and undefended pieces on both sides before you commit.",
   },
   slip: {
     signal: "Tactical slips in sharp positions",
@@ -74,14 +74,14 @@ const MINDSET: Record<string, MindsetDef> = {
   missedWin: {
     signal: "Won games slipping away",
     meaning:
-      "Over-caution or relaxation when ahead — the classic ‘how to not lose a winning position’ problem.",
+      "Over-caution or relaxation when ahead, the classic ‘how to not lose a winning position’ problem.",
     habit:
       "When clearly winning, switch modes: simplify, kill counterplay, and re-check for tricks every single move.",
   },
   panic: {
     signal: "Errors under time pressure",
     meaning:
-      "Decision quality falls off as the clock drops — a focus and emotional-control issue more than a chess one.",
+      "Decision quality falls off as the clock drops, a focus and emotional-control issue more than a chess one.",
     habit:
       "Budget the clock: spend your thinking time early where you’re less sure, and never let yourself sink to seconds in a normal position.",
   },
@@ -108,7 +108,7 @@ export function focusAreas(report: StudentReport): FocusArea[] {
       tag: "Weakest phase",
       title: `${PHASE_LABEL[weakestPhase.phase]} play`,
       metric: `${Math.round(weakestPhase.accuracy)}% accuracy`,
-      why: `Their ${PHASE_LABEL[weakestPhase.phase].toLowerCase()} is the lowest-scoring part of their game — the fastest rating to unlock.`,
+      why: `Their ${PHASE_LABEL[weakestPhase.phase].toLowerCase()} is the lowest-scoring part of their game, the fastest rating to unlock.`,
       drills: PHASE_DRILLS[weakestPhase.phase],
     });
   }
@@ -140,7 +140,7 @@ export function focusAreas(report: StudentReport): FocusArea[] {
       tag: "Tactics gap",
       title: weakestMotif.title,
       metric: `${weakestMotif.accuracy}% spotted`,
-      why: `They miss ${weakestMotif.title.toLowerCase()} more often than other patterns — a targeted puzzle set fixes this fast.`,
+      why: `They miss ${weakestMotif.title.toLowerCase()} more often than other patterns, a targeted puzzle set fixes this fast.`,
       drills: [
         `Do a focused ${weakestMotif.title.toLowerCase()} puzzle set 3× this week.`,
         "Quality over speed: fully calculate each before moving.",
@@ -179,7 +179,7 @@ export function consistency(report: StudentReport): Consistency | null {
       stdev,
       label: "Rock-steady",
       blurb:
-        "Their level barely wavers game to game — a strong sign of focus and emotional control. Push the ceiling with harder material.",
+        "Their level barely wavers game to game, a strong sign of focus and emotional control. Push the ceiling with harder material.",
     };
   }
   if (stdev < 14) {
@@ -194,7 +194,7 @@ export function consistency(report: StudentReport): Consistency | null {
     stdev,
     label: "Streaky",
     blurb:
-      "Big swings between their best and worst games — often tilt or focus dropping after a setback. Train the reset: short break + breathing after a bad game, and stop sessions after two losses in a row.",
+      "Big swings between their best and worst games, often tilt or focus dropping after a setback. Train the reset: short break + breathing after a bad game, and stop sessions after two losses in a row.",
   };
 }
 
@@ -206,7 +206,7 @@ export function weeklyRoutine(report: StudentReport): string[] {
   const motif = report.tacticalMotifs.find((t) => t.reliable && t.accuracy != null);
 
   const routine = [
-    `Tactics: 3 short sets a week${motif ? ` (lean on ${motif.title.toLowerCase()})` : ""} — accuracy first, speed later.`,
+    `Tactics: 3 short sets a week${motif ? ` (lean on ${motif.title.toLowerCase()})` : ""}, accuracy first, speed later.`,
     "Review 1 of your own games deeply per week: pause before each mistake and guess the move before checking.",
   ];
   if (weakestPhase) {

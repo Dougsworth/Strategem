@@ -68,14 +68,14 @@ export const AuthScreen = ({
             <div />
             <div className="bg-ink" />
           </div>
-          <span className="font-display text-xl font-bold tracking-tight">
+          <span className="font-display text-xl font-semibold tracking-tight">
             STRATEGEM
           </span>
         </div>
 
         <div className="relative max-w-md">
           <h1
-            className="animate-fade-up font-display text-4xl font-bold leading-tight tracking-tight"
+            className="animate-fade-up font-display text-4xl font-semibold leading-tight tracking-tight"
             style={{ animationDelay: "0.1s" }}
           >
             Coach smarter.<br />See every game clearly.
@@ -115,13 +115,13 @@ export const AuthScreen = ({
               <div />
               <div className="bg-paper" />
             </div>
-            <span className="font-display text-lg font-bold tracking-tight">
+            <span className="font-display text-lg font-semibold tracking-tight">
               STRATEGEM
             </span>
           </div>
 
           <h2
-            className="animate-fade-up font-display text-2xl font-bold tracking-tight"
+            className="animate-fade-up font-display text-2xl font-semibold tracking-tight"
             style={{ animationDelay: "0.05s" }}
           >
             {mode === "in" ? "Welcome back" : "Create your account"}
@@ -239,7 +239,7 @@ export const AuthScreen = ({
           {!firebaseEnabled && (
             <p className="mt-6 flex items-center justify-center gap-1.5 rounded-lg bg-ink-soft px-3 py-2 text-center text-[11px] text-muted">
               <Check size={12} className="text-positive" />
-              Demo mode — any email + a 6-char password works. No real account yet.
+              Demo mode: any email + a 6-char password works. No real account yet.
             </p>
           )}
         </div>

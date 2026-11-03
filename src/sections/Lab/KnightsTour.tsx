@@ -75,7 +75,7 @@ export const KnightsTour = () => {
               key={i}
               onClick={() => click(i)}
               disabled={won}
-              className={`grid h-14 w-14 place-items-center rounded-lg font-mono text-sm font-bold transition-all ${
+              className={`grid h-14 w-14 place-items-center rounded-lg font-mono text-sm font-bold transition-[background-color,border-color,color,opacity,transform] ${
                 isPos
                   ? "bg-accent text-paper ring-2 ring-accent"
                   : isVisited
@@ -110,13 +110,13 @@ export const KnightsTour = () => {
         <p className="mt-3 text-sm text-muted">Click any square to drop the knight.</p>
       )}
       {won && (
-        <p className="mt-4 font-display text-lg font-bold text-positive">
+        <p className="mt-4 font-display text-lg font-semibold text-positive">
           Full tour, every square once
         </p>
       )}
       {stuck && (
         <p className="mt-4 text-sm font-semibold text-accent">
-          No legal jumps left — restart and try a different path.
+          No legal jumps left. Restart and try a different path.
         </p>
       )}
     </div>

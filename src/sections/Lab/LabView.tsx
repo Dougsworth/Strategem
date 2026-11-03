@@ -28,7 +28,7 @@ const PUZZLES: {
     id: "lights",
     name: "Lights Out",
     icon: Lightbulb,
-    tagline: "Switch off every light — but each tap flips its neighbours too.",
+    tagline: "Switch off every light, but each tap flips its neighbours too.",
     trains: "Parity · side-effect thinking",
     render: () => <LightsOut />,
   },
@@ -36,7 +36,7 @@ const PUZZLES: {
     id: "maze",
     name: "The Maze",
     icon: Route,
-    tagline: "Find the exit — then beat the optimal path.",
+    tagline: "Find the exit, then beat the optimal path.",
     trains: "Efficiency · shortest-plan",
     render: () => <MazeRunner />,
   },
@@ -77,7 +77,7 @@ export const LabView = () => {
         </button>
         <div className="rounded-2xl border border-line bg-card p-8">
           <div className="mb-6 text-center">
-            <h2 className="font-display text-2xl font-bold tracking-tight">
+            <h2 className="font-display text-2xl font-semibold tracking-tight">
               {puzzle.name}
             </h2>
             <p className="mt-1 text-sm text-muted">{puzzle.tagline}</p>
@@ -92,11 +92,11 @@ export const LabView = () => {
     <section>
       <div className="mb-6">
         <p className="eyebrow">The Lab</p>
-        <h2 className="mt-0.5 font-display text-2xl font-bold tracking-tight">
+        <h2 className="mt-0.5 font-display text-2xl font-semibold tracking-tight">
           Brain toys
         </h2>
         <p className="mt-1 max-w-xl text-sm text-muted">
-          Quick thinking puzzles beyond the board — they train the same muscles
+          Quick thinking puzzles beyond the board, they train the same muscles
           good chess needs: calculation, planning, and seeing patterns. Pick one.
         </p>
       </div>
@@ -111,7 +111,7 @@ export const LabView = () => {
             <span className="grid h-11 w-11 place-items-center rounded-xl bg-ink-soft transition-colors group-hover:bg-accent-soft">
               <p.icon size={20} className="text-accent" />
             </span>
-            <h3 className="mt-4 font-display text-lg font-bold tracking-tight">
+            <h3 className="mt-4 font-display text-lg font-semibold tracking-tight">
               {p.name}
             </h3>
             <p className="mt-1 flex-1 text-sm leading-relaxed text-muted">

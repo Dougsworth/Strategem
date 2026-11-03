@@ -26,7 +26,7 @@ export const BrandingModal = ({ onClose }: { onClose: () => void }) => {
         onClick={(e) => e.stopPropagation()}
       >
         <p className="eyebrow">Academy / Club</p>
-        <h2 className="mt-0.5 font-display text-xl font-bold tracking-tight">
+        <h2 className="mt-0.5 font-display text-xl font-semibold tracking-tight">
           Studio branding
         </h2>
         <p className="mt-1 text-sm text-muted">

@@ -216,7 +216,7 @@ export const MazeRunner = () => {
 
         {/* player */}
         <span
-          className="absolute rounded-full bg-accent transition-all duration-150 ease-out"
+          className="absolute rounded-full bg-accent transition-[left,top] duration-150 ease-out"
           style={{ left: px(pos).left + CELL / 2 - 9, top: px(pos).top + CELL / 2 - 9, width: 18, height: 18 }}
         />
       </div>
@@ -256,11 +256,11 @@ export const MazeRunner = () => {
 
       {won && (
         <div className="mt-4 text-center">
-          <p className="font-display text-lg font-bold text-positive">
+          <p className="font-display text-lg font-semibold text-positive">
             Out in {moves} moves · {elapsed.toFixed(1)}s!
           </p>
           <p className="mt-1 text-sm text-muted">
-            Shortest was <span className="font-semibold text-ink">{optimal}</span> —{" "}
+            Shortest was <span className="font-semibold text-ink">{optimal}</span>,{" "}
             {moves === optimal
               ? "perfectly optimal."
               : `${moves - optimal} over. Hit “Reveal best path” to see the tighter line.`}

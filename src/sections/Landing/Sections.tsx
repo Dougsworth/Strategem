@@ -14,9 +14,6 @@ import {
   FileText,
   TrendingUp,
   Gamepad2,
-  UserPlus,
-  Cpu,
-  ClipboardCheck,
   Check,
   Plus,
   Minus,
@@ -49,7 +46,7 @@ export const Logos = () => (
 const FEATURES = [
   {
     icon: Crosshair,
-    title: "Grandmaster-grade game analysis",
+    title: "Stockfish game analysis",
     body: "Every move from your students' real online games, scored by Stockfish and translated into coach-ready notes: themes, missed plans, critical moments.",
   },
   {
@@ -369,7 +366,7 @@ export const Features = () => {
     >
       <Reveal className="max-w-2xl">
         <Eyebrow label="What's inside" />
-        <h2 className="mt-5 font-display text-[1.9rem] font-bold tracking-[-0.02em] md:text-[2.75rem]">
+        <h2 className="mt-5 font-display text-[1.9rem] font-semibold tracking-[-0.02em] md:text-[2.75rem]">
           Every tool a coach actually opens on a Tuesday night.
         </h2>
         <p className="mt-4 text-muted">
@@ -440,191 +437,119 @@ export const Features = () => {
 /* ── How it works ─────────────────────────────────────────────────────────── */
 const STEPS = [
   {
-    icon: UserPlus,
     title: "Add a student by username",
     body: "Just their Lichess or Chess.com handle. No account needed on the student's side.",
   },
   {
-    icon: Cpu,
     title: "Strategem analyzes their games",
     body: "We pull recent games, run engine analysis, and surface patterns across the whole batch.",
   },
   {
-    icon: ClipboardCheck,
     title: "Get weaknesses, drills & a report card",
     body: "You walk into the next lesson knowing exactly what to teach. They walk out with drills.",
   },
 ];
 
-// Visual-first: narrow username step, wide board step, full-width report step.
-const STEP_SPAN = ["md:col-span-1", "md:col-span-2", "md:col-span-3"];
+// Each step is marked like a line on a scoresheet.
 const STEP_MOVE = ["1. e4", "1…e5", "2. Nf3"];
 
 const ANALYSIS_FEED = [
-  { mv: "Bxf7+", tag: "Brilliant", cls: "text-positive bg-positive/15" },
-  { mv: "Nbd2", tag: "Inaccuracy", cls: "text-amber-600 bg-amber-500/15" },
-  { mv: "Qh5??", tag: "Blunder", cls: "text-accent bg-accent-soft" },
+  { mv: "Bxf7+", tag: "Brilliant", cls: "text-positive" },
+  { mv: "Nbd2", tag: "Inaccuracy", cls: "text-muted" },
+  { mv: "Qh5??", tag: "Blunder", cls: "text-accent" },
 ];
 const REPORT_BARS = [
   { label: "Rook endgames", pct: 58 },
   { label: "Back-rank", pct: 71 },
 ];
-const WEAKNESS_TAGS = ["Back-rank mates", "Time scrambles", "Rook endgames"];
+
+const StepVisual = ({ i }: { i: number }) => {
+  if (i === 0)
+    return (
+      <div className="flex items-baseline justify-between border-b border-ink/30 pb-2">
+        <span className="font-mono text-sm text-ink">magnus_jr</span>
+        <span className="text-xs text-muted">Lichess</span>
+      </div>
+    );
+  if (i === 1)
+    return (
+      <div className="flex items-center gap-6">
+        <div className="w-28 shrink-0 sm:w-32">
+          <MiniBoard />
+        </div>
+        <div className="min-w-0 flex-1">
+          <p className="pb-2 text-xs text-muted">Analyzing 47 games</p>
+          {ANALYSIS_FEED.map((r) => (
+            <div
+              key={r.mv}
+              className="flex items-baseline justify-between border-t border-line py-2"
+            >
+              <span className="font-mono text-[13px] text-ink">{r.mv}</span>
+              <span className={`text-xs ${r.cls}`}>{r.tag}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  return (
+    <div>
+      <p className="pb-2 text-xs text-muted">Report for Magnus Jr</p>
+      {REPORT_BARS.map((b) => (
+        <div key={b.label} className="border-t border-line py-2">
+          <div className="flex items-baseline justify-between text-[13px]">
+            <span className="text-ink">{b.label}</span>
+            <span className="font-mono tabular-nums text-muted">{b.pct}%</span>
+          </div>
+          <div className="mt-2 h-1 overflow-hidden rounded-full bg-line">
+            <span
+              className="block h-full bg-accent"
+              style={{ width: `${b.pct}%` }}
+            />
+          </div>
+        </div>
+      ))}
+      <p className="border-t border-line pt-2 text-xs text-muted">
+        4 drills queued
+      </p>
+    </div>
+  );
+};
 
 export const HowItWorks = () => (
   <section id="how" className="border-t border-line bg-card/40">
     <div className="mx-auto max-w-screen-xl px-5 py-16 sm:py-24 md:px-8 md:py-32">
       <Reveal className="max-w-2xl">
         <Eyebrow label="How it works" />
-        <h2 className="mt-5 font-display text-[1.9rem] font-bold tracking-[-0.02em] md:text-[2.75rem]">
-          From username to lesson plan in under two minutes.
+        <h2 className="mt-5 font-display text-[1.9rem] font-semibold tracking-[-0.02em] text-balance md:text-[2.75rem]">
+          From a username to a lesson plan.
         </h2>
       </Reveal>
 
-      <div className="mt-14 grid gap-3 md:grid-cols-3 md:auto-rows-[300px]">
-        {STEPS.map((s, i) => {
-          const Icon = s.icon;
-          const dark = i === 0;
-          return (
+      <ol className="mt-14 border-b border-line">
+        {STEPS.map((s, i) => (
+          <li key={s.title} className="border-t border-line">
             <Reveal
-              key={s.title}
-              delay={i * 110}
-              className={`group relative flex flex-col overflow-hidden rounded-3xl p-6 transition-all duration-300 ${STEP_SPAN[i]} ${
-                dark
-                  ? "bg-ink text-paper"
-                  : "border border-line bg-card hover:bg-ink-soft/30"
-              }`}
+              delay={i * 80}
+              className="grid gap-4 py-8 md:grid-cols-[80px_minmax(0,1fr)_minmax(0,1fr)] md:gap-8 md:py-10"
             >
-              {/* header: step label + chess-move tag */}
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2 text-accent">
-                  <Icon size={17} strokeWidth={2} />
-                  <span className="text-xs">
-                    Step {i + 1}
-                  </span>
-                </div>
-                <span
-                  className={`rounded-md px-2 py-0.5 font-mono text-[11px] ${
-                    dark ? "bg-paper/10 text-paper/55" : "bg-ink-soft text-muted"
-                  }`}
-                >
-                  {STEP_MOVE[i]}
-                </span>
+              <span className="pt-1 font-mono text-sm text-muted">
+                {STEP_MOVE[i]}
+              </span>
+              <div>
+                <h3 className="font-display text-xl font-semibold tracking-tight">
+                  {s.title}
+                </h3>
+                <p className="mt-2 max-w-md text-sm leading-relaxed text-muted">
+                  {s.body}
+                </p>
               </div>
-
-              {/* ── visual region (the focus — minimal copy) ── */}
-              <div className="my-4 flex flex-1 items-center">
-                {/* 1 — username field */}
-                {i === 0 && (
-                  <div className="w-full">
-                    <div className="flex items-center gap-2 rounded-xl border border-accent/40 bg-paper/[0.06] p-2.5">
-                      <span className="grid h-7 w-7 shrink-0 place-items-center rounded-lg bg-accent text-sm font-bold text-paper">
-                        @
-                      </span>
-                      <span className="font-mono text-sm text-paper/90">magnus_jr</span>
-                      <span className="-ml-1 inline-block h-4 w-px bg-accent" />
-                      <span className="ml-auto rounded-md bg-paper/10 px-2 py-0.5 text-xs text-paper/55">
-                        Lichess
-                      </span>
-                    </div>
-                    <p className="mt-3 font-mono text-[11px] text-paper/45">
-                      No student account needed.
-                    </p>
-                  </div>
-                )}
-
-                {/* 2 — mini board + live engine verdicts */}
-                {i === 1 && (
-                  <div className="flex w-full items-center gap-5">
-                    <div className="w-[168px] shrink-0">
-                      <MiniBoard />
-                    </div>
-                    <div className="hidden flex-1 space-y-1.5 sm:block">
-                      <div className="mb-1 flex items-center gap-2 text-xs text-muted">
-                        Analyzing 47 games
-                      </div>
-                      {ANALYSIS_FEED.map((r) => (
-                        <div
-                          key={r.mv}
-                          className="flex items-center justify-between rounded-lg border border-line bg-paper px-2.5 py-1.5"
-                        >
-                          <span className="font-mono text-[13px] font-medium text-ink">
-                            {r.mv}
-                          </span>
-                          <span
-                            className={`rounded px-1.5 py-0.5 text-[10px] font-semibold ${r.cls}`}
-                          >
-                            {r.tag}
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* 3 — weakness tags + report card */}
-                {i === 2 && (
-                  <div className="flex w-full flex-col items-stretch gap-5 md:flex-row md:items-center md:gap-8">
-                    <div className="flex flex-1 flex-wrap content-center gap-2">
-                      {WEAKNESS_TAGS.map((t) => (
-                        <span
-                          key={t}
-                          className="rounded-full border border-line bg-paper px-3 py-1 text-[12.5px] font-medium text-ink"
-                        >
-                          {t}
-                        </span>
-                      ))}
-                    </div>
-                    <div className="w-full shrink-0 rounded-2xl border border-line bg-paper p-4 shadow-sm md:w-80">
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs text-muted">
-                          Report · Magnus Jr
-                        </span>
-                        <span className="flex items-center gap-1 text-[11px] font-semibold text-positive">
-                          <TrendingUp size={11} /> +6
-                        </span>
-                      </div>
-                      <div className="mt-3 space-y-2.5">
-                        {REPORT_BARS.map((b) => (
-                          <div key={b.label}>
-                            <div className="flex items-center justify-between text-[11.5px]">
-                              <span className="text-ink">{b.label}</span>
-                              <span className="font-mono text-muted">{b.pct}%</span>
-                            </div>
-                            <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-line">
-                              <span
-                                className="block h-full rounded-full bg-accent"
-                                style={{ width: `${b.pct}%` }}
-                              />
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                      <div className="mt-3 flex items-center gap-2">
-                        <span className="rounded-full bg-accent-soft px-2.5 py-0.5 text-[11px] font-semibold text-accent">
-                          4 drills queued
-                        </span>
-                        <span className="rounded-full bg-positive/15 px-2.5 py-0.5 text-[11px] font-semibold text-positive">
-                          Card ✓
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                )}
+              <div className="mt-2 md:mt-0">
+                <StepVisual i={i} />
               </div>
-
-              {/* title only — no body copy */}
-              <h3 className="font-display text-xl font-bold tracking-tight md:text-2xl">
-                {s.title}
-              </h3>
-
-              {!dark && (
-                <span className="absolute bottom-0 left-0 h-[3px] w-0 bg-accent transition-all duration-500 ease-out group-hover:w-full" />
-              )}
             </Reveal>
-          );
-        })}
-      </div>
+          </li>
+        ))}
+      </ol>
     </div>
   </section>
 );
@@ -644,7 +569,7 @@ export const Pricing = () => (
   >
     <Reveal className="max-w-2xl">
       <Eyebrow label="Pricing" />
-      <h2 className="mt-5 font-display text-[1.9rem] font-bold tracking-[-0.02em] md:text-[2.75rem]">
+      <h2 className="mt-5 font-display text-[1.9rem] font-semibold tracking-[-0.02em] md:text-[2.75rem]">
         One student free. Scale when your roster scales.
       </h2>
       <p className="mt-4 text-muted">
@@ -652,7 +577,7 @@ export const Pricing = () => (
       </p>
     </Reveal>
 
-    <div className="mt-14 grid gap-5 md:grid-cols-4">
+    <div className="mt-14 grid border-t border-ink/20 md:grid-cols-2 xl:grid-cols-4">
       {PLANS.map((plan, i) => {
         const featured = plan.recommended;
         const cta =
@@ -665,70 +590,44 @@ export const Pricing = () => (
           <Reveal
             key={plan.id}
             delay={i * 70}
-            className={`relative flex flex-col rounded-3xl p-7 ${
-              featured
-                ? "bg-ink text-paper shadow-[0_30px_60px_-20px_rgba(20,18,15,0.45)]"
-                : "border border-line bg-card"
-            }`}
+            className={`flex flex-col border-b border-line py-8 md:px-6 xl:border-b-0 ${
+              i === 0 ? "xl:pl-0" : "xl:border-l"
+            } ${i % 2 === 1 ? "md:border-l" : ""} ${i === 3 ? "xl:pr-0" : ""}`}
           >
-            {featured && (
-              <span className="absolute -top-3 left-7 inline-flex items-center gap-1.5 rounded-full bg-accent px-3 py-1 text-xs text-paper">
-                <span className="h-1 w-1 rounded-full bg-paper" />
-                Most popular
-              </span>
-            )}
-            <div className="flex items-center justify-between">
+            <div className="flex items-baseline justify-between gap-3">
               <span className="font-display text-[15px] font-semibold">
                 {plan.name}
               </span>
-              <span
-                className={`font-mono text-[10px] ${featured ? "text-paper/40" : "text-muted/60"}`}
-              >
-                {String(i + 1).padStart(2, "0")}
-              </span>
+              {featured && (
+                <span className="text-xs text-accent">Most popular</span>
+              )}
             </div>
             <div className="mt-4 flex items-baseline gap-1.5">
-              <span className="font-display text-4xl font-bold tracking-tight tabular-nums">
+              <span className="font-display text-4xl font-medium tracking-tight tabular-nums">
                 ${plan.price}
               </span>
-              <span
-                className={`text-[13px] ${featured ? "text-paper/60" : "text-muted"}`}
-              >
-                /mo
-              </span>
+              <span className="text-[13px] text-muted">/mo</span>
             </div>
-            <p
-              className={`mt-2 text-[13px] leading-relaxed ${featured ? "text-paper/70" : "text-muted"}`}
-            >
+            <p className="mt-2 text-[13px] leading-relaxed text-muted">
               {TAGLINE[plan.id]}
             </p>
-            <div
-              className={`my-6 h-px ${featured ? "bg-paper/15" : "bg-line"}`}
-            />
-            <ul className="space-y-2.5">
+            <ul className="my-6 flex-1 space-y-2.5 border-t border-line pt-6">
               {plan.features.map((feat) => (
                 <li key={feat} className="flex items-start gap-2 text-[13.5px]">
-                  <Check
-                    size={16}
-                    className={`mt-0.5 shrink-0 ${featured ? "text-accent" : "text-positive"}`}
-                  />
-                  <span className={featured ? "text-paper/85" : ""}>{feat}</span>
+                  <Check size={16} className="mt-0.5 shrink-0 text-muted" />
+                  <span>{feat}</span>
                 </li>
               ))}
             </ul>
             <a
               href="#start"
-              className={`group mt-8 inline-flex h-11 items-center justify-center gap-1.5 rounded-lg px-5 text-sm font-semibold transition-[opacity,transform] duration-150 hover:opacity-90 active:scale-[0.98] ${
+              className={`inline-flex h-11 items-center justify-center rounded-lg px-5 text-sm font-medium transition-[background-color,opacity,transform] duration-150 active:scale-[0.98] ${
                 featured
-                  ? "bg-accent text-paper"
-                  : "bg-paper text-ink ring-1 ring-line hover:bg-ink-soft"
+                  ? "bg-accent text-paper hover:opacity-90"
+                  : "text-ink ring-1 ring-line hover:bg-ink-soft"
               }`}
             >
               {cta}
-              <ArrowRight
-                size={15}
-                className="transition-transform group-hover:translate-x-0.5"
-              />
             </a>
           </Reveal>
         );
@@ -775,12 +674,12 @@ const FaqRow = ({ q, a, n }: { q: string; a: string; n: number }) => {
         <span className="flex-1 font-display text-[15px] font-semibold tracking-tight">
           {q}
         </span>
-        <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full border border-line text-muted transition-colors hover:text-ink">
+        <span className="grid h-7 w-7 shrink-0 place-items-center text-muted transition-colors hover:text-ink">
           {open ? <Minus size={14} /> : <Plus size={14} />}
         </span>
       </button>
       <div
-        className="grid overflow-hidden transition-all duration-300 ease-out"
+        className="grid overflow-hidden transition-[grid-template-rows,opacity] duration-300 ease-out"
         style={{
           gridTemplateRows: open ? "1fr" : "0fr",
           opacity: open ? 1 : 0,
@@ -801,7 +700,7 @@ export const Faq = () => (
     <div className="mx-auto grid max-w-screen-xl gap-10 px-5 py-16 sm:py-24 md:grid-cols-[1fr_1.4fr] md:gap-12 md:px-8 md:py-32">
       <Reveal>
         <Eyebrow label="FAQ" />
-        <h2 className="mt-5 font-display text-[1.9rem] font-bold tracking-[-0.02em] md:text-[2.5rem]">
+        <h2 className="mt-5 font-display text-[1.9rem] font-semibold tracking-[-0.02em] md:text-[2.5rem]">
           Questions coaches actually ask.
         </h2>
         <p className="mt-4 max-w-md text-[15px] leading-relaxed text-muted">

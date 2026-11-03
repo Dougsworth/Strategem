@@ -72,7 +72,7 @@ export const ReportCardModal = () => {
               />
             )}
             {user.studioName && (
-              <span className="font-display text-lg font-bold tracking-tight">
+              <span className="font-display text-lg font-semibold tracking-tight">
                 {user.studioName}
               </span>
             )}
@@ -83,7 +83,7 @@ export const ReportCardModal = () => {
         <div className="flex items-start justify-between border-b border-line pb-5">
           <div>
             <p className="eyebrow">Report Card · {today}</p>
-            <h2 className="mt-1 font-display text-3xl font-bold tracking-tight">
+            <h2 className="mt-1 font-display text-3xl font-semibold tracking-tight">
               {report.displayName}
             </h2>
             <p className="mt-1 font-mono text-xs capitalize text-muted">
@@ -125,7 +125,7 @@ export const ReportCardModal = () => {
             <p className="eyebrow">Coach Summary</p>
             {ent.aiNarrative ? (
               <span
-                className="inline-flex items-center gap-1 rounded-full bg-accent/10 px-2 py-0.5 text-xs font-medium text-accent"
+                className="inline-flex items-center gap-1 rounded-md bg-accent/10 px-2 py-0.5 text-xs font-medium text-accent"
                 title="Written by Claude from this student's exact analysis. Numbers come straight from the data."
               >
                 <Sparkles size={11} />
@@ -265,7 +265,7 @@ function DeltaChip({ delta, unit }: { delta: Delta; unit: string }) {
   const up = delta.change > 0;
   return (
     <span
-      className={`rounded-full px-2.5 py-1 font-mono text-[11px] font-medium capitalize ${
+      className={`rounded-md px-2.5 py-1 font-mono text-[11px] font-medium capitalize ${
         up ? "bg-positive/10 text-positive" : "bg-accent-soft text-accent"
       }`}
     >

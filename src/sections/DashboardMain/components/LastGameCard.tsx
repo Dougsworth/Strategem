@@ -48,7 +48,7 @@ export const LastGameCard = () => {
         </a>
       </div>
 
-      <h3 className="mt-3 font-display text-xl font-bold tracking-tight">
+      <h3 className="mt-3 font-display text-xl font-semibold tracking-tight">
         vs {g.opponent}
       </h3>
       <p className="mt-1 text-xs text-muted">

@@ -22,7 +22,7 @@ export const DailyPuzzle = () => {
       <button
         onClick={() => setOpen(true)}
         title="Today’s puzzle"
-        className="fixed bottom-5 right-5 z-40 flex items-center gap-2 rounded-full bg-ink px-3.5 py-2.5 text-sm font-medium text-paper shadow-lg ring-1 ring-black/5 transition-[opacity,transform] duration-150 hover:opacity-90 active:scale-[0.98]"
+        className="fixed bottom-5 right-5 z-40 flex items-center gap-2 rounded-lg bg-ink px-3.5 py-2.5 text-sm font-medium text-paper shadow-lg ring-1 ring-black/5 transition-[opacity,transform] duration-150 hover:opacity-90 active:scale-[0.98]"
       >
         <Puzzle size={16} className="shrink-0" />
         <span className="hidden sm:inline">Daily puzzle</span>
@@ -164,12 +164,12 @@ function PuzzleModal({ onClose }: { onClose: () => void }) {
             <div className="mt-4 min-h-[1.5rem] text-center text-sm">
               {status === "solved" ? (
                 <span className="inline-flex items-center gap-1.5 font-semibold text-positive">
-                  <CheckCircle2 size={18} /> Solved — new puzzle tomorrow.
+                  <CheckCircle2 size={18} /> Solved. New puzzle tomorrow.
                 </span>
               ) : status === "opponent" ? (
-                <span className="text-muted">Good move — seeing the reply…</span>
+                <span className="text-muted">Good move. Seeing the reply…</span>
               ) : wrong ? (
-                <span className="font-medium text-accent">Not the one — try another move.</span>
+                <span className="font-medium text-accent">Not the one. Try another move.</span>
               ) : (
                 <span className="text-ink">
                   <span className="font-semibold">{side} to play.</span> Find the strongest move.

@@ -73,7 +73,7 @@ export const ScoresheetModal = ({ onClose }: { onClose: () => void }) => {
       <header className="flex items-center justify-between border-b border-line px-6 py-3">
         <div>
           <p className="eyebrow">Scan a game</p>
-          <h2 className="mt-0.5 font-display text-lg font-bold tracking-tight">
+          <h2 className="mt-0.5 font-display text-lg font-semibold tracking-tight">
             {stage === "view" ? "Review the game" : "Upload a scoresheet"}
           </h2>
         </div>
@@ -136,7 +136,7 @@ export const ScoresheetModal = ({ onClose }: { onClose: () => void }) => {
                   {dragging ? "Drop it here" : "Drag & drop, take, or upload a photo"}
                 </span>
                 <span className="text-xs text-muted">
-                  A photo of the scoresheet — we’ll read the moves
+                  A photo of the scoresheet. We’ll read the moves
                 </span>
               </button>
               <div className="mt-2 flex justify-center">
@@ -178,7 +178,7 @@ export const ScoresheetModal = ({ onClose }: { onClose: () => void }) => {
             {saved && (
               <div className="flex items-center gap-2 rounded-lg bg-positive/10 px-3 py-2 text-sm text-ink">
                 <Check size={15} className="text-positive" />
-                Saved to your library — find it under{" "}
+                Saved to your library. Find it under{" "}
                 <span className="font-semibold">Scanned Games</span> in the sidebar.
               </div>
             )}

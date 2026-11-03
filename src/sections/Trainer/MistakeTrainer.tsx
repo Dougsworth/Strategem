@@ -117,7 +117,7 @@ export const MistakeTrainer = ({
       setAttempts((a) => a + 1);
       setFeedback(
         attempts >= 1
-          ? "Still not it — reveal the answer below, or keep looking."
+          ? "Still not it. Reveal the answer below, or keep looking."
           : "Not the strongest move here. Try again.",
       );
     }
@@ -148,7 +148,7 @@ export const MistakeTrainer = ({
           <p className="eyebrow">
             {srsMode ? "Spaced review · resurfacing old mistakes" : "Fix your mistakes · from real games"}
           </p>
-          <h2 className="mt-0.5 font-display text-lg font-bold tracking-tight">
+          <h2 className="mt-0.5 font-display text-lg font-semibold tracking-tight">
             Position {idx + 1} of {items.length}
           </h2>
         </div>
@@ -180,7 +180,7 @@ export const MistakeTrainer = ({
             <div className="mt-3 min-h-[84px]">
               {state === "correct" ? (
                 <div>
-                  <p className="font-display text-xl font-bold text-positive">
+                  <p className="font-display text-xl font-semibold text-positive">
                     {answerSan}
                   </p>
                   <p className="mt-1 text-sm text-muted">
@@ -189,7 +189,7 @@ export const MistakeTrainer = ({
                 </div>
               ) : state === "revealed" ? (
                 <div>
-                  <p className="font-display text-lg font-bold">
+                  <p className="font-display text-lg font-semibold">
                     Best move: <span className="text-accent">{answerSan}</span>
                   </p>
                   <p className="mt-1 text-sm text-muted">
@@ -198,7 +198,7 @@ export const MistakeTrainer = ({
                 </div>
               ) : (
                 <div>
-                  <p className="font-display text-lg font-bold">Find the best move.</p>
+                  <p className="font-display text-lg font-semibold">Find the best move.</p>
                   <p className="mt-1 text-sm text-muted">
                     {studentName} reached this in a real game (move {moveNo}).
                     Drag a piece to make your move.
@@ -237,14 +237,14 @@ export const MistakeTrainer = ({
                     onClick={onClose}
                     className="rounded-lg bg-accent px-4 py-2 text-sm font-bold text-paper transition-opacity hover:opacity-90"
                   >
-                    Finish review — {solvedCount}/{items.length} solved
+                    Finish review: {solvedCount}/{items.length} solved
                   </button>
                 ) : (
                   <button
                     onClick={restart}
                     className="rounded-lg bg-accent px-4 py-2 text-sm font-bold text-paper transition-opacity hover:opacity-90"
                   >
-                    Done — {solvedCount}/{items.length} · Restart
+                    Done: {solvedCount}/{items.length} · Restart
                   </button>
                 )
               ) : (

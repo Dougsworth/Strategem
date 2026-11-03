@@ -66,7 +66,7 @@ export const RatingTrendModal = ({
         <div className="flex items-start justify-between">
           <div>
             <p className="eyebrow">Rating Trend</p>
-            <h2 className="mt-0.5 font-display text-xl font-bold tracking-tight">
+            <h2 className="mt-0.5 font-display text-xl font-semibold tracking-tight">
               {history.length} games · {fmtDate(history[0].date)} –{" "}
               {fmtDate(history[history.length - 1].date)}
             </h2>
@@ -86,7 +86,7 @@ export const RatingTrendModal = ({
                 {s.label}
               </p>
               <p
-                className={`mt-0.5 font-display text-xl font-bold tracking-tight ${
+                className={`mt-0.5 font-display text-xl font-semibold tracking-tight ${
                   s.accent ? (up ? "text-positive" : "text-accent") : ""
                 }`}
               >

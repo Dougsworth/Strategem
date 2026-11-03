@@ -18,7 +18,7 @@ export const PlayerOverview = () => {
   if (reportError) {
     return (
       <section className="border-b border-line pb-6">
-        <p className="font-display text-2xl font-bold">Couldn’t load {selected}</p>
+        <p className="font-display text-2xl font-semibold">Couldn’t load {selected}</p>
         <p className="mt-2 text-sm text-accent">{reportError}</p>
       </section>
     );
@@ -57,7 +57,7 @@ export const PlayerOverview = () => {
               <RotateCw size={13} className={reportLoading ? "animate-spin" : ""} />
             </button>
           </div>
-          <h1 className="font-display text-4xl font-bold tracking-tight">
+          <h1 className="font-display text-4xl font-semibold tracking-tight">
             {profile.displayName}
           </h1>
 
