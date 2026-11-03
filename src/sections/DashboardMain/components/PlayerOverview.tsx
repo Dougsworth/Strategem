@@ -67,7 +67,7 @@ export const PlayerOverview = () => {
               <p className="mt-2 max-w-lg leading-relaxed text-muted">
                 {report.headline}
               </p>
-              <p className="mt-2 font-mono text-xs uppercase tracking-wide text-muted/70">
+              <p className="mt-2 text-xs text-muted">
                 Plays a good move {Math.round(report.overallAccuracy)}% of the time ·{" "}
                 {report.gamesAnalyzed} games checked
               </p>

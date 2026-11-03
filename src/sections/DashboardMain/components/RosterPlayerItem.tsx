@@ -38,7 +38,7 @@ export const RosterPlayerItem = ({
           >
             {entry.displayName}
           </p>
-          <p className="mt-1 font-mono text-xs uppercase text-muted">
+          <p className="mt-1 text-xs text-muted">
             {entry.rating ?? "—"} rating ·{" "}
             <TrendBadge trend={entry.trend} variant="text" />
           </p>

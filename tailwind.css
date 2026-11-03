@@ -24,9 +24,9 @@
     @apply bg-card rounded-xl ring-1 ring-line;
   }
 
-  /* Uppercase eyebrow label used on card headers. */
+  /* Small label used on card headers. */
   .eyebrow {
-    @apply text-[10px] font-bold uppercase tracking-[1px] text-muted font-mono;
+    @apply text-xs font-medium text-muted;
   }
 }
 

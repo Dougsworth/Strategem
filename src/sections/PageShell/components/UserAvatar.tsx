@@ -41,7 +41,7 @@ export const UserAvatar = () => {
           <div className="px-3 py-2">
             <p className="truncate text-sm font-semibold">{user.name}</p>
             <p className="truncate text-xs text-muted">{user.email}</p>
-            <span className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-ink-soft px-2 py-0.5 font-mono text-[10px] font-bold uppercase tracking-wide text-muted">
+            <span className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-ink-soft px-2 py-0.5 text-xs font-medium text-muted">
               <span className="h-1.5 w-1.5 rounded-full bg-accent" />
               {planName(user.plan)} plan
             </span>

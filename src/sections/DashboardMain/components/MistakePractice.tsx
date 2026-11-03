@@ -129,7 +129,7 @@ export const MistakePractice = () => {
         </div>
         <button
           onClick={startReview}
-          className="shrink-0 rounded-lg bg-paper px-5 py-2.5 text-sm font-bold text-ink transition-transform hover:-translate-y-px active:scale-[0.99]"
+          className="shrink-0 rounded-lg bg-paper px-5 py-2.5 text-sm font-bold text-ink transition-[opacity,transform] duration-150 hover:opacity-90 active:scale-[0.98]"
         >
           Start review →
         </button>

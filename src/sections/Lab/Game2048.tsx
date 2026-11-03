@@ -137,7 +137,7 @@ export const Game2048 = () => {
 
       {won && (
         <p className="mt-4 font-display text-lg font-bold text-positive">
-          You hit 2048! Keep going for a higher score. 🏆
+          You hit 2048. Keep going for a higher score
         </p>
       )}
       {lost && !won && (
@@ -145,7 +145,7 @@ export const Game2048 = () => {
           No moves left — final score {score}. New game?
         </p>
       )}
-      <p className="mt-2 font-mono text-[10px] uppercase tracking-wide text-muted/50">
+      <p className="mt-2 text-xs text-muted">
         Arrow keys / WASD to slide
       </p>
     </div>

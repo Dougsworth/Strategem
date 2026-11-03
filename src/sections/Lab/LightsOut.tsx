@@ -58,7 +58,7 @@ export const LightsOut = () => {
             onClick={() => click(i)}
             className={`h-14 w-14 rounded-lg transition-all ${
               on
-                ? "bg-accent shadow-[0_0_18px_rgba(192,81,43,0.45)]"
+                ? "bg-accent"
                 : "bg-ink-soft ring-1 ring-line hover:bg-ink/10"
             }`}
           />
@@ -78,7 +78,7 @@ export const LightsOut = () => {
 
       {solved && (
         <p className="mt-4 font-display text-lg font-bold text-positive">
-          Lights out in {moves} moves 🎉
+          Lights out in {moves} moves
         </p>
       )}
     </div>

@@ -341,7 +341,7 @@ export function GameViewer({
                 className="rounded-md bg-card px-2 py-0.5 font-mono text-xs ring-1 ring-accent/40 transition-colors hover:bg-ink-soft"
               >
                 {Math.floor(idx / 2) + 1}
-                {idx % 2 === 0 ? "." : "…"} {parsed.moves[idx]} ⚠
+                {idx % 2 === 0 ? "." : "…"} {parsed.moves[idx]}?
               </button>
             ))}
           </div>
@@ -430,7 +430,7 @@ export function GameViewer({
                   "radial-gradient(60% 22% at 50% 6%, rgba(126,154,100,0.13), transparent 72%)",
               }}
             />
-            <div className="relative z-20 grid grid-cols-[2.75rem_1fr_1fr] border-b border-line bg-card/85 px-3 py-2 font-mono text-[10px] uppercase tracking-wide text-muted backdrop-blur-sm">
+            <div className="relative z-20 grid grid-cols-[2.75rem_1fr_1fr] border-b border-line bg-card/85 px-3 py-2 text-xs text-muted backdrop-blur-sm">
               <span>#</span>
               <span className="flex items-center gap-1.5">
                 <span className="inline-block h-2.5 w-2.5 rounded-full bg-paper ring-1 ring-line" />
@@ -472,7 +472,7 @@ export function GameViewer({
 
             <div aria-hidden className="pointer-events-none absolute inset-x-0 bottom-0 z-20 h-6 bg-gradient-to-t from-card to-transparent" />
           </div>
-          <p className="mt-2 text-center font-mono text-[10px] uppercase tracking-wide text-muted/50">
+          <p className="mt-2 text-center text-xs text-muted">
             ← → step · Home / End jump · flip with the ⇅ button
           </p>
         </div>
@@ -578,7 +578,7 @@ function ScoresheetPanel({
         onClick={onOpen}
         className="mx-auto mt-3 max-h-[44vh] w-auto cursor-zoom-in rounded-lg object-contain ring-1 ring-line"
       />
-      <p className="mt-1.5 text-center font-mono text-[10px] uppercase tracking-wide text-muted/50">
+      <p className="mt-1.5 text-center text-xs text-muted">
         {current
           ? `Compare move ${current.no} on the sheet with “${current.san}” on the board`
           : "Click to open it beside the board"}

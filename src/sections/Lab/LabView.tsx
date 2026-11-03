@@ -117,7 +117,7 @@ export const LabView = () => {
             <p className="mt-1 flex-1 text-sm leading-relaxed text-muted">
               {p.tagline}
             </p>
-            <p className="mt-3 font-mono text-[10px] uppercase tracking-wide text-muted/70">
+            <p className="mt-3 text-xs text-muted">
               {p.trains}
             </p>
           </button>

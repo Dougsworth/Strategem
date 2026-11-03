@@ -18,7 +18,7 @@ export const Upsell = ({
       <span className="mx-auto grid h-12 w-12 place-items-center rounded-xl bg-ink-soft">
         <Lock size={22} className="text-accent" />
       </span>
-      <p className="mt-4 font-mono text-[10px] uppercase tracking-wide text-accent">
+      <p className="mt-4 text-xs text-accent">
         Coach plan
       </p>
       <h2 className="mt-1 font-display text-2xl font-bold tracking-tight">{title}</h2>

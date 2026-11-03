@@ -149,7 +149,7 @@ export const ScoresheetModal = ({ onClose }: { onClose: () => void }) => {
             {/* Or paste */}
             <div className="flex items-center gap-3">
               <div className="h-px flex-1 bg-line" />
-              <span className="font-mono text-[10px] uppercase tracking-wide text-muted/60">
+              <span className="text-xs text-muted">
                 or paste the moves
               </span>
               <div className="h-px flex-1 bg-line" />

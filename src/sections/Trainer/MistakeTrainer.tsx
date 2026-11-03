@@ -181,7 +181,7 @@ export const MistakeTrainer = ({
               {state === "correct" ? (
                 <div>
                   <p className="font-display text-xl font-bold text-positive">
-                    {answerSan} 🎯
+                    {answerSan}
                   </p>
                   <p className="mt-1 text-sm text-muted">
                     That's the move the engine recommends here.

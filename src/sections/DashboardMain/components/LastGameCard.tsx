@@ -30,7 +30,7 @@ export const LastGameCard = () => {
     <section className="rounded-2xl border border-line bg-card p-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-3">
-          <span className="font-mono text-[10px] uppercase tracking-wide text-accent">
+          <span className="text-xs text-accent">
             Last game
           </span>
           <span className={`rounded-md px-2 py-0.5 text-xs font-bold ${r.cls}`}>
@@ -51,7 +51,7 @@ export const LastGameCard = () => {
       <h3 className="mt-3 font-display text-xl font-bold tracking-tight">
         vs {g.opponent}
       </h3>
-      <p className="mt-1 font-mono text-xs uppercase tracking-wide text-muted/80">
+      <p className="mt-1 text-xs text-muted">
         {Math.round(g.accuracy)}% accuracy · played {timeAgo(g.date)} ·{" "}
         {g.color === "w" ? "White" : "Black"}
       </p>
@@ -77,7 +77,7 @@ export const LastGameCard = () => {
         </>
       ) : (
         <p className="mt-4 text-sm text-muted">
-          Clean game — no flagged mistakes. 🎯
+          Clean game, no flagged mistakes
         </p>
       )}
 

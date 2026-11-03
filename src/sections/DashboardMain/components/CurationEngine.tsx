@@ -78,7 +78,7 @@ export const CurationEngine = () => {
                 {rec.reason}
               </p>
             </div>
-            <span className="shrink-0 font-mono text-[10px] uppercase tracking-wide text-accent transition-colors group-hover:text-paper">
+            <span className="shrink-0 text-xs text-accent transition-colors group-hover:text-paper">
               Practice →
             </span>
           </button>

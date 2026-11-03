@@ -56,7 +56,7 @@ export function CheckoutToast() {
           )}
           <div>
             <p className="text-sm font-bold">
-              {upgraded ? "You’re upgraded 🎉" : "Finishing checkout…"}
+              {upgraded ? "You’re upgraded" : "Finishing checkout…"}
             </p>
             <p className="text-xs text-muted">
               {upgraded

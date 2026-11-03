@@ -181,7 +181,7 @@ export const PuzzleTrainer = ({
               {status === "solved" ? (
                 <div>
                   <p className="font-display text-xl font-bold text-positive">
-                    Solved! 🎉
+                    Solved
                   </p>
                   <p className="mt-1 text-sm text-muted">
                     Nice — you found the whole line.
@@ -214,7 +214,7 @@ export const PuzzleTrainer = ({
 
             {showHint && status === "playing" && (
               <p className="mt-1 rounded-lg bg-ink-soft px-3 py-2 text-sm text-ink">
-                💡 {hintText}
+                {hintText}
               </p>
             )}
 

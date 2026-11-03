@@ -22,7 +22,7 @@ export const DailyPuzzle = () => {
       <button
         onClick={() => setOpen(true)}
         title="Today’s puzzle"
-        className="fixed bottom-5 right-5 z-40 flex items-center gap-2 rounded-full bg-ink px-3.5 py-2.5 text-sm font-medium text-paper shadow-lg ring-1 ring-black/5 transition-transform hover:scale-105 hover:shadow-xl active:scale-95"
+        className="fixed bottom-5 right-5 z-40 flex items-center gap-2 rounded-full bg-ink px-3.5 py-2.5 text-sm font-medium text-paper shadow-lg ring-1 ring-black/5 transition-[opacity,transform] duration-150 hover:opacity-90 active:scale-[0.98]"
       >
         <Puzzle size={16} className="shrink-0" />
         <span className="hidden sm:inline">Daily puzzle</span>

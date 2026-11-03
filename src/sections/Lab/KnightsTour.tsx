@@ -111,7 +111,7 @@ export const KnightsTour = () => {
       )}
       {won && (
         <p className="mt-4 font-display text-lg font-bold text-positive">
-          Full tour — every square, once. 🐴
+          Full tour, every square once
         </p>
       )}
       {stuck && (

@@ -263,7 +263,7 @@ function EngineMoment({ m, onSeek }: { m: EngineMove; onSeek: (ply: number) => v
       </span>
       {m.best && (
         <span className="hidden truncate text-xs text-muted sm:inline">
-          best <span className="font-mono text-ink">{m.best}</span>
+          Best <span className="font-mono text-ink">{m.best}</span>
         </span>
       )}
       <span className="ml-auto font-mono text-[11px] text-muted">−{lost}</span>
@@ -346,7 +346,7 @@ function Curve({
       className="relative cursor-help"
       title="Advantage through the game — above the centre line favours White, below favours Black. The orange line marks the move you're on. Click to jump there."
     >
-      <div className="mb-1 flex justify-between text-[10px] uppercase tracking-wide text-muted">
+      <div className="mb-1 flex justify-between text-xs text-muted">
         <span>{leftLabel}</span>
         <span>{rightLabel}</span>
       </div>

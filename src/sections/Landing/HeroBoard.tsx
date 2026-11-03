@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Chessboard } from "react-chessboard";
 import { Chess } from "chess.js";
-import { Target, TrendingUp } from "lucide-react";
 import { HERO_POSITIONS } from "./heroPositions";
 
 // A LIVE board for the hero: it cycles through ~240 baked-in middlegame
@@ -9,7 +8,7 @@ import { HERO_POSITIONS } from "./heroPositions";
 // moves from each before advancing to the next. Visitors can grab a piece and
 // play their own — drags are validated by chess.js, so only legal moves land.
 // Auto-play pauses for a few seconds after anyone touches it, then resumes.
-// Floating analysis cards are decoration.
+// The analysis readout sits under the board so nothing covers the pieces.
 
 // Fresh steel-blue board palette.
 const LIGHT = "#e8edf1";
@@ -105,16 +104,11 @@ export const HeroBoard = () => {
 
   return (
     <div className="relative mx-auto w-full max-w-md">
-      {/* ambient glows */}
-      <div className="pointer-events-none absolute -right-10 -top-10 h-56 w-56 animate-glow-pulse rounded-full bg-accent/30 blur-[90px]" />
-      <div
-        className="pointer-events-none absolute -bottom-12 -left-10 h-56 w-56 animate-float rounded-full bg-positive/20 blur-[90px]"
-        style={{ animationDelay: "1.2s" }}
-      />
+
 
       {/* the live board */}
-      <div className="relative rounded-[18px] border border-line bg-card p-2 shadow-[0_30px_70px_-28px_rgba(20,18,15,0.45)] sm:rounded-[22px] sm:p-3">
-        <div ref={wrapRef} className="w-full">
+      <div className="relative rounded-[18px] border border-line bg-card p-2 shadow-[0_8px_24px_rgba(0,0,0,0.06)] sm:rounded-[22px] sm:p-3">
+        <div ref={wrapRef} className="w-full min-w-0">
           <Chessboard
             id="hero-board"
             position={fen}
@@ -131,50 +125,28 @@ export const HeroBoard = () => {
         </div>
       </div>
 
+      {/* analysis readout, under the board so it never covers a piece */}
+      <dl className="mt-4 grid grid-cols-3 gap-4 border-b border-line pb-4 text-sm">
+        <div>
+          <dt className="text-xs text-muted">Accuracy</dt>
+          <dd className="mt-1 font-medium tabular-nums">
+            79% <span className="text-xs text-positive">+4</span>
+          </dd>
+        </div>
+        <div>
+          <dt className="text-xs text-muted">Next focus</dt>
+          <dd className="mt-1 font-medium">Rook endgames</dd>
+        </div>
+        <div>
+          <dt className="text-xs text-muted">Blunder</dt>
+          <dd className="mt-1 font-medium tabular-nums text-accent">Move 24</dd>
+        </div>
+      </dl>
+
       {/* drag-me hint */}
-      <div className="mt-3 text-center font-mono text-[10px] uppercase tracking-[0.18em] text-muted/70">
-        Live board — drag a piece to play
-      </div>
-
-      {/* floating accuracy card */}
-      <div
-        className="absolute -right-4 top-8 hidden animate-float rounded-2xl border border-line bg-card/95 p-3 shadow-[0_18px_40px_-18px_rgba(20,18,15,0.4)] backdrop-blur sm:block md:-right-8"
-        style={{ animationDelay: "0.6s" }}
-      >
-        <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-muted">
-          Accuracy
-        </p>
-        <div className="mt-0.5 flex items-end gap-2">
-          <span className="font-display text-2xl font-bold tracking-tight">79%</span>
-          <span className="mb-0.5 flex items-center gap-0.5 text-[11px] font-semibold text-positive">
-            <TrendingUp size={12} /> +4
-          </span>
-        </div>
-      </div>
-
-      {/* floating next-focus card */}
-      <div
-        className="absolute -left-4 bottom-14 hidden animate-float rounded-2xl border border-line bg-card/95 p-3 shadow-[0_18px_40px_-18px_rgba(20,18,15,0.4)] backdrop-blur sm:block md:-left-10"
-        style={{ animationDelay: "1.6s" }}
-      >
-        <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-muted">
-          Next focus
-        </p>
-        <div className="mt-1 flex items-center gap-1.5">
-          <span className="grid h-6 w-6 place-items-center rounded-lg bg-accent-soft text-accent">
-            <Target size={13} />
-          </span>
-          <span className="text-sm font-semibold">Rook endgames</span>
-        </div>
-      </div>
-
-      {/* blunder pill */}
-      <div
-        className="absolute right-6 bottom-4 animate-float rounded-full bg-accent px-3 py-1 text-[11px] font-semibold text-paper shadow-[0_10px_24px_-8px_oklch(0.56_0.19_38_/_0.6)]"
-        style={{ animationDelay: "0.9s" }}
-      >
-        Blunder · move 24
-      </div>
+      <p className="mt-3 text-xs text-muted">
+        Live board. Drag a piece to play
+      </p>
     </div>
   );
 };

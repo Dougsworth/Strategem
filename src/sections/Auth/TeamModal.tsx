@@ -84,7 +84,7 @@ export const TeamModal = ({ onClose }: { onClose: () => void }) => {
             </div>
 
             <div className="rounded-xl bg-ink-soft/60 p-4">
-              <p className="font-mono text-[10px] uppercase tracking-wide text-muted">
+              <p className="text-xs text-muted">
                 Invite code — share it with a coach
               </p>
               <div className="mt-2 flex items-center gap-2">
@@ -139,7 +139,7 @@ export const TeamModal = ({ onClose }: { onClose: () => void }) => {
 
             <div className="flex items-center gap-3">
               <div className="h-px flex-1 bg-line" />
-              <span className="font-mono text-[10px] uppercase tracking-wide text-muted/60">
+              <span className="text-xs text-muted">
                 or join one
               </span>
               <div className="h-px flex-1 bg-line" />

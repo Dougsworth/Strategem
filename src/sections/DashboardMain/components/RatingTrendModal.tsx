@@ -82,7 +82,7 @@ export const RatingTrendModal = ({
         <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
           {stats.map((s) => (
             <div key={s.label} className="rounded-xl bg-ink-soft/60 p-3">
-              <p className="font-mono text-[10px] uppercase tracking-wide text-muted">
+              <p className="text-xs text-muted">
                 {s.label}
               </p>
               <p
@@ -155,7 +155,7 @@ export const RatingTrendModal = ({
           </text>
         </svg>
 
-        <p className="mt-2 text-center font-mono text-[10px] uppercase tracking-wide text-muted/50">
+        <p className="mt-2 text-center text-xs text-muted">
           Each dot is a recorded rating point
         </p>
       </div>

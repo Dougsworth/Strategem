@@ -258,13 +258,13 @@ const Contact = () => (
 
     <a
       href={`mailto:${CONTACT_EMAIL}`}
-      className="mt-8 inline-flex items-center gap-3 rounded-2xl border border-line bg-card px-6 py-5 transition-all hover:-translate-y-0.5 hover:shadow-[0_18px_40px_-24px_rgba(0,0,0,0.35)]"
+      className="mt-8 inline-flex items-center gap-3 rounded-2xl border border-line bg-card px-6 py-5 transition-colors duration-150 hover:bg-ink-soft"
     >
       <span className="grid h-11 w-11 place-items-center rounded-xl bg-accent/12 text-accent">
         <Mail size={20} />
       </span>
       <span>
-        <span className="block font-mono text-[11px] uppercase tracking-[0.18em] text-muted">
+        <span className="block text-xs text-muted">
           Email us
         </span>
         <span className="block font-display text-lg font-semibold text-ink">
@@ -334,7 +334,7 @@ export const LegalPage = ({
       </header>
 
       <main className="mx-auto max-w-3xl px-5 py-14 md:px-8 md:py-20">
-        <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-accent">
+        <p className="text-xs text-accent">
           {meta.subtitle}
         </p>
         <h1 className="mt-3 font-display text-[2.25rem] font-bold leading-[1.05] tracking-[-0.02em] md:text-[3rem]">

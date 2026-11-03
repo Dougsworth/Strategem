@@ -211,12 +211,12 @@ export const MazeRunner = () => {
           className="absolute grid place-items-center"
           style={{ ...px(goal), width: CELL, height: CELL }}
         >
-          <Flag size={16} className="animate-pulse text-positive" />
+          <Flag size={16} className="text-positive" />
         </span>
 
         {/* player */}
         <span
-          className="absolute rounded-full bg-accent shadow-[0_0_14px_rgba(192,81,43,0.6)] transition-all duration-150 ease-out"
+          className="absolute rounded-full bg-accent transition-all duration-150 ease-out"
           style={{ left: px(pos).left + CELL / 2 - 9, top: px(pos).top + CELL / 2 - 9, width: 18, height: 18 }}
         />
       </div>
@@ -262,12 +262,12 @@ export const MazeRunner = () => {
           <p className="mt-1 text-sm text-muted">
             Shortest was <span className="font-semibold text-ink">{optimal}</span> —{" "}
             {moves === optimal
-              ? "perfectly optimal. 🎯"
+              ? "perfectly optimal."
               : `${moves - optimal} over. Hit “Reveal best path” to see the tighter line.`}
           </p>
         </div>
       )}
-      <p className="mt-2 font-mono text-[10px] uppercase tracking-wide text-muted/50">
+      <p className="mt-2 text-xs text-muted">
         Arrow keys / WASD · or tap the pad
       </p>
     </div>

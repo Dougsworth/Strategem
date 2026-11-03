@@ -125,7 +125,7 @@ export const ReportCardModal = () => {
             <p className="eyebrow">Coach Summary</p>
             {ent.aiNarrative ? (
               <span
-                className="inline-flex items-center gap-1 rounded-full bg-accent/10 px-2 py-0.5 font-mono text-[10px] font-bold uppercase tracking-wide text-accent"
+                className="inline-flex items-center gap-1 rounded-full bg-accent/10 px-2 py-0.5 text-xs font-medium text-accent"
                 title="Written by Claude from this student's exact analysis. Numbers come straight from the data."
               >
                 <Sparkles size={11} />
@@ -142,7 +142,7 @@ export const ReportCardModal = () => {
               <div className="h-4 w-full animate-pulse rounded bg-ink-soft" />
               <div className="h-4 w-11/12 animate-pulse rounded bg-ink-soft" />
               <div className="h-4 w-4/5 animate-pulse rounded bg-ink-soft" />
-              <p className="pt-1 font-mono text-[10px] uppercase tracking-wide text-muted/60">
+              <p className="pt-1 text-xs text-muted">
                 Writing {report.displayName.split(/\s+/)[0]}’s summary…
               </p>
             </div>
@@ -212,7 +212,7 @@ export const ReportCardModal = () => {
                   <p className="text-sm font-semibold">{rec.label}</p>
                   <p className="text-xs text-muted">{rec.reason}</p>
                 </div>
-                <span className="font-mono text-[10px] uppercase tracking-wide text-accent print:hidden">
+                <span className="text-xs text-accent print:hidden">
                   Practice →
                 </span>
               </a>
@@ -220,7 +220,7 @@ export const ReportCardModal = () => {
           </div>
         </div>
 
-        <p className="mt-6 border-t border-line pt-4 font-mono text-[10px] uppercase tracking-wide text-muted/70">
+        <p className="mt-6 border-t border-line pt-4 text-xs text-muted">
           Made by Strategem from {report.gamesAnalyzed} of {report.username}’s recent games ·
           Tactics percentages are best-guess estimates
         </p>

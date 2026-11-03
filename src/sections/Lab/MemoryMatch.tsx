@@ -93,7 +93,7 @@ export const MemoryMatch = () => {
 
       {won && (
         <p className="mt-4 font-display text-lg font-bold text-positive">
-          All matched in {moves} flips! 🧠
+          All matched in {moves} flips
         </p>
       )}
     </div>

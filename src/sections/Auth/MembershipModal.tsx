@@ -85,12 +85,12 @@ export const MembershipModal = () => {
                 }`}
               >
                 {plan.recommended && (
-                  <span className="absolute right-4 top-4 rounded-full bg-accent px-2 py-0.5 font-mono text-[10px] font-bold uppercase tracking-wide text-paper">
+                  <span className="absolute right-4 top-4 rounded-full bg-accent px-2 py-0.5 text-xs font-medium text-paper">
                     Popular
                   </span>
                 )}
                 <p
-                  className={`font-mono text-[11px] uppercase tracking-wide ${plan.recommended ? "text-paper/60" : "text-muted"}`}
+                  className={`text-xs ${plan.recommended ?"text-paper/60" :"text-muted"}`}
                 >
                   {plan.name}
                 </p>
@@ -154,7 +154,7 @@ export const MembershipModal = () => {
           <p className="mt-4 text-center text-xs text-accent">{error}</p>
         )}
 
-        <p className="mt-6 text-center font-mono text-[10px] uppercase tracking-wide text-muted/60">
+        <p className="mt-6 text-center text-xs text-muted">
           {firebaseEnabled
             ? "Secure checkout via Polar · cancel anytime"
             : "Demo — plan switches are local until Polar is connected"}
@@ -174,7 +174,7 @@ export const MembershipModal = () => {
             onClick={(e) => e.stopPropagation()}
           >
             <h3 className="font-display text-xl font-bold tracking-tight">
-              Sorry to see you go 💔
+              Sorry to see you go
             </h3>
             <p className="mt-2 text-sm leading-relaxed text-muted">
               No hard feelings — you can come back any time, and{" "}

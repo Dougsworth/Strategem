@@ -38,7 +38,7 @@ export const ActiveRoster = () => {
   return (
     <aside className="col-span-12 md:col-span-3">
       <header className="mb-4 flex items-center justify-between">
-        <h2 className="font-display text-sm font-bold uppercase tracking-[1.4px] text-muted">
+        <h2 className="font-display text-sm font-medium text-muted">
           Active Roster
         </h2>
         <span className="font-mono text-xs text-muted">

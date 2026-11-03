@@ -45,7 +45,7 @@ export const TrainingPlan = () => {
                 {i + 1}
               </span>
               <div className="min-w-0">
-                <p className="font-mono text-[10px] uppercase tracking-wide text-accent">
+                <p className="text-xs text-accent">
                   {a.tag}
                 </p>
                 <h3 className="font-display text-lg font-bold tracking-tight">
@@ -69,7 +69,7 @@ export const TrainingPlan = () => {
             </ul>
 
             {a.cta && (
-              <p className="mt-3 font-mono text-[10px] uppercase tracking-wide text-muted/70">
+              <p className="mt-3 text-xs text-muted">
                 ↓ {a.cta === "mistakes" ? "Start in the mistake drills below" : "Practice in the puzzle sets below"}
               </p>
             )}
