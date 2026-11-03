@@ -9,7 +9,7 @@ export const ScannedGamesList = () => {
   return (
     <section className="mt-8">
       <header className="mb-3 flex items-center justify-between">
-        <h2 className="font-display text-sm font-bold uppercase tracking-[1.4px] text-muted">
+        <h2 className="font-display text-sm font-medium text-muted">
           Scanned Games
         </h2>
         <span className="font-mono text-xs text-muted">{games.length}</span>
@@ -30,7 +30,7 @@ export const ScannedGamesList = () => {
                 <span className="block truncate text-sm font-medium">
                   {g.white} – {g.black}
                 </span>
-                <span className="block font-mono text-[10px] uppercase tracking-wide text-muted/70">
+                <span className="block text-xs text-muted">
                   {g.moveCount} {g.moveCount === 1 ? "move" : "moves"}
                 </span>
               </span>

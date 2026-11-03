@@ -92,7 +92,7 @@ export function computeNextRung(report: StudentReport): NextRung {
     rung = {
       title: weakest ? `Sharpen ${weakest.name.toLowerCase()}` : "Keep your edge",
       metric: weakest ? `${weakest.level}%` : "",
-      why: "No glaring weakness right now — your lowest skill is where the next gains hide. Keep sharpening it.",
+      why: "No glaring weakness right now, your lowest skill is where the next gains hide. Keep sharpening it.",
       drills: ["Mixed tactics at your level, daily", "Review every loss for the turning point"],
       cta: "puzzles",
     };

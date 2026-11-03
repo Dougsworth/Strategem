@@ -27,7 +27,7 @@ const BrandMark = () => (
       <span />
       <span className="bg-paper" />
     </span>
-    <span className="font-display text-lg font-bold tracking-tight">
+    <span className="font-display text-lg font-semibold tracking-tight">
       STRATEGEM
     </span>
   </a>
@@ -55,7 +55,7 @@ const Nav = () => (
       </nav>
       <a
         href="#start"
-        className="group inline-flex h-9 items-center gap-1.5 rounded-full bg-accent px-4 text-[13px] font-semibold text-paper transition-all hover:-translate-y-0.5 hover:shadow-[0_12px_28px_-10px_oklch(0.56_0.19_38_/_0.6)]"
+        className="group inline-flex h-9 items-center gap-1.5 rounded-lg bg-accent px-4 text-[13px] font-semibold text-paper transition-opacity duration-150 hover:opacity-90"
       >
         Start free
         <ArrowRight
@@ -70,38 +70,21 @@ const Nav = () => (
 const CtaBand = () => (
   <section className="mx-auto max-w-screen-xl px-5 pb-16 sm:pb-24 md:px-8 md:pb-32">
     <Reveal className="relative overflow-hidden rounded-[24px] bg-ink px-6 py-14 text-paper sm:rounded-[28px] sm:px-8 sm:py-20 md:px-16 md:py-28">
-      {/* glows + grid */}
-      <div className="pointer-events-none absolute -right-20 -top-20 h-80 w-80 rounded-full bg-accent/40 blur-[80px]" />
-      <div className="pointer-events-none absolute -bottom-32 -left-20 h-80 w-80 rounded-full bg-positive/20 blur-[80px]" />
-      <div
-        className="pointer-events-none absolute inset-0 opacity-[0.06]"
-        style={{
-          backgroundImage:
-            "linear-gradient(to right, #fff 1px, transparent 1px), linear-gradient(#fff 1px, transparent 1px)",
-          backgroundSize: "64px 64px",
-        }}
-      />
       <div className="relative max-w-2xl">
-        <div className="flex items-center gap-3">
-          <span className="font-mono text-[11px] text-accent">§ 05</span>
-          <span className="h-px w-8 bg-paper/30" />
-          <span className="font-mono text-[11px] uppercase tracking-[0.2em] text-paper/60">
-            Ready when you are
-          </span>
-        </div>
-        <h2 className="mt-5 font-display text-[2rem] font-bold leading-[1.05] tracking-[-0.02em] md:text-[3.5rem]">
+        <p className="text-sm text-paper/70">Ready when you are</p>
+        <h2 className="mt-5 font-display text-[2rem] font-semibold leading-[1.05] tracking-[-0.02em] md:text-[3.5rem]">
           See every game clearly.{" "}
           <span className="text-accent">Start free.</span>
         </h2>
         <p className="mt-5 max-w-lg leading-relaxed text-paper/70">
           Add one student. Pull their last 20 games. See what Strategem surfaces
-          in the next ten minutes — then decide.
+          in the next ten minutes, then decide.
         </p>
         <div className="mt-8 flex flex-wrap gap-3">
-          <PrimaryCta>Start free — 1 student</PrimaryCta>
+          <PrimaryCta>Start free with 1 student</PrimaryCta>
           <a
             href="#sample"
-            className="inline-flex h-12 items-center gap-2 rounded-full border border-paper/20 px-6 text-sm font-semibold text-paper transition-all hover:-translate-y-0.5 hover:bg-paper/10"
+            className="inline-flex h-12 items-center gap-2 rounded-lg border border-paper/20 px-6 text-sm font-semibold text-paper transition-colors duration-150 hover:bg-paper/10"
           >
             See a sample report
           </a>
@@ -122,7 +105,7 @@ const Footer = () => (
         </p>
       </div>
       <div>
-        <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-muted">
+        <p className="text-xs text-muted">
           Product
         </p>
         <ul className="mt-4 space-y-2.5 text-sm">
@@ -141,7 +124,7 @@ const Footer = () => (
         </ul>
       </div>
       <div>
-        <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-muted">
+        <p className="text-xs text-muted">
           Company
         </p>
         <ul className="mt-4 space-y-2.5 text-sm">
@@ -162,7 +145,7 @@ const Footer = () => (
     <div className="border-t border-line">
       <div className="mx-auto flex max-w-screen-xl flex-col items-center justify-between gap-2 px-5 py-6 text-xs text-muted md:flex-row md:px-8">
         <span>© {2026} Strategem. All rights reserved.</span>
-        <span className="font-mono uppercase tracking-[0.18em]">
+        <span className="">
           Your students&rsquo; games, decoded
         </span>
       </div>

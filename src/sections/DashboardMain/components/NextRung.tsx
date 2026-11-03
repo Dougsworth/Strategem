@@ -43,7 +43,7 @@ export const NextRung = () => {
         <div className="sm:col-span-3">
           <div className="flex items-center gap-2 text-accent">
             <Target size={16} />
-            <span className="text-xs font-semibold uppercase tracking-wide">Work on next</span>
+            <span className="text-xs font-semibold">Work on next</span>
           </div>
           <h4 className="mt-1.5 flex items-baseline gap-2 text-xl font-bold tracking-tight text-ink">
             {rung.title}

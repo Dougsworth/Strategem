@@ -69,7 +69,7 @@ export const DashboardMain = () => {
                   title="Curriculum"
                   blurb="Turn the analysis into a plan. Strategem builds each student a personalized training roadmap from their real weaknesses."
                   bullets={[
-                    "Prioritized focus areas — what to fix first, and why",
+                    "Prioritized focus areas: what to fix first, and why",
                     "Drills on their actual blunders + targeted puzzle sets",
                     "A realistic weekly training routine",
                   ]}
@@ -82,10 +82,10 @@ export const DashboardMain = () => {
               ) : (
                 <Upsell
                   title="Analytics"
-                  blurb="The deep dive coaches pay for — how a student is trending, how steady they are, and the mindset behind their mistakes."
+                  blurb="The deep dive coaches pay for: how a student is trending, how steady they are, and the mindset behind their mistakes."
                   bullets={[
                     "Game-by-game growth curve",
-                    "Consistency score — a real focus & tilt signal",
+                    "Consistency score: a real focus & tilt signal",
                     "Mindset signals: each mistake + the habit that fixes it",
                   ]}
                 />
@@ -95,7 +95,7 @@ export const DashboardMain = () => {
               !rosterLoading && (
                 <div className="grid min-h-[60vh] place-items-center rounded-2xl border border-dashed border-line">
                   <div className="max-w-sm text-center">
-                    <h2 className="font-display text-2xl font-bold tracking-tight">
+                    <h2 className="font-display text-2xl font-semibold tracking-tight">
                       Analyze any Lichess player
                     </h2>
                     <p className="mt-2 text-sm leading-relaxed text-muted">

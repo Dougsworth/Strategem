@@ -14,9 +14,6 @@ import {
   FileText,
   TrendingUp,
   Gamepad2,
-  UserPlus,
-  Cpu,
-  ClipboardCheck,
   Check,
   Plus,
   Minus,
@@ -31,10 +28,10 @@ import { Eyebrow } from "./ui";
 export const Logos = () => (
   <section className="border-y border-line bg-card/40">
     <div className="mx-auto flex max-w-screen-xl flex-col items-center gap-4 px-5 py-8 md:flex-row md:justify-between md:px-8">
-      <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-muted">
+      <p className="text-xs text-muted">
         Built on real engine analysis
       </p>
-      <div className="flex items-center gap-8 font-display text-lg font-semibold text-ink/70">
+      <div className="flex items-center gap-4 font-display text-base font-semibold text-ink/70 sm:gap-8 sm:text-lg">
         <span className="transition-colors hover:text-ink">Lichess</span>
         <span className="h-4 w-px bg-line" />
         <span className="transition-colors hover:text-ink">Chess.com</span>
@@ -49,8 +46,8 @@ export const Logos = () => (
 const FEATURES = [
   {
     icon: Crosshair,
-    title: "Grandmaster-grade game analysis",
-    body: "Every move from your students' real online games, scored by Stockfish and translated into coach-ready notes — themes, missed plans, critical moments.",
+    title: "Stockfish game analysis",
+    body: "Every move from your students' real online games, scored by Stockfish and translated into coach-ready notes: themes, missed plans, critical moments.",
   },
   {
     icon: RefreshCw,
@@ -60,7 +57,7 @@ const FEATURES = [
   {
     icon: ScanLine,
     title: "Scan a paper scoresheet",
-    body: "Snap a photo of a handwritten scoresheet — get the full digital game back, ready for analysis. Tournament games, finally usable.",
+    body: "Snap a photo of a handwritten scoresheet and get the full digital game back, ready for analysis. Tournament games, finally usable.",
   },
   {
     icon: FileText,
@@ -70,12 +67,12 @@ const FEATURES = [
   {
     icon: TrendingUp,
     title: "Growth tracking",
-    body: "Prove progress over weeks. Accuracy trends, rating curves, themes resolved — the receipts that keep students (and parents) bought in.",
+    body: "Prove progress over weeks. Accuracy trends, rating curves, themes resolved: the receipts that keep students (and parents) bought in.",
   },
   {
     icon: Gamepad2,
     title: "The Lab",
-    body: "Knight's tour, mazes, vision drills — chess brain-games that keep younger students engaged between serious training blocks.",
+    body: "Knight's tour, mazes, vision drills: chess brain-games that keep younger students engaged between serious training blocks.",
   },
 ];
 
@@ -136,7 +133,7 @@ class GLBoundary extends Component<
 
 const KingGlyph = () => (
   <div className="grid h-full w-full place-items-center">
-    <span className="animate-glow-pulse select-none text-[7rem] leading-none text-paper/15">
+    <span className="select-none text-[7rem] leading-none text-paper/15">
       ♚
     </span>
   </div>
@@ -180,7 +177,7 @@ const TrainerDeck = () => (
     <div className="absolute left-1/2 top-3 h-12 w-[88px] -translate-x-1/2 -rotate-6 rounded-lg border border-line bg-paper" />
     <div className="absolute left-1/2 top-1.5 h-12 w-[88px] -translate-x-1/2 rotate-3 rounded-lg border border-line bg-paper" />
     <div className="absolute left-1/2 top-0 flex h-12 w-[88px] -translate-x-1/2 items-center justify-center rounded-lg border border-accent bg-paper shadow-sm">
-      <span className="font-mono text-[10px] font-semibold uppercase tracking-wide text-accent">
+      <span className="text-xs font-semibold text-accent">
         Due · 1
       </span>
     </div>
@@ -255,7 +252,7 @@ const KnightTour = () => (
           y={r * 29}
           width="29"
           height="29"
-          fill={dark ? "rgba(255,255,255,0.10)" : "rgba(255,255,255,0.04)"}
+          fill={dark ? "rgba(20,18,15,0.10)" : "rgba(20,18,15,0.04)"}
         />
       );
     })}
@@ -325,61 +322,35 @@ const MiniBoard = () => (
   </div>
 );
 
-// Bento config — each tile carries a bespoke visual. `side` tiles lay copy
-// left / visual right; the rest stack icon → visual → title.
+// One row per feature: copy on the left, its visual on the right.
 const TILES = [
   {
-    icon: TrendingUp,
-    num: "02",
     title: "Growth tracking",
     body: "Accuracy & rating trends that prove progress over weeks.",
-    span: "md:col-span-2",
-    tone: "light",
-    side: true,
     visual: (
-      <div className="w-[220px] max-w-full">
+      <div className="w-[176px] max-w-full">
         <RatingChart />
       </div>
     ),
   },
   {
-    icon: RefreshCw,
-    num: "03",
     title: "Fix-your-mistakes trainer",
     body: "Their blunders, resurfaced right before they'd forget.",
-    span: "",
-    tone: "light",
-    side: false,
     visual: <TrainerDeck />,
   },
   {
-    icon: FileText,
-    num: "04",
     title: "AI report cards",
     body: "Plain-language game summaries in seconds.",
-    span: "",
-    tone: "light",
-    side: false,
     visual: <ReportRing />,
   },
   {
-    icon: ScanLine,
-    num: "05",
     title: "Scan a paper scoresheet",
     body: "Photo of a handwritten sheet → a clean digital game.",
-    span: "md:col-span-2",
-    tone: "light",
-    side: true,
     visual: <ScanTransform />,
   },
   {
-    icon: Gamepad2,
-    num: "06",
     title: "The Lab",
     body: "Knight's tour, mazes & vision drills between training blocks.",
-    span: "md:col-span-2",
-    tone: "dark",
-    side: true,
     visual: <KnightTour />,
   },
 ] as const;
@@ -387,7 +358,6 @@ const TILES = [
 export const Features = () => {
   const [stageRef, inView] = useInView<HTMLDivElement>();
   const isDesktop = useMediaQuery("(min-width: 768px)");
-  const HeroIcon = FEATURES[0].icon;
 
   return (
     <section
@@ -395,8 +365,8 @@ export const Features = () => {
       className="mx-auto max-w-screen-xl px-5 py-16 sm:py-24 md:px-8 md:py-32"
     >
       <Reveal className="max-w-2xl">
-        <Eyebrow n="§ 01" label="What's inside" />
-        <h2 className="mt-5 font-display text-[1.9rem] font-bold tracking-[-0.02em] md:text-[2.75rem]">
+        <Eyebrow label="What's inside" />
+        <h2 className="mt-5 font-display text-[1.9rem] font-semibold tracking-[-0.02em] md:text-[2.75rem]">
           Every tool a coach actually opens on a Tuesday night.
         </h2>
         <p className="mt-4 text-muted">
@@ -407,10 +377,10 @@ export const Features = () => {
 
       <div
         ref={stageRef}
-        className="mt-14 grid gap-3 md:grid-cols-4 md:auto-rows-[210px]"
+        className="mt-14 grid gap-8 md:grid-cols-[1.1fr_1fr] md:gap-12"
       >
-        {/* 01 — hero: live 3D king + engine eval overlay */}
-        <Reveal className="group relative min-h-[320px] overflow-hidden rounded-3xl bg-ink text-paper md:col-span-2 md:row-span-2 md:min-h-0">
+        {/* The lead feature: live 3D king with an engine eval */}
+        <Reveal className="relative min-h-[420px] overflow-hidden rounded-2xl bg-ink text-paper md:min-h-0">
           <div className="absolute inset-0">
             {inView && isDesktop ? (
               <GLBoundary fallback={<KingGlyph />}>
@@ -423,99 +393,42 @@ export const Features = () => {
             )}
           </div>
           <EvalBar />
-          {/* floating best-move chip */}
-          <div className="absolute right-6 top-1/2 z-10 rounded-lg bg-paper/10 px-2.5 py-1.5 font-mono text-[11px] text-paper/80 backdrop-blur">
-            Best · <span className="text-accent">Nf5</span> +1.2
-          </div>
+          <p className="absolute right-6 top-6 z-10 font-mono text-xs text-paper/80">
+            Best <span className="text-accent">Nf5</span> +1.2
+          </p>
           <div className="pointer-events-none absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-ink via-ink/70 to-transparent" />
-          <div className="relative flex h-full flex-col justify-between p-7">
-            <div className="flex items-center justify-between">
-              <span className="grid h-10 w-10 place-items-center rounded-xl bg-paper/10 text-accent">
-                <HeroIcon size={19} strokeWidth={1.75} />
-              </span>
-              <span className="font-mono text-[11px] text-paper/40">01</span>
-            </div>
-            <div>
-              <h3 className="font-display text-2xl font-bold tracking-tight">
-                {FEATURES[0].title}
-              </h3>
-              <p className="mt-2 max-w-sm text-sm leading-relaxed text-paper/70">
-                Every move scored by Stockfish — themes, missed plans and the
-                critical moments, in coach-ready language.
-              </p>
-            </div>
+          <div className="relative flex h-full flex-col justify-end p-8">
+            <h3 className="font-display text-2xl font-semibold tracking-tight">
+              {FEATURES[0].title}
+            </h3>
+            <p className="mt-2 max-w-sm text-sm leading-relaxed text-paper/70">
+              Every move scored by Stockfish: themes, missed plans and the
+              critical moments, in coach-ready language.
+            </p>
           </div>
         </Reveal>
 
-        {/* 02–06 — bespoke-visual tiles */}
-        {TILES.map((t, k) => {
-          const dark = t.tone === "dark";
-          const Icon = t.icon;
-          const head = (
-            <div className="flex items-center justify-between">
-              <span
-                className={`grid h-10 w-10 place-items-center rounded-xl transition-transform duration-300 group-hover:-translate-y-0.5 ${
-                  dark ? "bg-paper/10 text-accent" : "bg-accent-soft text-accent"
-                }`}
-              >
-                <Icon size={19} strokeWidth={1.75} />
-              </span>
-              <span
-                className={`font-mono text-[11px] ${dark ? "text-paper/40" : "text-muted/60"}`}
-              >
-                {t.num}
-              </span>
-            </div>
-          );
-          const titleBlock = (
-            <div>
-              <h3 className="font-display text-lg font-bold tracking-tight">
-                {t.title}
-              </h3>
-              <p
-                className={`mt-1.5 text-[13.5px] leading-relaxed ${dark ? "text-paper/70" : "text-muted"}`}
-              >
-                {t.body}
-              </p>
-            </div>
-          );
-          return (
+        {/* The other five as a ruled list */}
+        <ul className="border-b border-line">
+          {TILES.map((t, k) => (
             <Reveal
+              as="li"
               key={t.title}
-              delay={(k % 3) * 70}
-              className={`group relative overflow-hidden rounded-3xl p-6 transition-all duration-300 ${t.span} ${
-                dark
-                  ? "bg-ink text-paper"
-                  : "border border-line bg-card hover:bg-ink-soft/30"
-              }`}
+              delay={(k % 3) * 60}
+              className="grid items-center gap-6 border-t border-line py-6 sm:grid-cols-[1fr_176px]"
             >
-              {t.side ? (
-                <div className="flex h-full flex-col gap-5 md:flex-row md:items-center md:gap-6">
-                  <div className="flex flex-1 flex-col">
-                    {head}
-                    <div className="mt-auto pt-5">{titleBlock}</div>
-                  </div>
-                  <div className="flex shrink-0 items-center justify-center">
-                    {t.visual}
-                  </div>
-                </div>
-              ) : (
-                <div className="flex h-full flex-col">
-                  {head}
-                  <div className="flex flex-1 items-center justify-center py-2">
-                    {t.visual}
-                  </div>
-                  <h3 className="font-display text-base font-bold leading-snug tracking-tight">
-                    {t.title}
-                  </h3>
-                </div>
-              )}
-              {!dark && (
-                <span className="absolute bottom-0 left-0 h-[3px] w-0 bg-accent transition-all duration-500 ease-out group-hover:w-full" />
-              )}
+              <div>
+                <h3 className="font-display text-lg font-semibold tracking-tight">
+                  {t.title}
+                </h3>
+                <p className="mt-1 text-sm leading-relaxed text-muted">
+                  {t.body}
+                </p>
+              </div>
+              <div className="flex justify-start sm:justify-end">{t.visual}</div>
             </Reveal>
-          );
-        })}
+          ))}
+        </ul>
       </div>
     </section>
   );
@@ -524,195 +437,119 @@ export const Features = () => {
 /* ── How it works ─────────────────────────────────────────────────────────── */
 const STEPS = [
   {
-    icon: UserPlus,
     title: "Add a student by username",
     body: "Just their Lichess or Chess.com handle. No account needed on the student's side.",
   },
   {
-    icon: Cpu,
     title: "Strategem analyzes their games",
     body: "We pull recent games, run engine analysis, and surface patterns across the whole batch.",
   },
   {
-    icon: ClipboardCheck,
     title: "Get weaknesses, drills & a report card",
     body: "You walk into the next lesson knowing exactly what to teach. They walk out with drills.",
   },
 ];
 
-// Visual-first: narrow username step, wide board step, full-width report step.
-const STEP_SPAN = ["md:col-span-1", "md:col-span-2", "md:col-span-3"];
+// Each step is marked like a line on a scoresheet.
 const STEP_MOVE = ["1. e4", "1…e5", "2. Nf3"];
 
 const ANALYSIS_FEED = [
-  { mv: "Bxf7+", tag: "Brilliant", cls: "text-positive bg-positive/15" },
-  { mv: "Nbd2", tag: "Inaccuracy", cls: "text-amber-600 bg-amber-500/15" },
-  { mv: "Qh5??", tag: "Blunder", cls: "text-accent bg-accent-soft" },
+  { mv: "Bxf7+", tag: "Brilliant", cls: "text-positive" },
+  { mv: "Nbd2", tag: "Inaccuracy", cls: "text-muted" },
+  { mv: "Qh5??", tag: "Blunder", cls: "text-accent" },
 ];
 const REPORT_BARS = [
   { label: "Rook endgames", pct: 58 },
   { label: "Back-rank", pct: 71 },
 ];
-const WEAKNESS_TAGS = ["Back-rank mates", "Time scrambles", "Rook endgames"];
+
+const StepVisual = ({ i }: { i: number }) => {
+  if (i === 0)
+    return (
+      <div className="flex items-baseline justify-between border-b border-ink/30 pb-2">
+        <span className="font-mono text-sm text-ink">magnus_jr</span>
+        <span className="text-xs text-muted">Lichess</span>
+      </div>
+    );
+  if (i === 1)
+    return (
+      <div className="flex items-center gap-6">
+        <div className="w-28 shrink-0 sm:w-32">
+          <MiniBoard />
+        </div>
+        <div className="min-w-0 flex-1">
+          <p className="pb-2 text-xs text-muted">Analyzing 47 games</p>
+          {ANALYSIS_FEED.map((r) => (
+            <div
+              key={r.mv}
+              className="flex items-baseline justify-between border-t border-line py-2"
+            >
+              <span className="font-mono text-[13px] text-ink">{r.mv}</span>
+              <span className={`text-xs ${r.cls}`}>{r.tag}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  return (
+    <div>
+      <p className="pb-2 text-xs text-muted">Report for Magnus Jr</p>
+      {REPORT_BARS.map((b) => (
+        <div key={b.label} className="border-t border-line py-2">
+          <div className="flex items-baseline justify-between text-[13px]">
+            <span className="text-ink">{b.label}</span>
+            <span className="font-mono tabular-nums text-muted">{b.pct}%</span>
+          </div>
+          <div className="mt-2 h-1 overflow-hidden rounded-full bg-line">
+            <span
+              className="block h-full bg-accent"
+              style={{ width: `${b.pct}%` }}
+            />
+          </div>
+        </div>
+      ))}
+      <p className="border-t border-line pt-2 text-xs text-muted">
+        4 drills queued
+      </p>
+    </div>
+  );
+};
 
 export const HowItWorks = () => (
   <section id="how" className="border-t border-line bg-card/40">
     <div className="mx-auto max-w-screen-xl px-5 py-16 sm:py-24 md:px-8 md:py-32">
       <Reveal className="max-w-2xl">
-        <Eyebrow n="§ 02" label="How it works" />
-        <h2 className="mt-5 font-display text-[1.9rem] font-bold tracking-[-0.02em] md:text-[2.75rem]">
-          From username to lesson plan in under two minutes.
+        <Eyebrow label="How it works" />
+        <h2 className="mt-5 font-display text-[1.9rem] font-semibold tracking-[-0.02em] text-balance md:text-[2.75rem]">
+          From a username to a lesson plan.
         </h2>
       </Reveal>
 
-      <div className="mt-14 grid gap-3 md:grid-cols-3 md:auto-rows-[300px]">
-        {STEPS.map((s, i) => {
-          const Icon = s.icon;
-          const dark = i === 0;
-          return (
+      <ol className="mt-14 border-b border-line">
+        {STEPS.map((s, i) => (
+          <li key={s.title} className="border-t border-line">
             <Reveal
-              key={s.title}
-              delay={i * 110}
-              className={`group relative flex flex-col overflow-hidden rounded-3xl p-6 transition-all duration-300 ${STEP_SPAN[i]} ${
-                dark
-                  ? "bg-ink text-paper"
-                  : "border border-line bg-card hover:bg-ink-soft/30"
-              }`}
+              delay={i * 80}
+              className="grid gap-4 py-8 md:grid-cols-[80px_minmax(0,1fr)_minmax(0,1fr)] md:gap-8 md:py-10"
             >
-              {/* header: step label + chess-move tag */}
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2 text-accent">
-                  <Icon size={17} strokeWidth={2} />
-                  <span className="font-mono text-[11px] uppercase tracking-[0.18em]">
-                    Step {i + 1}
-                  </span>
-                </div>
-                <span
-                  className={`rounded-md px-2 py-0.5 font-mono text-[11px] ${
-                    dark ? "bg-paper/10 text-paper/55" : "bg-ink-soft text-muted"
-                  }`}
-                >
-                  {STEP_MOVE[i]}
-                </span>
+              <span className="pt-1 font-mono text-sm text-muted">
+                {STEP_MOVE[i]}
+              </span>
+              <div>
+                <h3 className="font-display text-xl font-semibold tracking-tight">
+                  {s.title}
+                </h3>
+                <p className="mt-2 max-w-md text-sm leading-relaxed text-muted">
+                  {s.body}
+                </p>
               </div>
-
-              {/* ── visual region (the focus — minimal copy) ── */}
-              <div className="my-4 flex flex-1 items-center">
-                {/* 1 — username field */}
-                {i === 0 && (
-                  <div className="w-full">
-                    <div className="flex items-center gap-2 rounded-xl border border-accent/40 bg-paper/[0.06] p-2.5">
-                      <span className="grid h-7 w-7 shrink-0 place-items-center rounded-lg bg-accent text-sm font-bold text-paper">
-                        @
-                      </span>
-                      <span className="font-mono text-sm text-paper/90">magnus_jr</span>
-                      <span className="-ml-1 inline-block h-4 w-px animate-pulse bg-accent" />
-                      <span className="ml-auto rounded-md bg-paper/10 px-2 py-0.5 font-mono text-[10px] uppercase tracking-wide text-paper/55">
-                        Lichess
-                      </span>
-                    </div>
-                    <p className="mt-3 font-mono text-[11px] text-paper/45">
-                      No student account needed.
-                    </p>
-                  </div>
-                )}
-
-                {/* 2 — mini board + live engine verdicts */}
-                {i === 1 && (
-                  <div className="flex w-full items-center gap-5">
-                    <div className="w-[168px] shrink-0">
-                      <MiniBoard />
-                    </div>
-                    <div className="hidden flex-1 space-y-1.5 sm:block">
-                      <div className="mb-1 flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.16em] text-muted">
-                        <span className="relative flex h-1.5 w-1.5">
-                          <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-accent opacity-75" />
-                          <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-accent" />
-                        </span>
-                        Analyzing 47 games
-                      </div>
-                      {ANALYSIS_FEED.map((r) => (
-                        <div
-                          key={r.mv}
-                          className="flex items-center justify-between rounded-lg border border-line bg-paper px-2.5 py-1.5"
-                        >
-                          <span className="font-mono text-[13px] font-medium text-ink">
-                            {r.mv}
-                          </span>
-                          <span
-                            className={`rounded px-1.5 py-0.5 text-[10px] font-semibold ${r.cls}`}
-                          >
-                            {r.tag}
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* 3 — weakness tags + report card */}
-                {i === 2 && (
-                  <div className="flex w-full flex-col items-stretch gap-5 md:flex-row md:items-center md:gap-8">
-                    <div className="flex flex-1 flex-wrap content-center gap-2">
-                      {WEAKNESS_TAGS.map((t) => (
-                        <span
-                          key={t}
-                          className="rounded-full border border-line bg-paper px-3 py-1 text-[12.5px] font-medium text-ink"
-                        >
-                          {t}
-                        </span>
-                      ))}
-                    </div>
-                    <div className="w-full shrink-0 rounded-2xl border border-line bg-paper p-4 shadow-sm md:w-80">
-                      <div className="flex items-center justify-between">
-                        <span className="font-mono text-[10px] uppercase tracking-[0.16em] text-muted">
-                          Report · Magnus Jr
-                        </span>
-                        <span className="flex items-center gap-1 text-[11px] font-semibold text-positive">
-                          <TrendingUp size={11} /> +6
-                        </span>
-                      </div>
-                      <div className="mt-3 space-y-2.5">
-                        {REPORT_BARS.map((b) => (
-                          <div key={b.label}>
-                            <div className="flex items-center justify-between text-[11.5px]">
-                              <span className="text-ink">{b.label}</span>
-                              <span className="font-mono text-muted">{b.pct}%</span>
-                            </div>
-                            <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-line">
-                              <span
-                                className="block h-full rounded-full bg-accent"
-                                style={{ width: `${b.pct}%` }}
-                              />
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                      <div className="mt-3 flex items-center gap-2">
-                        <span className="rounded-full bg-accent-soft px-2.5 py-0.5 text-[11px] font-semibold text-accent">
-                          4 drills queued
-                        </span>
-                        <span className="rounded-full bg-positive/15 px-2.5 py-0.5 text-[11px] font-semibold text-positive">
-                          Card ✓
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                )}
+              <div className="mt-2 md:mt-0">
+                <StepVisual i={i} />
               </div>
-
-              {/* title only — no body copy */}
-              <h3 className="font-display text-xl font-bold tracking-tight md:text-2xl">
-                {s.title}
-              </h3>
-
-              {!dark && (
-                <span className="absolute bottom-0 left-0 h-[3px] w-0 bg-accent transition-all duration-500 ease-out group-hover:w-full" />
-              )}
             </Reveal>
-          );
-        })}
-      </div>
+          </li>
+        ))}
+      </ol>
     </div>
   </section>
 );
@@ -731,8 +568,8 @@ export const Pricing = () => (
     className="mx-auto max-w-screen-xl px-5 py-16 sm:py-24 md:px-8 md:py-32"
   >
     <Reveal className="max-w-2xl">
-      <Eyebrow n="§ 03" label="Pricing" />
-      <h2 className="mt-5 font-display text-[1.9rem] font-bold tracking-[-0.02em] md:text-[2.75rem]">
+      <Eyebrow label="Pricing" />
+      <h2 className="mt-5 font-display text-[1.9rem] font-semibold tracking-[-0.02em] md:text-[2.75rem]">
         One student free. Scale when your roster scales.
       </h2>
       <p className="mt-4 text-muted">
@@ -740,7 +577,7 @@ export const Pricing = () => (
       </p>
     </Reveal>
 
-    <div className="mt-14 grid gap-5 md:grid-cols-4">
+    <div className="mt-14 grid border-t border-ink/20 md:grid-cols-2 xl:grid-cols-4">
       {PLANS.map((plan, i) => {
         const featured = plan.recommended;
         const cta =
@@ -753,70 +590,44 @@ export const Pricing = () => (
           <Reveal
             key={plan.id}
             delay={i * 70}
-            className={`relative flex flex-col rounded-3xl p-7 transition-transform duration-200 hover:-translate-y-1 ${
-              featured
-                ? "bg-ink text-paper shadow-[0_30px_60px_-20px_rgba(20,18,15,0.45)]"
-                : "border border-line bg-card"
-            }`}
+            className={`flex flex-col border-b border-line py-8 md:px-6 xl:border-b-0 ${
+              i === 0 ? "xl:pl-0" : "xl:border-l"
+            } ${i % 2 === 1 ? "md:border-l" : ""} ${i === 3 ? "xl:pr-0" : ""}`}
           >
-            {featured && (
-              <span className="absolute -top-3 left-7 inline-flex items-center gap-1.5 rounded-full bg-accent px-3 py-1 font-mono text-[10px] uppercase tracking-[0.16em] text-paper">
-                <span className="h-1 w-1 rounded-full bg-paper" />
-                Most popular
-              </span>
-            )}
-            <div className="flex items-center justify-between">
+            <div className="flex items-baseline justify-between gap-3">
               <span className="font-display text-[15px] font-semibold">
                 {plan.name}
               </span>
-              <span
-                className={`font-mono text-[10px] ${featured ? "text-paper/40" : "text-muted/60"}`}
-              >
-                {String(i + 1).padStart(2, "0")}
-              </span>
+              {featured && (
+                <span className="text-xs text-accent">Most popular</span>
+              )}
             </div>
             <div className="mt-4 flex items-baseline gap-1.5">
-              <span className="font-display text-4xl font-bold tracking-tight tabular-nums">
+              <span className="font-display text-4xl font-medium tracking-tight tabular-nums">
                 ${plan.price}
               </span>
-              <span
-                className={`text-[13px] ${featured ? "text-paper/60" : "text-muted"}`}
-              >
-                /mo
-              </span>
+              <span className="text-[13px] text-muted">/mo</span>
             </div>
-            <p
-              className={`mt-2 text-[13px] leading-relaxed ${featured ? "text-paper/70" : "text-muted"}`}
-            >
+            <p className="mt-2 text-[13px] leading-relaxed text-muted">
               {TAGLINE[plan.id]}
             </p>
-            <div
-              className={`my-6 h-px ${featured ? "bg-paper/15" : "bg-line"}`}
-            />
-            <ul className="space-y-2.5">
+            <ul className="my-6 flex-1 space-y-2.5 border-t border-line pt-6">
               {plan.features.map((feat) => (
                 <li key={feat} className="flex items-start gap-2 text-[13.5px]">
-                  <Check
-                    size={16}
-                    className={`mt-0.5 shrink-0 ${featured ? "text-accent" : "text-positive"}`}
-                  />
-                  <span className={featured ? "text-paper/85" : ""}>{feat}</span>
+                  <Check size={16} className="mt-0.5 shrink-0 text-muted" />
+                  <span>{feat}</span>
                 </li>
               ))}
             </ul>
             <a
               href="#start"
-              className={`group mt-8 inline-flex h-11 items-center justify-center gap-1.5 rounded-full px-5 text-sm font-semibold transition-all hover:-translate-y-0.5 active:scale-[0.99] ${
+              className={`inline-flex h-11 items-center justify-center rounded-lg px-5 text-sm font-medium transition-[background-color,opacity,transform] duration-150 active:scale-[0.98] ${
                 featured
-                  ? "bg-accent text-paper"
-                  : "bg-paper text-ink ring-1 ring-line hover:bg-ink-soft"
+                  ? "bg-accent text-paper hover:opacity-90"
+                  : "text-ink ring-1 ring-line hover:bg-ink-soft"
               }`}
             >
               {cta}
-              <ArrowRight
-                size={15}
-                className="transition-transform group-hover:translate-x-0.5"
-              />
             </a>
           </Reveal>
         );
@@ -829,7 +640,7 @@ export const Pricing = () => (
 const FAQS = [
   {
     q: "Do my students need to create accounts?",
-    a: "No. You add them by their Lichess or Chess.com username. We do the rest — they keep playing where they already play.",
+    a: "No. You add them by their Lichess or Chess.com username. We do the rest, and they keep playing where they already play.",
   },
   {
     q: "Which sites do you support?",
@@ -863,12 +674,12 @@ const FaqRow = ({ q, a, n }: { q: string; a: string; n: number }) => {
         <span className="flex-1 font-display text-[15px] font-semibold tracking-tight">
           {q}
         </span>
-        <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full border border-line text-muted transition-colors hover:text-ink">
+        <span className="grid h-7 w-7 shrink-0 place-items-center text-muted transition-colors hover:text-ink">
           {open ? <Minus size={14} /> : <Plus size={14} />}
         </span>
       </button>
       <div
-        className="grid overflow-hidden transition-all duration-300 ease-out"
+        className="grid overflow-hidden transition-[grid-template-rows,opacity] duration-300 ease-out"
         style={{
           gridTemplateRows: open ? "1fr" : "0fr",
           opacity: open ? 1 : 0,
@@ -888,8 +699,8 @@ export const Faq = () => (
   <section id="faq" className="border-t border-line">
     <div className="mx-auto grid max-w-screen-xl gap-10 px-5 py-16 sm:py-24 md:grid-cols-[1fr_1.4fr] md:gap-12 md:px-8 md:py-32">
       <Reveal>
-        <Eyebrow n="§ 04" label="FAQ" />
-        <h2 className="mt-5 font-display text-[1.9rem] font-bold tracking-[-0.02em] md:text-[2.5rem]">
+        <Eyebrow label="FAQ" />
+        <h2 className="mt-5 font-display text-[1.9rem] font-semibold tracking-[-0.02em] md:text-[2.5rem]">
           Questions coaches actually ask.
         </h2>
         <p className="mt-4 max-w-md text-[15px] leading-relaxed text-muted">
@@ -897,7 +708,7 @@ export const Faq = () => (
           <a href="#start" className="font-semibold text-ink underline-offset-2 hover:underline">
             Email us
           </a>{" "}
-          — a human writes back.
+          and a human writes back.
         </p>
       </Reveal>
       <Reveal delay={80} className="border-t border-line">

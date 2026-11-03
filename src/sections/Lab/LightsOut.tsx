@@ -56,9 +56,9 @@ export const LightsOut = () => {
           <button
             key={i}
             onClick={() => click(i)}
-            className={`h-14 w-14 rounded-lg transition-all ${
+            className={`h-14 w-14 rounded-lg transition-[background-color,border-color,color,opacity,transform] ${
               on
-                ? "bg-accent shadow-[0_0_18px_rgba(192,81,43,0.45)]"
+                ? "bg-accent"
                 : "bg-ink-soft ring-1 ring-line hover:bg-ink/10"
             }`}
           />
@@ -77,8 +77,8 @@ export const LightsOut = () => {
       </div>
 
       {solved && (
-        <p className="mt-4 font-display text-lg font-bold text-positive">
-          Lights out in {moves} moves 🎉
+        <p className="mt-4 font-display text-lg font-semibold text-positive">
+          Lights out in {moves} moves
         </p>
       )}
     </div>

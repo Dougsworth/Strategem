@@ -126,7 +126,7 @@ export const Game2048 = () => {
         {grid.map((v, i) => (
           <div
             key={i}
-            className={`grid h-16 w-16 place-items-center rounded-lg font-display text-xl font-bold transition-all ${
+            className={`grid h-16 w-16 place-items-center rounded-lg font-display text-xl font-semibold transition-[background-color,border-color,color,opacity,transform] ${
               v === 0 ? "bg-card ring-1 ring-line" : TILE[v] ?? "bg-positive text-paper"
             }`}
           >
@@ -136,16 +136,16 @@ export const Game2048 = () => {
       </div>
 
       {won && (
-        <p className="mt-4 font-display text-lg font-bold text-positive">
-          You hit 2048! Keep going for a higher score. 🏆
+        <p className="mt-4 font-display text-lg font-semibold text-positive">
+          You hit 2048. Keep going for a higher score
         </p>
       )}
       {lost && !won && (
         <p className="mt-4 text-sm font-semibold text-accent">
-          No moves left — final score {score}. New game?
+          No moves left. Final score {score}. New game?
         </p>
       )}
-      <p className="mt-2 font-mono text-[10px] uppercase tracking-wide text-muted/50">
+      <p className="mt-2 text-xs text-muted">
         Arrow keys / WASD to slide
       </p>
     </div>

@@ -74,8 +74,8 @@ export const AnalyticsView = () => {
     <section className="space-y-5">
       <div>
         <p className="eyebrow">Analytics</p>
-        <h2 className="mt-0.5 font-display text-2xl font-bold tracking-tight">
-          {firstName} — deep dive
+        <h2 className="mt-0.5 font-display text-2xl font-semibold tracking-tight">
+          {firstName}: deep dive
         </h2>
         <p className="mt-1 text-sm text-muted">
           The signals coaches care about: how they’re trending, how steady they
@@ -89,7 +89,7 @@ export const AnalyticsView = () => {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <TrendingUp size={18} className="text-accent" />
-              <h3 className="font-display text-lg font-bold tracking-tight">
+              <h3 className="font-display text-lg font-semibold tracking-tight">
                 Accuracy, game by game
               </h3>
             </div>
@@ -103,7 +103,7 @@ export const AnalyticsView = () => {
             </span>
           </div>
           <p className="mb-3 mt-1 text-sm text-muted">
-            Their real growth curve over {report.gamesAnalyzed} games — the trend
+            Their real growth curve over {report.gamesAnalyzed} games, the trend
             matters more than any single game.
           </p>
           <Sparkline points={report.gamesTimeline} />
@@ -113,14 +113,14 @@ export const AnalyticsView = () => {
         <div className="rounded-2xl border border-line bg-card p-6">
           <div className="flex items-center gap-2">
             <Activity size={18} className="text-accent" />
-            <h3 className="font-display text-lg font-bold tracking-tight">
+            <h3 className="font-display text-lg font-semibold tracking-tight">
               Consistency
             </h3>
           </div>
           {cons ? (
             <>
               <div className="mt-3 flex items-baseline gap-2">
-                <span className="font-display text-2xl font-bold tracking-tight">
+                <span className="font-display text-2xl font-semibold tracking-tight">
                   {cons.label}
                 </span>
               </div>
@@ -145,12 +145,12 @@ export const AnalyticsView = () => {
         <div className="rounded-2xl border border-line bg-card p-6">
           <div className="flex items-center gap-2">
             <Brain size={18} className="text-accent" />
-            <h3 className="font-display text-lg font-bold tracking-tight">
+            <h3 className="font-display text-lg font-semibold tracking-tight">
               Mindset signals
             </h3>
           </div>
           <p className="mt-1 text-sm text-muted">
-            The same mistakes, read as the mental pattern behind them — and the
+            The same mistakes, read as the mental pattern behind them, and the
             habit that fixes each.
           </p>
           <div className="mt-4 space-y-3">
@@ -175,7 +175,7 @@ export const AnalyticsView = () => {
       {/* Phase strengths */}
       {sortedPhases.length > 0 && (
         <div className="rounded-2xl border border-line bg-card p-6">
-          <h3 className="font-display text-lg font-bold tracking-tight">
+          <h3 className="font-display text-lg font-semibold tracking-tight">
             Strength by phase
           </h3>
           <div className="mt-4 space-y-3">

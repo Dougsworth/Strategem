@@ -451,7 +451,7 @@ function buildNotes(fetched: number, analysed: number): string[] {
     );
   }
   if (analysed < 8) {
-    notes.push("Small sample — numbers will firm up with more analyzed games.");
+    notes.push("Small sample. Numbers will firm up with more analyzed games.");
   }
   return notes;
 }

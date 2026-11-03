@@ -215,7 +215,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   );
 
   const requireReal = () => {
-    if (!firebaseEnabled) throw new Error("Clubs need an account — sign in first.");
+    if (!firebaseEnabled) throw new Error("Clubs need an account. Sign in first.");
   };
   const createClub = useCallback(async () => {
     requireReal();

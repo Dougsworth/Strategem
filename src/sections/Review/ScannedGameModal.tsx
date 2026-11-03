@@ -41,7 +41,7 @@ export const ScannedGameModal = () => {
       setSaved(true);
       open(g);
     } else {
-      setError("Couldn’t save — nothing legible to keep.");
+      setError("Couldn’t save. Nothing legible to keep.");
     }
   }
 
@@ -81,7 +81,7 @@ export const ScannedGameModal = () => {
       <header className="flex items-center justify-between border-b border-line px-6 py-3">
         <div>
           <p className="eyebrow">{isShared ? "Shared game" : "Saved game"}</p>
-          <h2 className="mt-0.5 font-display text-lg font-bold tracking-tight">
+          <h2 className="mt-0.5 font-display text-lg font-semibold tracking-tight">
             {openGame.white} – {openGame.black}
           </h2>
         </div>

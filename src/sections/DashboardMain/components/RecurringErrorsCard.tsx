@@ -66,7 +66,7 @@ export const RecurringErrorsCard = () => {
       {open && (
         <EvidenceModal
           title={open.title}
-          subtitle={`${firstName} — ${open.description.toLowerCase()} Tap a board to see the moment on Lichess.`}
+          subtitle={`${firstName}: ${open.description.toLowerCase()} Tap a board to see the moment on Lichess.`}
           items={open.examples}
           onClose={() => setOpen(null)}
         />

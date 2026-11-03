@@ -56,7 +56,7 @@ export function CheckoutToast() {
           )}
           <div>
             <p className="text-sm font-bold">
-              {upgraded ? "You’re upgraded 🎉" : "Finishing checkout…"}
+              {upgraded ? "You’re upgraded" : "Finishing checkout…"}
             </p>
             <p className="text-xs text-muted">
               {upgraded
@@ -74,7 +74,7 @@ export function CheckoutToast() {
         </div>
       ) : (
         <div className="flex items-center gap-3 rounded-xl border border-line bg-card px-4 py-3 shadow-lg">
-          <p className="text-sm text-muted">Checkout canceled — no charge made.</p>
+          <p className="text-sm text-muted">Checkout canceled. No charge made.</p>
           <button
             onClick={() => setKind(null)}
             className="rounded-md p-1 text-muted transition-colors hover:bg-ink-soft"

@@ -28,11 +28,11 @@ export const TrainingPlan = () => {
     <section className="space-y-5">
       <div>
         <p className="eyebrow">Curriculum</p>
-        <h2 className="mt-0.5 font-display text-2xl font-bold tracking-tight">
+        <h2 className="mt-0.5 font-display text-2xl font-semibold tracking-tight">
           {firstName}’s training plan
         </h2>
         <p className="mt-1 text-sm text-muted">
-          Built from {report.gamesAnalyzed} analyzed games — ordered by what will
+          Built from {report.gamesAnalyzed} analyzed games, ordered by what will
           raise their rating fastest.
         </p>
       </div>
@@ -41,14 +41,14 @@ export const TrainingPlan = () => {
         {areas.map((a, i) => (
           <div key={a.tag} className="rounded-2xl border border-line bg-card p-6">
             <div className="flex flex-wrap items-center gap-3">
-              <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-ink font-display text-sm font-bold text-paper">
+              <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-ink font-display text-sm font-semibold text-paper">
                 {i + 1}
               </span>
               <div className="min-w-0">
-                <p className="font-mono text-[10px] uppercase tracking-wide text-accent">
+                <p className="text-xs text-accent">
                   {a.tag}
                 </p>
-                <h3 className="font-display text-lg font-bold tracking-tight">
+                <h3 className="font-display text-lg font-semibold tracking-tight">
                   {a.title}
                 </h3>
               </div>
@@ -69,7 +69,7 @@ export const TrainingPlan = () => {
             </ul>
 
             {a.cta && (
-              <p className="mt-3 font-mono text-[10px] uppercase tracking-wide text-muted/70">
+              <p className="mt-3 text-xs text-muted">
                 ↓ {a.cta === "mistakes" ? "Start in the mistake drills below" : "Practice in the puzzle sets below"}
               </p>
             )}
@@ -80,7 +80,7 @@ export const TrainingPlan = () => {
       <div className="rounded-2xl border border-line bg-card p-6">
         <div className="flex items-center gap-2">
           <CalendarCheck size={18} className="text-accent" />
-          <h3 className="font-display text-lg font-bold tracking-tight">
+          <h3 className="font-display text-lg font-semibold tracking-tight">
             A week that works
           </h3>
         </div>

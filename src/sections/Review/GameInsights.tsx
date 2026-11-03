@@ -52,7 +52,7 @@ export function GameInsights({
       });
       if (!abortRef.current.aborted) setEngine(a);
     } catch {
-      if (!abortRef.current.aborted) setEngineErr("Engine analysis failed — try again.");
+      if (!abortRef.current.aborted) setEngineErr("Engine analysis failed. Try again.");
     } finally {
       setProgress(null);
     }
@@ -84,12 +84,12 @@ export function GameInsights({
               <Stat
                 label={`${white} acc`}
                 value={`${engine.accuracyWhite}%`}
-                title={`${white}'s accuracy — how close their moves were to Stockfish's best (Lichess model). 100% = flawless.`}
+                title={`${white}'s accuracy, how close their moves were to Stockfish's best (Lichess model). 100% = flawless.`}
               />
               <Stat
                 label={`${black} acc`}
                 value={`${engine.accuracyBlack}%`}
-                title={`${black}'s accuracy — how close their moves were to Stockfish's best (Lichess model). 100% = flawless.`}
+                title={`${black}'s accuracy, how close their moves were to Stockfish's best (Lichess model). 100% = flawless.`}
               />
             </>
           ) : (
@@ -149,7 +149,7 @@ export function GameInsights({
       {engine ? (
         mistakes.length > 0 ? (
           <>
-            <MomentList title="Biggest mistakes — click to jump there" onSeek={onSeek}>
+            <MomentList title="Biggest mistakes: click to jump there" onSeek={onSeek}>
               {mistakes.map((m, i) => (
                 <EngineMoment key={i} m={m} onSeek={onSeek} />
               ))}
@@ -162,16 +162,16 @@ export function GameInsights({
             </p>
           </>
         ) : (
-          <p className="mt-4 text-sm text-positive">Clean game — no clear mistakes found.</p>
+          <p className="mt-4 text-sm text-positive">Clean game, no clear mistakes found.</p>
         )
       ) : (
         keyMoments.length > 0 && (
-          <MomentList title="Key moments — click to jump there" onSeek={onSeek}>
+          <MomentList title="Key moments: click to jump there" onSeek={onSeek}>
             {keyMoments.map((m, i) => (
               <HeuristicMoment key={i} m={m} onSeek={onSeek} />
             ))}
             <p className="mt-2 text-[11px] text-muted">
-              Heuristic — “loose material” is a flag to check. Run the engine for verified accuracy.
+              Heuristic: “loose material” is a flag to check. Run the engine for verified accuracy.
             </p>
           </MomentList>
         )
@@ -246,7 +246,7 @@ function EngineMoment({ m, onSeek }: { m: EngineMove; onSeek: (ply: number) => v
   const no = `${Math.floor(m.ply / 2) + 1}${m.side === "w" ? "." : "…"}`;
   const lost = (m.cpLoss / 100).toFixed(1);
   const title =
-    `${CLASS_LABEL[m.classification]} — gave up ${lost} pawns of advantage vs the engine's best move` +
+    `${CLASS_LABEL[m.classification]}, gave up ${lost} pawns of advantage vs the engine's best move` +
     (m.best ? ` (${m.best} was better)` : "") +
     `. Click to jump to this position.`;
   return (
@@ -263,7 +263,7 @@ function EngineMoment({ m, onSeek }: { m: EngineMove; onSeek: (ply: number) => v
       </span>
       {m.best && (
         <span className="hidden truncate text-xs text-muted sm:inline">
-          best <span className="font-mono text-ink">{m.best}</span>
+          Best <span className="font-mono text-ink">{m.best}</span>
         </span>
       )}
       <span className="ml-auto font-mono text-[11px] text-muted">−{lost}</span>
@@ -289,7 +289,7 @@ function HeuristicMoment({ m, onSeek }: { m: KeyMoment; onSeek: (ply: number) =>
       <Icon size={15} className={`shrink-0 ${MOMENT_TINT[m.kind]}`} />
       <span className="font-mono text-xs text-muted">{no}</span>
       <span className="font-mono font-semibold text-ink">{m.san}</span>
-      <span className="truncate text-muted">— {m.label}</span>
+      <span className="truncate text-muted">{m.label}</span>
     </button>
   );
 }
@@ -344,9 +344,9 @@ function Curve({
   return (
     <div
       className="relative cursor-help"
-      title="Advantage through the game — above the centre line favours White, below favours Black. The orange line marks the move you're on. Click to jump there."
+      title="Advantage through the game. Above the centre line favours White, below favours Black. The orange line marks the move you're on. Click to jump there."
     >
-      <div className="mb-1 flex justify-between text-[10px] uppercase tracking-wide text-muted">
+      <div className="mb-1 flex justify-between text-xs text-muted">
         <span>{leftLabel}</span>
         <span>{rightLabel}</span>
       </div>

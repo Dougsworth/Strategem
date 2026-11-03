@@ -13,7 +13,7 @@ export const TacticalDiagnostic = () => {
     <section>
       <div className="mb-6 flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <h3 className="font-display text-xl font-bold tracking-tight">
+          <h3 className="font-display text-xl font-semibold tracking-tight">
             Tactics: What They Spot
           </h3>
           <span title="A best-guess estimate from their games, not an exact score.">
@@ -41,7 +41,7 @@ export const TacticalDiagnostic = () => {
 
       {open && (
         <EvidenceModal
-          title={`${open.title} — chances missed`}
+          title={`${open.title}: chances missed`}
           subtitle={`Positions where a ${open.title.toLowerCase().replace(/s$/, "")} was available and ${report?.displayName.split(/\s+/)[0]} played something else. The move shown is the one the engine recommends.`}
           items={open.missed}
           onClose={() => setOpen(null)}

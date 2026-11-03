@@ -36,14 +36,14 @@ export const TacticalDiagnosticItem = ({
             <p className={`font-mono text-sm font-bold ${weak ? "text-accent" : "text-ink"}`}>
               {pct(motif.accuracy)}
             </p>
-            <p className="text-[10px] uppercase tracking-tight text-muted">
+            <p className="text-xs tracking-tight text-muted">
               {canAudit ? `${motif.missed.length} missed →` : `${motif.sample} seen`}
             </p>
           </>
         ) : (
           <>
             <p className="font-mono text-sm font-bold text-muted/60">—</p>
-            <p className="text-[10px] uppercase tracking-tight text-muted/60">
+            <p className="text-xs tracking-tight text-muted">
               {motif.sample > 0 ? `only ${motif.sample} seen` : "no data"}
             </p>
           </>

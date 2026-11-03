@@ -74,7 +74,7 @@ export function generateNarrative(
   if (report.recurringErrors[0]) {
     const e = report.recurringErrors[0];
     sentences.push(
-      `Their most common mistake is ${e.title.toLowerCase()} (${e.count} times) — ${e.description.toLowerCase()}`,
+      `Their most common mistake is ${e.title.toLowerCase()} (${e.count} times), ${e.description.toLowerCase()}`,
     );
   }
   const ratingMove = ratingDelta ? fmtChange(ratingDelta.change) : null;

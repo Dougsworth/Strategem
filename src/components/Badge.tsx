@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 import type { Trend } from "@/lib/types";
 import { TREND_LABEL, trendColor } from "@/lib/format";
 
-// Small shared pills/chips — one source of truth for the uppercase mono labels
+// Small shared pills/chips — one source of truth for the small labels
 // used across the app (trend pills, the "Estimate"/"Auto" meta chips).
 
 type Tone = "solid-accent" | "solid-positive" | "meta";
@@ -24,7 +24,7 @@ export function Badge({
 }) {
   return (
     <span
-      className={`inline-flex items-center rounded px-2 py-0.5 font-mono text-[10px] font-bold uppercase tracking-wide ${TONE[tone]} ${className}`}
+      className={`inline-flex items-center rounded px-2 py-0.5 text-xs font-medium ${TONE[tone]} ${className}`}
     >
       {children}
     </span>

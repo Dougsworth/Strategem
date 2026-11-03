@@ -7,7 +7,7 @@ export const BrandLogo = () => {
         <div />
         <div className="bg-paper" />
       </div>
-      <span className="font-display text-lg font-bold tracking-tight">
+      <span className="font-display text-lg font-semibold tracking-tight">
         STRATEGEM
       </span>
     </a>

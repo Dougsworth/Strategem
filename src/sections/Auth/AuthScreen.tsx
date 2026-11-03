@@ -52,19 +52,13 @@ export const AuthScreen = ({
       <div className="relative hidden flex-col justify-between overflow-hidden bg-ink p-12 text-paper md:flex">
         {/* slowly drifting board motif */}
         <div
-          className="pointer-events-none absolute inset-0 animate-board-drift opacity-[0.06]"
+          className="pointer-events-none absolute inset-0 opacity-[0.06]"
           style={{
             backgroundImage:
               "linear-gradient(45deg, #fff 25%, transparent 25%, transparent 75%, #fff 75%), linear-gradient(45deg, #fff 25%, transparent 25%, transparent 75%, #fff 75%)",
             backgroundSize: "64px 64px",
             backgroundPosition: "0 0, 32px 32px",
           }}
-        />
-        {/* ambient accent glows */}
-        <div className="pointer-events-none absolute -left-24 top-16 h-64 w-64 animate-glow-pulse rounded-full bg-accent/40 blur-[100px]" />
-        <div
-          className="pointer-events-none absolute -right-20 bottom-8 h-72 w-72 animate-float rounded-full bg-accent/15 blur-[120px]"
-          style={{ animationDelay: "1.5s" }}
         />
 
         <div className="relative flex animate-fade-up items-center gap-2">
@@ -74,14 +68,14 @@ export const AuthScreen = ({
             <div />
             <div className="bg-ink" />
           </div>
-          <span className="font-display text-xl font-bold tracking-tight">
+          <span className="font-display text-xl font-semibold tracking-tight">
             STRATEGEM
           </span>
         </div>
 
         <div className="relative max-w-md">
           <h1
-            className="animate-fade-up font-display text-4xl font-bold leading-tight tracking-tight"
+            className="animate-fade-up font-display text-4xl font-semibold leading-tight tracking-tight"
             style={{ animationDelay: "0.1s" }}
           >
             Coach smarter.<br />See every game clearly.
@@ -93,7 +87,7 @@ export const AuthScreen = ({
                 className="flex animate-fade-up items-start gap-3 text-paper/80"
                 style={{ animationDelay: `${0.25 + i * 0.12}s` }}
               >
-                <span className="mt-0.5 grid h-7 w-7 shrink-0 place-items-center rounded-lg bg-accent/20 text-accent transition-transform hover:scale-110">
+                <span className="mt-0.5 grid h-7 w-7 shrink-0 place-items-center rounded-lg bg-accent/20 text-accent">
                   <Icon size={15} />
                 </span>
                 <span className="leading-snug">{text}</span>
@@ -103,7 +97,7 @@ export const AuthScreen = ({
         </div>
 
         <p
-          className="relative animate-fade-up font-mono text-[11px] uppercase tracking-wide text-paper/40"
+          className="relative animate-fade-up text-xs text-paper/40"
           style={{ animationDelay: "0.7s" }}
         >
           Your students’ games, decoded
@@ -121,13 +115,13 @@ export const AuthScreen = ({
               <div />
               <div className="bg-paper" />
             </div>
-            <span className="font-display text-lg font-bold tracking-tight">
+            <span className="font-display text-lg font-semibold tracking-tight">
               STRATEGEM
             </span>
           </div>
 
           <h2
-            className="animate-fade-up font-display text-2xl font-bold tracking-tight"
+            className="animate-fade-up font-display text-2xl font-semibold tracking-tight"
             style={{ animationDelay: "0.05s" }}
           >
             {mode === "in" ? "Welcome back" : "Create your account"}
@@ -159,7 +153,7 @@ export const AuthScreen = ({
                   setBusy(false);
                 }
               }}
-              className="flex w-full items-center justify-center gap-2.5 rounded-lg border border-line bg-card py-2.5 text-sm font-medium transition-all hover:-translate-y-px hover:bg-ink-soft hover:shadow-sm active:scale-[0.99] disabled:opacity-50"
+              className="flex w-full items-center justify-center gap-2.5 rounded-lg border border-line bg-card py-2.5 text-sm font-medium transition-[background-color,transform] duration-150 hover:bg-ink-soft active:scale-[0.98] disabled:opacity-50"
             >
               <GoogleIcon />
               Continue with Google
@@ -171,7 +165,7 @@ export const AuthScreen = ({
             style={{ animationDelay: "0.24s" }}
           >
             <div className="h-px flex-1 bg-line" />
-            <span className="font-mono text-[10px] uppercase tracking-wide text-muted/60">
+            <span className="text-xs text-muted">
               or with email
             </span>
             <div className="h-px flex-1 bg-line" />
@@ -214,7 +208,7 @@ export const AuthScreen = ({
             <button
               type="submit"
               disabled={busy}
-              className="w-full rounded-lg bg-ink py-2.5 text-sm font-semibold text-paper transition-all hover:-translate-y-px hover:opacity-90 hover:shadow-md active:scale-[0.99] disabled:opacity-50"
+              className="w-full rounded-lg bg-ink py-2.5 text-sm font-semibold text-paper transition-[opacity,transform] duration-150 hover:opacity-90 active:scale-[0.98] disabled:opacity-50"
             >
               {busy
                 ? "One moment…"
@@ -245,7 +239,7 @@ export const AuthScreen = ({
           {!firebaseEnabled && (
             <p className="mt-6 flex items-center justify-center gap-1.5 rounded-lg bg-ink-soft px-3 py-2 text-center text-[11px] text-muted">
               <Check size={12} className="text-positive" />
-              Demo mode — any email + a 6-char password works. No real account yet.
+              Demo mode: any email + a 6-char password works. No real account yet.
             </p>
           )}
         </div>
@@ -271,7 +265,7 @@ function Field({
 }) {
   return (
     <label className="block">
-      <span className="mb-1 block font-mono text-[11px] uppercase tracking-wide text-muted">
+      <span className="mb-1 block text-xs text-muted">
         {label}
       </span>
       <input

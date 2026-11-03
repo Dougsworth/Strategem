@@ -71,7 +71,7 @@ export function ShareMenu({ white, black, pgn }: SharedGame) {
   }
 
   const title = `${white} – ${black}`;
-  const text = `Chess game on Strategem — ${title}`;
+  const text = `Chess game on Strategem: ${title}`;
 
   async function copyLink() {
     const u = await ensureUrl();

@@ -66,7 +66,7 @@ export const RatingTrendModal = ({
         <div className="flex items-start justify-between">
           <div>
             <p className="eyebrow">Rating Trend</p>
-            <h2 className="mt-0.5 font-display text-xl font-bold tracking-tight">
+            <h2 className="mt-0.5 font-display text-xl font-semibold tracking-tight">
               {history.length} games · {fmtDate(history[0].date)} –{" "}
               {fmtDate(history[history.length - 1].date)}
             </h2>
@@ -82,11 +82,11 @@ export const RatingTrendModal = ({
         <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
           {stats.map((s) => (
             <div key={s.label} className="rounded-xl bg-ink-soft/60 p-3">
-              <p className="font-mono text-[10px] uppercase tracking-wide text-muted">
+              <p className="text-xs text-muted">
                 {s.label}
               </p>
               <p
-                className={`mt-0.5 font-display text-xl font-bold tracking-tight ${
+                className={`mt-0.5 font-display text-xl font-semibold tracking-tight ${
                   s.accent ? (up ? "text-positive" : "text-accent") : ""
                 }`}
               >
@@ -155,7 +155,7 @@ export const RatingTrendModal = ({
           </text>
         </svg>
 
-        <p className="mt-2 text-center font-mono text-[10px] uppercase tracking-wide text-muted/50">
+        <p className="mt-2 text-center text-xs text-muted">
           Each dot is a recorded rating point
         </p>
       </div>

@@ -303,7 +303,7 @@ export function GameViewer({
         <div className="rounded-xl border border-positive/30 bg-positive/10 px-4 py-3 text-sm">
           <p className="font-semibold text-ink">
             Auto-fixed {parsed.corrections.length}{" "}
-            {parsed.corrections.length === 1 ? "move" : "moves"} that looked misread —
+            {parsed.corrections.length === 1 ? "move" : "moves"} that looked misread,
             click one to jump there and check it against the photo.
           </p>
           <div className="mt-2 flex flex-wrap gap-1.5">
@@ -325,7 +325,7 @@ export function GameViewer({
         <div className="rounded-xl border border-accent/40 bg-accent-soft px-4 py-3 text-sm">
           <p className="font-semibold text-ink">
             Filled in {parsed.inferred.length} move{parsed.inferred.length === 1 ? "" : "s"} the
-            scan seems to have dropped — please verify {parsed.inferred.length === 1 ? "it" : "them"}{" "}
+            scan seems to have dropped, please verify {parsed.inferred.length === 1 ? "it" : "them"}{" "}
             against the photo.
           </p>
           <p className="mt-0.5 text-muted">
@@ -341,7 +341,7 @@ export function GameViewer({
                 className="rounded-md bg-card px-2 py-0.5 font-mono text-xs ring-1 ring-accent/40 transition-colors hover:bg-ink-soft"
               >
                 {Math.floor(idx / 2) + 1}
-                {idx % 2 === 0 ? "." : "…"} {parsed.moves[idx]} ⚠
+                {idx % 2 === 0 ? "." : "…"} {parsed.moves[idx]}?
               </button>
             ))}
           </div>
@@ -350,11 +350,11 @@ export function GameViewer({
       {parsed.truncated && (
         <div className="rounded-xl border border-accent/30 bg-accent-soft px-4 py-3 text-sm">
           <p className="font-semibold text-ink">
-            Got the first {total} {total === 1 ? "move" : "moves"} — then one didn’t add up.
+            Got the first {total} {total === 1 ? "move" : "moves"}, then one didn’t add up.
           </p>
           <p className="mt-0.5 text-muted">
             Around move {parsed.truncated.atMoveNo}, “{parsed.truncated.token}” isn’t a
-            legal move here — usually a handwriting mix-up (a “c” vs “e”, a “d” vs “b”,
+            legal move here, usually a handwriting mix-up (a “c” vs “e”, a “d” vs “b”,
             or a wrong rank). Everything up to there is below; fix it in{" "}
             <span className="font-medium text-ink">Edit the moves</span> to read the rest.
           </p>
@@ -430,7 +430,7 @@ export function GameViewer({
                   "radial-gradient(60% 22% at 50% 6%, rgba(126,154,100,0.13), transparent 72%)",
               }}
             />
-            <div className="relative z-20 grid grid-cols-[2.75rem_1fr_1fr] border-b border-line bg-card/85 px-3 py-2 font-mono text-[10px] uppercase tracking-wide text-muted backdrop-blur-sm">
+            <div className="relative z-20 grid grid-cols-[2.75rem_1fr_1fr] border-b border-line bg-card/85 px-3 py-2 text-xs text-muted backdrop-blur-sm">
               <span>#</span>
               <span className="flex items-center gap-1.5">
                 <span className="inline-block h-2.5 w-2.5 rounded-full bg-paper ring-1 ring-line" />
@@ -472,7 +472,7 @@ export function GameViewer({
 
             <div aria-hidden className="pointer-events-none absolute inset-x-0 bottom-0 z-20 h-6 bg-gradient-to-t from-card to-transparent" />
           </div>
-          <p className="mt-2 text-center font-mono text-[10px] uppercase tracking-wide text-muted/50">
+          <p className="mt-2 text-center text-xs text-muted">
             ← → step · Home / End jump · flip with the ⇅ button
           </p>
         </div>
@@ -565,7 +565,7 @@ function ScoresheetPanel({
   return (
     <details className="rounded-xl border border-line bg-card px-4 py-3">
       <summary className="flex cursor-pointer items-center justify-between gap-3 text-sm font-medium text-muted">
-        <span>Original scoresheet — click to view</span>
+        <span>Original scoresheet: click to view</span>
         {current && (
           <span className="rounded-md bg-accent/10 px-2 py-0.5 font-mono text-[11px] font-semibold text-accent">
             find move {current.no} · {current.side} · {current.san}
@@ -578,7 +578,7 @@ function ScoresheetPanel({
         onClick={onOpen}
         className="mx-auto mt-3 max-h-[44vh] w-auto cursor-zoom-in rounded-lg object-contain ring-1 ring-line"
       />
-      <p className="mt-1.5 text-center font-mono text-[10px] uppercase tracking-wide text-muted/50">
+      <p className="mt-1.5 text-center text-xs text-muted">
         {current
           ? `Compare move ${current.no} on the sheet with “${current.san}” on the board`
           : "Click to open it beside the board"}

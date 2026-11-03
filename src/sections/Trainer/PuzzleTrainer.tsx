@@ -136,7 +136,7 @@ export const PuzzleTrainer = ({
         <div className="mb-4 flex items-start justify-between">
           <div>
             <p className="eyebrow">Practice · {title}</p>
-            <h2 className="mt-1 font-display text-2xl font-bold tracking-tight">
+            <h2 className="mt-1 font-display text-2xl font-semibold tracking-tight">
               Solve the puzzle
             </h2>
           </div>
@@ -180,31 +180,31 @@ export const PuzzleTrainer = ({
             <div className="mt-3 min-h-[64px]">
               {status === "solved" ? (
                 <div>
-                  <p className="font-display text-xl font-bold text-positive">
-                    Solved! 🎉
+                  <p className="font-display text-xl font-semibold text-positive">
+                    Solved
                   </p>
                   <p className="mt-1 text-sm text-muted">
-                    Nice — you found the whole line.
+                    Nice, you found the whole line.
                   </p>
                 </div>
               ) : status === "opponent" ? (
                 <p className="text-sm text-muted">Opponent is replying…</p>
               ) : feedback === "wrong" ? (
                 <div>
-                  <p className="font-display text-lg font-bold text-accent">
-                    Not the one — try again.
+                  <p className="font-display text-lg font-semibold text-accent">
+                    Not the one. Try again.
                   </p>
                   <p className="mt-1 text-sm text-muted">
                     Look for the strongest move in the position.
                   </p>
                 </div>
               ) : feedback === "right" ? (
-                <p className="font-display text-lg font-bold text-positive">
+                <p className="font-display text-lg font-semibold text-positive">
                   Yes! Keep going.
                 </p>
               ) : (
                 <div>
-                  <p className="font-display text-lg font-bold">Your move.</p>
+                  <p className="font-display text-lg font-semibold">Your move.</p>
                   <p className="mt-1 text-sm text-muted">
                     Click a piece, then click where it should go.
                   </p>
@@ -214,7 +214,7 @@ export const PuzzleTrainer = ({
 
             {showHint && status === "playing" && (
               <p className="mt-1 rounded-lg bg-ink-soft px-3 py-2 text-sm text-ink">
-                💡 {hintText}
+                {hintText}
               </p>
             )}
 

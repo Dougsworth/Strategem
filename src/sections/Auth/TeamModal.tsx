@@ -64,7 +64,7 @@ export const TeamModal = ({ onClose }: { onClose: () => void }) => {
       >
         <div className="flex items-center gap-2">
           <Users size={18} className="text-accent" />
-          <h2 className="font-display text-xl font-bold tracking-tight">
+          <h2 className="font-display text-xl font-semibold tracking-tight">
             {inClub ? "Your club" : "Coaches & teams"}
           </h2>
         </div>
@@ -76,19 +76,19 @@ export const TeamModal = ({ onClose }: { onClose: () => void }) => {
                 You’re in{" "}
                 <span className="font-semibold text-ink">
                   {club?.name ?? "your club"}
-                </span>{" "}
-                — its roster is shared with{" "}
+                </span>
+                , and its roster is shared with{" "}
                 {club ? club.memberUids.length : "—"}{" "}
                 {club && club.memberUids.length === 1 ? "coach" : "coaches"}.
               </p>
             </div>
 
             <div className="rounded-xl bg-ink-soft/60 p-4">
-              <p className="font-mono text-[10px] uppercase tracking-wide text-muted">
-                Invite code — share it with a coach
+              <p className="text-xs text-muted">
+                Invite code: share it with a coach
               </p>
               <div className="mt-2 flex items-center gap-2">
-                <span className="font-display text-2xl font-bold tracking-[0.2em]">
+                <span className="font-display text-2xl font-semibold tracking-[0.2em]">
                   {club?.inviteCode ?? "······"}
                 </span>
                 <button
@@ -139,7 +139,7 @@ export const TeamModal = ({ onClose }: { onClose: () => void }) => {
 
             <div className="flex items-center gap-3">
               <div className="h-px flex-1 bg-line" />
-              <span className="font-mono text-[10px] uppercase tracking-wide text-muted/60">
+              <span className="text-xs text-muted">
                 or join one
               </span>
               <div className="h-px flex-1 bg-line" />

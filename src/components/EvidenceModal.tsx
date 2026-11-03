@@ -26,7 +26,7 @@ export const EvidenceModal = ({
       >
         <div className="mb-5 flex items-start justify-between">
           <div>
-            <h2 className="font-display text-xl font-bold tracking-tight">
+            <h2 className="font-display text-xl font-semibold tracking-tight">
               {title}
             </h2>
             <p className="mt-1 text-sm text-muted">{subtitle}</p>
@@ -65,7 +65,7 @@ export const EvidenceModal = ({
                 <div className="mt-2 px-1">
                   <p className="font-mono text-xs font-semibold">{ev.san}</p>
                   <p className="truncate text-[11px] text-muted">{ev.label}</p>
-                  <p className="mt-0.5 font-mono text-[10px] uppercase tracking-wide text-accent opacity-0 transition-opacity group-hover:opacity-100">
+                  <p className="mt-0.5 text-xs text-accent opacity-0 transition-opacity group-hover:opacity-100">
                     View on Lichess →
                   </p>
                 </div>

@@ -40,7 +40,7 @@ export const CurationEngine = () => {
     <section className="rounded-2xl bg-ink p-8 text-paper">
       <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h3 className="font-display text-2xl font-bold tracking-tight">
+          <h3 className="font-display text-2xl font-semibold tracking-tight">
             Practice Plan
           </h3>
           <p className="mt-1 max-w-md text-sm leading-relaxed text-paper/60">
@@ -66,19 +66,19 @@ export const CurationEngine = () => {
             className="group flex items-center gap-4 rounded-xl bg-white/[0.04] p-4 text-left ring-1 ring-white/10 transition-colors hover:bg-white/[0.08]"
           >
             <div
-              className={`grid h-12 w-12 shrink-0 place-items-center rounded-lg font-display text-base font-bold ${
+              className={`grid h-12 w-12 shrink-0 place-items-center rounded-lg font-display text-base font-semibold ${
                 i === 0 ? "bg-accent text-paper" : "bg-white/10 text-paper"
               }`}
             >
               {monogram(rec.label)}
             </div>
             <div className="min-w-0 flex-1">
-              <p className="font-display text-sm font-bold">{rec.label}</p>
+              <p className="font-display text-sm font-semibold">{rec.label}</p>
               <p className="mt-0.5 text-xs leading-snug text-paper/55">
                 {rec.reason}
               </p>
             </div>
-            <span className="shrink-0 font-mono text-[10px] uppercase tracking-wide text-accent transition-colors group-hover:text-paper">
+            <span className="shrink-0 text-xs text-accent transition-colors group-hover:text-paper">
               Practice →
             </span>
           </button>

@@ -96,7 +96,7 @@ export function recommendPuzzles(report: StudentReport): PuzzleRec[] {
       key: `phase-${phase.phase}`,
       theme,
       label: `${PHASE_LABEL[phase.phase]} play`,
-      reason: `Weakest part of the game — only ${Math.round(phase.accuracy)}% accurate here`,
+      reason: `Weakest part of the game, only ${Math.round(phase.accuracy)}% accurate here`,
       weakness: phase.accuracy,
       trainingUrl: trainingUrl(theme),
     });
